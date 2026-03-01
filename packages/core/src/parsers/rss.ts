@@ -5,6 +5,7 @@ import { HEADERS_WITH_CURL, HEADERS_WITH_FELFELE } from '../utils/headers'
 import { timeout } from '../utils/timeout'
 import * as urlUtils from '../utils/url'
 import { parseAtomFeed } from './atom'
+import { isJsonFeed, parseJsonFeed } from './json-feed'
 
 const FEED_FETCH_TIMEOUT = 15000
 
@@ -143,6 +144,28 @@ export async function loadRSSFeed(
   downloadTime = 0,
 ): Promise<RSSFeedWithMetrics> {
   const xmlTime = Date.now()
+
+  // Check if content is JSON Feed (starts with '{')
+  const trimmedContent = xml.trimStart()
+  if (trimmedContent.startsWith('{')) {
+    try {
+      const json = JSON.parse(trimmedContent)
+      if (isJsonFeed(json)) {
+        const parseTime = Date.now()
+        const feed = parseJsonFeed(json)
+        return {
+          feed,
+          url,
+          size: xml.length,
+          downloadTime: downloadTime - startTime,
+          xmlTime: xmlTime - downloadTime,
+          parseTime: parseTime - xmlTime,
+        }
+      }
+    } catch {
+      // Not valid JSON, fall through to XML parsing
+    }
+  }
 
   const parser = new XMLParser({
     ignoreAttributes: false,

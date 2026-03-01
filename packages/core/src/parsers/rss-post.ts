@@ -25,8 +25,11 @@ const RSSMimeTypes = [
   'text/xml',
 ]
 
+const JsonFeedMimeTypes = ['application/feed+json', 'application/json']
+
 function getFeedUrlFromHtmlLink(link: ParsedNode): string {
-  for (const mimeType of RSSMimeTypes) {
+  const allFeedMimeTypes = [...RSSMimeTypes, ...JsonFeedMimeTypes]
+  for (const mimeType of allFeedMimeTypes) {
     const matcher = [{ name: 'type', value: mimeType }]
     if (HtmlUtils.matchAttributes(link, matcher)) {
       const feedUrl = HtmlUtils.getAttribute(link, 'href') || ''
@@ -101,9 +104,7 @@ export function parseMimeType(contentType: string): string {
   return mimeType
 }
 
-export async function fetchContentWithMimeType(
-  url: string,
-): Promise<ContentWithMimeType | null> {
+export async function fetchContentWithMimeType(url: string): Promise<ContentWithMimeType | null> {
   const isRedditUrl = urlUtils.getHumanHostname(url) === urlUtils.REDDIT_COM
 
   try {
@@ -151,6 +152,14 @@ export function getFeedFromHtml(baseUrl: string, html: string): Feed {
 
 export function isRssMimeType(mimeType: string): boolean {
   return RSSMimeTypes.includes(mimeType)
+}
+
+export function isJsonFeedMimeType(mimeType: string): boolean {
+  return JsonFeedMimeTypes.includes(mimeType)
+}
+
+export function isFeedMimeType(mimeType: string): boolean {
+  return isRssMimeType(mimeType) || isJsonFeedMimeType(mimeType)
 }
 
 async function fetchRSSFeedUrlFromUrl(url: string): Promise<ContentWithMimeType | null> {
@@ -292,7 +301,7 @@ export async function fetchFeedByContentWithMimeType(
     }
   }
 
-  if (isRssMimeType(contentWithMimeType.mimeType)) {
+  if (isFeedMimeType(contentWithMimeType.mimeType)) {
     const rssFeed = await loadRSSFeed(url, contentWithMimeType.content)
     const augmentedFeed = await augmentFeedWithMetadata(url, '', rssFeed)
     if (augmentedFeed != null) {

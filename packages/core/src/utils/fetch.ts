@@ -1,9 +1,6 @@
 import { timeout } from './timeout'
 
-export async function safeFetch(
-  input: string | URL,
-  init?: RequestInit,
-): Promise<Response> {
+export async function safeFetch(input: string | URL, init?: RequestInit): Promise<Response> {
   const response = await fetch(input, init)
   if (!response.ok) {
     throw new Error(
