@@ -13,9 +13,9 @@ function getEntryDate(entry: Record<string, unknown>): string | null {
 }
 
 interface AtomMediaThumbnail {
-  url: string[]
-  width: string[]
-  height: string[]
+  url: string
+  width: string
+  height: string
 }
 
 interface AtomMediaGroup {
@@ -30,9 +30,9 @@ function getAtomEntryMedia(entry: Record<string, unknown>): RSSMedia | undefined
       return {
         thumbnail: [
           {
-            url: [atomMediaThumbnail.url[0] ?? ''],
-            width: [Number.parseInt(atomMediaThumbnail.width[0] ?? '0', 10)],
-            height: [Number.parseInt(atomMediaThumbnail.height[0] ?? '0', 10)],
+            url: [atomMediaThumbnail.url ?? ''],
+            width: [Number.parseInt(atomMediaThumbnail.width ?? '0', 10)],
+            height: [Number.parseInt(atomMediaThumbnail.height ?? '0', 10)],
           },
         ],
       }
@@ -44,9 +44,14 @@ function getAtomEntryMedia(entry: Record<string, unknown>): RSSMedia | undefined
 }
 
 interface AtomLink {
-  rel?: string[]
-  type?: string[]
-  href: string[]
+  rel?: string | string[]
+  type?: string | string[]
+  href: string | string[]
+}
+
+function getAttr(value: string | string[] | undefined): string {
+  if (!value) return ''
+  return Array.isArray(value) ? (value[0] ?? '') : value
 }
 
 function findBestLink(entry: Record<string, unknown>): string {
@@ -57,21 +62,25 @@ function findBestLink(entry: Record<string, unknown>): string {
 
   const htmlLinks: AtomLink[] = []
   for (const link of links) {
-    if (link.rel && link.rel[0] === 'alternate') {
-      return link.href[0] ?? ''
+    const rel = getAttr(link.rel)
+    const type = getAttr(link.type)
+    const href = getAttr(link.href)
+
+    if (rel === 'alternate') {
+      return href
     }
-    if (link.type && link.type[0] === 'text/html') {
+    if (type === 'text/html') {
       htmlLinks.push(link)
     }
   }
 
   if (htmlLinks.length > 0) {
-    return htmlLinks[0]?.href[0] ?? ''
+    return getAttr(htmlLinks[0]?.href)
   }
 
   if (links.length > 0) {
     const firstLink = links[0]
-    return typeof firstLink === 'string' ? firstLink : (firstLink?.href[0] ?? '')
+    return typeof firstLink === 'string' ? firstLink : getAttr(firstLink?.href)
   }
 
   return ''
@@ -109,7 +118,7 @@ export function parseAtomFeed(json: AtomJson): RSSFeed {
     rss.icon = feed.icon[0]
   }
   if (feed.link) {
-    rss.url = feed.link[0]?.href[0] ?? ''
+    rss.url = getAttr(feed.link[0]?.href)
   }
 
   rss.items = feed.entry.map((entry: Record<string, unknown>) => {

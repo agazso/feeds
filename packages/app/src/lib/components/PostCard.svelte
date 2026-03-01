@@ -1,0 +1,253 @@
+<script lang="ts">
+import type { Post } from '@feeds/core'
+import { getHumanHostname } from '@feeds/core'
+import { postTitle, postText, commentLink, formatTimestamp, thumbnailSrc } from '$lib/text'
+
+interface Props {
+  post: Post
+  onfilter?: (term: string) => void
+}
+
+let { post, onfilter }: Props = $props()
+
+const title = $derived(postTitle(post))
+const text = $derived(postText(post))
+const comment = $derived(commentLink(post))
+const timestamp = $derived(post.updatedAt || post.createdAt)
+const printableTime = $derived(timestamp ? formatTimestamp(timestamp) : '')
+const hostname = $derived(post.link ? getHumanHostname(post.link) : '')
+const thumbnail = $derived(thumbnailSrc(post))
+const postLink = $derived(post.link || '')
+
+function handleCardClick(e: MouseEvent) {
+  const target = e.target as HTMLElement
+  // Don't trigger if clicking on interactive elements
+  if (target.closest('a, button, .tag, .avatar')) {
+    return
+  }
+  // Don't trigger if text is selected
+  if (window.getSelection()?.toString()) {
+    return
+  }
+  if (postLink) {
+    window.open(postLink, '_blank', 'noopener,noreferrer')
+  }
+}
+
+function handleFilterClick(e: MouseEvent, term: string) {
+  e.stopPropagation()
+  onfilter?.(term)
+}
+
+function handleImageLoad(e: Event) {
+  const img = e.target as HTMLImageElement
+  // Fix YouTube thumbnail fallback - YouTube returns a 120x90 placeholder for missing thumbnails
+  if (img.src.includes('ytimg.com') && img.naturalWidth === 120 && img.naturalHeight === 90) {
+    img.src = img.src.replace(/\/\w+.jpg$/, '/mqdefault.jpg')
+  }
+}
+</script>
+
+<div class="card-parent" onclick={handleCardClick} onkeydown={(e) => e.key === 'Enter' && handleCardClick(e as unknown as MouseEvent)} role="button" tabindex="0">
+  <div class="card-header">
+    <button
+      class="avatar"
+      onclick={(e) => handleFilterClick(e, post.author?.name || '')}
+      aria-label="Filter by author"
+    >
+      {#if post.author?.image?.uri}
+        <img src={post.author.image.uri} alt="" loading="lazy" />
+      {:else}
+        <div class="avatar-placeholder"></div>
+      {/if}
+    </button>
+    <div class="header-text">
+      <div class="author-name">{post.author?.name || ''}</div>
+      <div class="hostname">
+        <span class="tooltip" title={printableTime}>{hostname}</span>
+      </div>
+    </div>
+  </div>
+
+  {#if thumbnail}
+    <a href={postLink} target="_blank" rel="noopener noreferrer" class="thumbnail-link">
+      <img
+        class="thumbnail"
+        src={thumbnail}
+        alt=""
+        loading="lazy"
+        onload={handleImageLoad}
+      />
+    </a>
+  {/if}
+
+  {#if title}
+    <div class="text title-text">
+      <a href={postLink} target="_blank" rel="noopener noreferrer">{title}</a>
+    </div>
+  {/if}
+
+  {#if text}
+    <div class="text body-text">
+      <a href={postLink} target="_blank" rel="noopener noreferrer">{text}</a>
+    </div>
+  {/if}
+
+  {#if comment}
+    <div class="text">
+      <a class="comment-link" href={comment} target="_blank" rel="noopener noreferrer">Comments</a>
+    </div>
+  {/if}
+
+  {#if post.tags && post.tags.length > 0}
+    <div class="tags">
+      {#each post.tags as tag}
+        <button class="tag" onclick={(e) => handleFilterClick(e, tag)}>#{tag}</button>
+      {/each}
+    </div>
+  {/if}
+</div>
+
+<style>
+  .card-parent {
+    display: flex;
+    flex-direction: column;
+    background-color: #88888822;
+    padding-bottom: var(--half-padding);
+    cursor: pointer;
+    break-inside: avoid;
+    margin-bottom: var(--padding);
+  }
+
+  .card-parent:hover {
+    background-color: #88888844;
+  }
+
+  .card-parent:active {
+    background-color: #88888822;
+  }
+
+  .card-header {
+    display: flex;
+    flex-direction: row;
+    padding: var(--padding);
+    align-items: center;
+  }
+
+  .avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    margin: 0;
+    min-width: unset;
+    cursor: pointer;
+  }
+
+  .avatar img {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+  }
+
+  .avatar-placeholder {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: var(--color-step-30);
+  }
+
+  .avatar:hover {
+    opacity: 0.8;
+  }
+
+  .header-text {
+    padding-left: var(--padding);
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .author-name {
+    font-weight: 700;
+    font-size: 14px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .hostname {
+    font-size: 12px;
+    color: gray;
+  }
+
+  .tooltip {
+    border-bottom: 1px dotted #333;
+    cursor: help;
+  }
+
+  .thumbnail-link {
+    display: block;
+  }
+
+  .thumbnail {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .text {
+    margin: var(--padding);
+    overflow: hidden;
+  }
+
+  .text a {
+    display: block;
+  }
+
+  .title-text {
+    font-weight: bold;
+  }
+
+  .body-text a {
+    display: -webkit-box;
+    -webkit-line-clamp: 6;
+    line-clamp: 6;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .comment-link {
+    text-decoration: underline;
+    display: inline !important;
+  }
+
+  .comment-link:hover {
+    background-color: #88888866;
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 0 var(--half-padding);
+  }
+
+  .tag {
+    margin: var(--half-padding);
+    padding: var(--half-padding);
+    font-size: 14px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    color: var(--color);
+    cursor: pointer;
+    min-width: unset;
+  }
+
+  .tag:hover {
+    background-color: #88888866;
+  }
+</style>
