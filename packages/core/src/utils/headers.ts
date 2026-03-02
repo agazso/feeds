@@ -1,4 +1,4 @@
-import { REDDIT_COM, TWITTER_COM, X_COM, getHumanHostname } from './url'
+import { REDDIT_COM, getHumanHostname } from './url'
 
 /** Safari user agent - works for most sites including Tumblr */
 export const HEADERS_WITH_SAFARI = {
@@ -36,9 +36,6 @@ export function getHeadersForUrl(url: string): Record<string, string> {
   if (hostname === REDDIT_COM) {
     return HEADERS_WITH_FELFELE
   }
-  if (hostname === TWITTER_COM || hostname === X_COM) {
-    return HEADERS_WITH_BOT
-  }
-  // Default - Safari works for most sites including Tumblr
-  return HEADERS_WITH_SAFARI
+  // Default - Bot UA works for link previews on most sites
+  return HEADERS_WITH_BOT
 }

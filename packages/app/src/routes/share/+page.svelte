@@ -1,11 +1,51 @@
 <script lang="ts">
 import type { ActionData } from './$types'
+import type { Post } from '@feeds/core'
 import { enhance } from '$app/forms'
+import { debounce } from '$lib/search'
+import PostCard from '$lib/components/PostCard.svelte'
 
 let { form }: { form: ActionData } = $props()
 
 let loading = $state(false)
 let url = $state('')
+let previewPost = $state<Post | null>(null)
+let previewLoading = $state(false)
+
+async function fetchPreview(urlValue: string) {
+  if (!urlValue.trim()) {
+    previewPost = null
+    return
+  }
+
+  try {
+    new URL(urlValue)
+  } catch {
+    previewPost = null
+    return
+  }
+
+  previewLoading = true
+  try {
+    const response = await fetch('/api/preview', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: urlValue })
+    })
+    const result = await response.json()
+    previewPost = result.preview || null
+  } catch {
+    previewPost = null
+  } finally {
+    previewLoading = false
+  }
+}
+
+const debouncedFetchPreview = debounce(fetchPreview, 500)
+
+function handleUrlInput() {
+  debouncedFetchPreview(url)
+}
 </script>
 
 <svelte:head>
@@ -45,6 +85,7 @@ let url = $state('')
         class="url-input"
         placeholder="Paste URL to share..."
         bind:value={url}
+        oninput={handleUrlInput}
         required
         disabled={loading}
       />
@@ -56,6 +97,19 @@ let url = $state('')
     {#if form?.error}
       <p class="error">{form.error}</p>
     {/if}
+
+    {#if previewLoading}
+      <div class="preview-section">
+        <p class="preview-label">Loading preview...</p>
+      </div>
+    {:else if previewPost}
+      <div class="preview-section">
+        <p class="preview-label">Preview</p>
+        <div class="preview-card">
+          <PostCard post={previewPost} />
+        </div>
+      </div>
+    {/if}
   {/if}
 </div>
 
@@ -64,9 +118,9 @@ let url = $state('')
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
     min-height: 60vh;
     padding: var(--padding);
+    padding-top: calc(var(--padding) * 4);
   }
 
   .share-form {
@@ -163,14 +217,31 @@ let url = $state('')
 
   .goto-button {
     padding: var(--padding);
-    background: var(--accent-color, #3498db);
-    color: white;
+    background: var(--background-color);
+    color: var(--color);
     text-decoration: none;
     border-radius: 4px;
+    border: 1px solid #88888888;
     margin-top: var(--padding);
   }
 
   .goto-button:hover {
     opacity: 0.9;
+  }
+
+  .preview-section {
+    width: 100%;
+    max-width: var(--max-column-width);
+    margin-top: var(--padding);
+  }
+
+  .preview-label {
+    color: #888;
+    font-size: 14px;
+    margin-bottom: var(--half-padding);
+  }
+
+  .preview-card {
+    width: 100%;
   }
 </style>

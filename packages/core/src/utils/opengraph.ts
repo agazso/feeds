@@ -49,6 +49,32 @@ export function getHtmlOpenGraphData(document: ParsedNode, url: string): OpenGra
     ogData.name = getPropertyIfValueNotSet(ogData.name, meta, 'og:site_name')
     ogData.url = getPropertyIfValueNotSet(ogData.url, meta, 'og:url')
   }
+
+  // Fallback to standard meta description if og:description not found
+  if (ogData.description === '') {
+    for (const meta of metaElements) {
+      if (HtmlUtils.matchAttributes(meta, [{ name: 'name', value: 'description' }])) {
+        const content = HtmlUtils.getAttribute(meta, 'content')
+        if (content) {
+          ogData.description = content
+          break
+        }
+      }
+    }
+  }
+
+  // Fallback to title tag if og:title not found
+  if (ogData.title === '') {
+    const titleElements = HtmlUtils.findPath(document, ['html', 'head', 'title'])
+    const titleElement = titleElements[0]
+    if (titleElement) {
+      const textNode = titleElement.childNodes.find((node) => node.nodeName === '#text')
+      if (textNode?.value) {
+        ogData.title = textNode.value
+      }
+    }
+  }
+
   return normalizeOpenGraphData(ogData, baseUrl)
 }
 

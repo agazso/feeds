@@ -7,6 +7,7 @@ export interface ParsedNode {
   nodeName: string
   childNodes: ParsedNode[]
   attrs?: Array<{ name: string; value: string }>
+  value?: string // For text nodes
 }
 
 /**
@@ -44,6 +45,18 @@ export function parseHtml(html: string): ParsedNode {
     })
   }
 
+  // Parse title element
+  const titles: ParsedNode[] = []
+  const titleRegex = /<title[^>]*>([\s\S]*?)<\/title>/gi
+  let titleMatch: RegExpExecArray | null
+  while ((titleMatch = titleRegex.exec(headContent)) !== null) {
+    const textContent = decodeHtmlEntities(titleMatch[1]?.trim() ?? '')
+    titles.push({
+      nodeName: 'title',
+      childNodes: [{ nodeName: '#text', childNodes: [], value: textContent }],
+    })
+  }
+
   return {
     nodeName: '#document',
     childNodes: [
@@ -52,12 +65,23 @@ export function parseHtml(html: string): ParsedNode {
         childNodes: [
           {
             nodeName: 'head',
-            childNodes: [...links, ...metas],
+            childNodes: [...links, ...metas, ...titles],
           },
         ],
       },
     ],
   }
+}
+
+function decodeHtmlEntities(text: string): string {
+  return text
+    .replace(/&#(\d+);/g, (_, num) => String.fromCharCode(parseInt(num, 10)))
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&') // Must be last
 }
 
 function parseAttributes(attrString: string): Array<{ name: string; value: string }> {
@@ -66,7 +90,7 @@ function parseAttributes(attrString: string): Array<{ name: string; value: strin
   let match: RegExpExecArray | null
   while ((match = attrRegex.exec(attrString)) !== null) {
     const name = match[1] ?? ''
-    const value = match[2] ?? match[3] ?? match[4] ?? ''
+    const value = decodeHtmlEntities(match[2] ?? match[3] ?? match[4] ?? '')
     attrs.push({ name, value })
   }
   return attrs

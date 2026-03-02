@@ -1,9 +1,7 @@
-import type { Actions } from './$types'
+import { json } from '@sveltejs/kit'
+import type { RequestHandler } from './$types'
 import type { Post } from '@feeds/core'
 import { fetchHtmlMetaDataOnly, type HtmlMetaData } from '@feeds/core'
-import { readFile, writeFile } from 'fs/promises'
-import { join } from 'path'
-import { fail } from '@sveltejs/kit'
 
 function isImageUrl(url: string): boolean {
   const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp', '.ico']
@@ -19,12 +17,7 @@ function mergeMetadata(urlMeta: HtmlMetaData, originMeta: HtmlMetaData): HtmlMet
   }
 }
 
-function buildPostFromMetadata(
-  url: string,
-  metadata: HtmlMetaData,
-  originUrl: string
-): { post: Post; title: string } {
-  // Handle image URLs specially
+function buildPostFromMetadata(url: string, metadata: HtmlMetaData, originUrl: string): Post {
   let title = metadata.title?.trim() || ''
   let description = metadata.description?.trim() || ''
   let image = metadata.image
@@ -35,12 +28,10 @@ function buildPostFromMetadata(
     description = ''
   }
 
-  // Build post text
   const text =
     metadata.name && title ? `**${title}**\n\n${description}` : description || title || ''
 
-  // Create Post object
-  const post: Post = {
+  return {
     _id: `${url}-${Math.random().toString(36).slice(2, 8)}`,
     text,
     createdAt: Date.now(),
@@ -52,19 +43,15 @@ function buildPostFromMetadata(
       image: { uri: metadata.icon }
     }
   }
-
-  return { post, title }
 }
 
 async function fetchMetadataForUrl(
   url: string
 ): Promise<{ metadata: HtmlMetaData; originUrl: string }> {
-  // Fetch metadata for the URL
   const urlMetadata = await fetchHtmlMetaDataOnly(url)
-
-  // Fetch origin metadata for icon/name fallback
   const originUrl = new URL(url).origin
   let originMetadata: HtmlMetaData | null = null
+
   if (originUrl !== url) {
     try {
       originMetadata = await fetchHtmlMetaDataOnly(originUrl)
@@ -73,50 +60,30 @@ async function fetchMetadataForUrl(
     }
   }
 
-  // Merge metadata
   const metadata = originMetadata ? mergeMetadata(urlMetadata, originMetadata) : urlMetadata
-
   return { metadata, originUrl }
 }
 
-export const actions = {
-  share: async ({ request }) => {
-    const formData = await request.formData()
-    const url = formData.get('url')?.toString()?.trim()
+export const POST: RequestHandler = async ({ request }) => {
+  const body = await request.json()
+  const url = body.url?.trim()
 
-    if (!url) {
-      return fail(400, { error: 'URL is required' })
-    }
-
-    try {
-      new URL(url)
-    } catch {
-      return fail(400, { error: 'Invalid URL format' })
-    }
-
-    try {
-      const { metadata, originUrl } = await fetchMetadataForUrl(url)
-      const { post, title } = buildPostFromMetadata(url, metadata, originUrl)
-
-      // Read existing posts
-      const filePath = join(process.cwd(), 'static', 'myposts.json')
-      const content = await readFile(filePath, 'utf-8')
-      const posts: Post[] = JSON.parse(content)
-
-      // Prepend new post and write back
-      const newPosts = [post, ...posts]
-      await writeFile(filePath, JSON.stringify(newPosts, null, 4))
-
-      return {
-        success: true,
-        post: {
-          title: title || metadata.name || 'Shared link',
-          icon: metadata.icon
-        }
-      }
-    } catch (e) {
-      console.error('Share error:', e)
-      return fail(500, { error: 'Failed to fetch URL metadata' })
-    }
+  if (!url) {
+    return json({ preview: null })
   }
-} satisfies Actions
+
+  try {
+    new URL(url)
+  } catch {
+    return json({ preview: null })
+  }
+
+  try {
+    const { metadata, originUrl } = await fetchMetadataForUrl(url)
+    const post = buildPostFromMetadata(url, metadata, originUrl)
+    return json({ preview: post })
+  } catch (e) {
+    console.error('Preview error:', e)
+    return json({ preview: null })
+  }
+}
