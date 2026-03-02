@@ -10,6 +10,12 @@ import { isJsonFeed, parseJsonFeed } from './json-feed'
 const FEED_FETCH_TIMEOUT = 15000
 
 function redditJsonFeedUrl(url: string): string {
+  if (url.endsWith('.rss')) {
+    return url.slice(0, -4) + '.json'
+  }
+  if (url.endsWith('.json')) {
+    return url
+  }
   const canonicalUrl = urlUtils.getCanonicalUrl(url)
   return canonicalUrl.endsWith('/') ? canonicalUrl + '.json' : canonicalUrl + '/.json'
 }
@@ -83,7 +89,7 @@ function parseRedditJson(
             img.width <= IMAGE_DIMENSION_THRESHOLD && img.height <= IMAGE_DIMENSION_THRESHOLD,
         ) || sortedImages[0]
       if (bestImage) {
-        const imgUrl = bestImage.url.replace('amp;s', 's').replace('amp;', '').replace('amp;', '')
+        const imgUrl = bestImage.url.replace(/&amp;/g, '&')
         thumbnail = [
           { url: [imgUrl], width: [bestImage.width || 640], height: [bestImage.height || 422] },
         ]

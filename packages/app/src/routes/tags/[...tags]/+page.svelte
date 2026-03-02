@@ -10,7 +10,27 @@ let { data }: { data: PageData } = $props()
 
 let searchQuery = $state('')
 
-const filteredPosts = $derived(searchQuery ? searchPosts(data.posts, searchQuery) : data.posts)
+// Local state for selected tags - allows client-side filtering when adding tags
+let selectedTags = $state<string[]>(data.selectedTags)
+
+// Track the base tags from server load (the "broadest" cached state)
+let baseTags = $state<string[]>(data.selectedTags)
+let cachedPosts = $state(data.posts)
+
+// Sync cache when data changes from server navigation
+$effect(() => {
+  baseTags = [...data.selectedTags]
+  cachedPosts = data.posts
+  selectedTags = [...data.selectedTags]
+})
+
+// Filter from cached posts
+const filteredPosts = $derived.by(() => {
+  const tagFiltered = cachedPosts.filter((post) =>
+    selectedTags.every((tag) => post.tags?.includes(tag))
+  )
+  return searchQuery ? searchPosts(tagFiltered, searchQuery) : tagFiltered
+})
 
 function handleSearch(query: string) {
   searchQuery = query
@@ -22,34 +42,44 @@ function handleFilter(term: string) {
 }
 
 function handleTagClick(tag: string) {
-  if (data.selectedTags.includes(tag)) {
-    // Remove tag
-    const newTags = data.selectedTags.filter((t) => t !== tag)
+  const isRemoving = selectedTags.includes(tag)
+
+  if (isRemoving) {
+    const newTags = selectedTags.filter((t) => t !== tag)
+
+    // Check if new tags still contain all base tags (can filter from cache)
+    const canUseCache = baseTags.every((t) => newTags.includes(t))
+
     if (newTags.length === 0) {
       goto('/tags')
+    } else if (canUseCache) {
+      // Filter client-side from cached posts
+      selectedTags = newTags
+      history.replaceState({}, '', `/tags/${formatTagsForPath(newTags)}`)
     } else {
+      // Need broader data from server
       goto(`/tags/${formatTagsForPath(newTags)}`)
     }
   } else {
-    // Add tag
-    const newTags = [...data.selectedTags, tag]
-    goto(`/tags/${formatTagsForPath(newTags)}`)
+    // Adding a tag - always filter client-side
+    selectedTags = [...selectedTags, tag]
+    history.replaceState({}, '', `/tags/${formatTagsForPath(selectedTags)}`)
   }
 }
 </script>
 
 <svelte:head>
-  <title>Tags: {data.selectedTags.join(' + ')}</title>
+  <title>Tags: {selectedTags.join(' + ')}</title>
 </svelte:head>
 
 <div class="tags-header">
   <div class="selected-tags">
-    {#each data.selectedTags as tag}
+    {#each selectedTags as tag}
       <button class="tag selected" onclick={() => handleTagClick(tag)}>#{tag} &times;</button>
     {/each}
   </div>
   <div class="available-tags">
-    {#each data.allTags.filter((t) => !data.selectedTags.includes(t)) as tag}
+    {#each data.allTags.filter((t) => !selectedTags.includes(t)) as tag}
       <button class="tag" onclick={() => handleTagClick(tag)}>+{tag}</button>
     {/each}
   </div>
