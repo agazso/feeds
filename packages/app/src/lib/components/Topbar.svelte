@@ -10,6 +10,7 @@ function handleReload() {
   <button class="logo-btn" onclick={handleReload} aria-label="Reload">
     <img src="/icon-white-transparent.png" alt="Feeds logo" class="logo" />
   </button>
+  <a href="/tags" class="nav-link">Tags</a>
   <div class="spacer"></div>
   <button class="icon-btn" onclick={() => preferences.toggleLayout()} aria-label="Toggle layout">
     {#if preferences.layout === 'three-column'}
@@ -77,6 +78,17 @@ function handleReload() {
     width: 40px;
     height: 40px;
     object-fit: contain;
+  }
+
+  .nav-link {
+    color: #fff8;
+    text-decoration: none;
+    padding: var(--half-padding) var(--padding);
+    font-size: 14px;
+  }
+
+  .nav-link:hover {
+    color: #fff;
   }
 
   .spacer {

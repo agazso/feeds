@@ -53,5 +53,11 @@ export async function loadConfig(): Promise<AppConfig> {
 
   // Load from feeds.json in current directory
   const config = await loadJsonFile(join(process.cwd(), 'feeds.json'))
-  return config ?? DEFAULT_CONFIG
+  if (config) {
+    return config
+  }
+
+  // Load from static/feeds.json
+  const staticConfig = await loadJsonFile(join(process.cwd(), 'static', 'feeds.json'))
+  return staticConfig ?? DEFAULT_CONFIG
 }

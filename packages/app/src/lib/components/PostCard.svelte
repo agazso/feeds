@@ -102,7 +102,7 @@ function handleImageLoad(e: Event) {
   {#if post.tags && post.tags.length > 0}
     <div class="tags">
       {#each post.tags as tag}
-        <button class="tag" onclick={(e) => handleFilterClick(e, tag)}>#{tag}</button>
+        <a href="/tags/{tag}" class="tag" onclick={(e) => e.stopPropagation()}>#{tag}</a>
       {/each}
     </div>
   {/if}
@@ -240,11 +240,9 @@ function handleImageLoad(e: Event) {
     padding: var(--half-padding);
     font-size: 14px;
     background: transparent;
-    border: none;
-    box-shadow: none;
     color: var(--color);
     cursor: pointer;
-    min-width: unset;
+    text-decoration: none;
   }
 
   .tag:hover {
