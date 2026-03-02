@@ -28,3 +28,6 @@ coverage/
 .env
 .env.local
 .env.*.local
+
+# User data
+packages/app/static/myposts.json
