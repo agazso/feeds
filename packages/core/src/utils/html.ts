@@ -81,6 +81,19 @@ function decodeHtmlEntities(text: string): string {
     .replace(/&apos;/g, "'")
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&middot;/g, '·')
+    .replace(/&ndash;/g, '–')
+    .replace(/&mdash;/g, '—')
+    .replace(/&lsquo;/g, "\u2018")
+    .replace(/&rsquo;/g, "\u2019")
+    .replace(/&ldquo;/g, "\u201C")
+    .replace(/&rdquo;/g, "\u201D")
+    .replace(/&bull;/g, '•')
+    .replace(/&hellip;/g, '…')
+    .replace(/&copy;/g, '©')
+    .replace(/&reg;/g, '®')
+    .replace(/&trade;/g, '™')
     .replace(/&amp;/g, '&') // Must be last
 }
 

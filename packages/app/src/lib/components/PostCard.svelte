@@ -150,13 +150,11 @@ function handleImageLoad(e: Event) {
   .avatar img {
     width: 30px;
     height: 30px;
-    border-radius: 50%;
   }
 
   .avatar-placeholder {
     width: 30px;
     height: 30px;
-    border-radius: 50%;
     background-color: var(--color-step-30);
   }
 
