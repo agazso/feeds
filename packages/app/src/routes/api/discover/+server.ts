@@ -24,15 +24,21 @@ function getFirstImage(item: RSSItem): string | undefined {
 function createPostFromItem(
   item: RSSItem,
   feed: { name: string; url: string; favicon: string },
-  enrichedData?: { title?: string; description?: string; image?: string; icon?: string; name?: string; feedUrl?: string; author?: string }
+  enrichedData?: {
+    title?: string
+    description?: string
+    image?: string
+    icon?: string
+    name?: string
+    feedUrl?: string
+    author?: string
+  },
 ): Post {
   const title = enrichedData?.title || item.title || ''
   const description = enrichedData?.description || htmlToMarkdown(item.description || '')
   const image = enrichedData?.image || getFirstImage(item)
 
-  const text = title && description
-    ? `**${title}**\n\n${description}`
-    : title || description
+  const text = title && description ? `**${title}**\n\n${description}` : title || description
 
   return {
     _id: `${item.link}-${Math.random().toString(36).slice(2, 8)}`,
@@ -43,16 +49,16 @@ function createPostFromItem(
     author: {
       name: enrichedData?.author || enrichedData?.name || feed.name,
       uri: feed.url,
-      image: { uri: enrichedData?.icon || feed.favicon }
+      image: { uri: enrichedData?.icon || feed.favicon },
     },
     rssItem: item,
-    feedUrl: enrichedData?.feedUrl
+    feedUrl: enrichedData?.feedUrl,
   }
 }
 
 async function enrichItemWithTimeout(
   url: string,
-  timeoutMs: number = 5000
+  timeoutMs: number = 5000,
 ): Promise<HtmlMetaData | null> {
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
@@ -69,7 +75,7 @@ async function enrichItemWithTimeout(
 
 async function enrichAllItems(
   items: RSSItem[],
-  concurrencyLimit: number = 30
+  concurrencyLimit: number = 30,
 ): Promise<Map<string, HtmlMetaData>> {
   const results = new Map<string, HtmlMetaData>()
 
@@ -81,7 +87,7 @@ async function enrichAllItems(
         if (!item.link) return { link: '', metadata: null }
         const metadata = await enrichItemWithTimeout(item.link)
         return { link: item.link, metadata }
-      })
+      }),
     )
 
     for (const { link, metadata } of batchResults) {
@@ -128,7 +134,7 @@ export const POST: RequestHandler = async ({ request }) => {
       url: firstFeed.url || rssFeed.url || url,
       feedUrl: firstFeed.feedUrl,
       favicon: typeof firstFeed.favicon === 'string' ? firstFeed.favicon : '',
-      itemCount: rssFeed.items.length
+      itemCount: rssFeed.items.length,
     }
 
     // Enrich all items automatically
@@ -140,21 +146,26 @@ export const POST: RequestHandler = async ({ request }) => {
       return createPostFromItem(
         item,
         { name: discoveredFeed.name, url: discoveredFeed.url, favicon: discoveredFeed.favicon },
-        metadata ? {
-          title: metadata.title,
-          description: metadata.description,
-          image: metadata.image,
-          icon: metadata.icon,
-          name: metadata.name,
-          feedUrl: metadata.feedUrl,
-          author: metadata.author
-        } : undefined
+        metadata
+          ? {
+              title: metadata.title,
+              description: metadata.description,
+              image: metadata.image,
+              icon: metadata.icon,
+              name: metadata.name,
+              feedUrl: metadata.feedUrl,
+              author: metadata.author,
+            }
+          : undefined,
       )
     })
 
     return json({ feed: discoveredFeed, posts })
   } catch (e) {
     console.error('Discover error:', e)
-    return json({ error: 'Failed to discover feed. Please check the URL and try again.' }, { status: 500 })
+    return json(
+      { error: 'Failed to discover feed. Please check the URL and try again.' },
+      { status: 500 },
+    )
   }
 }

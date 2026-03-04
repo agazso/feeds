@@ -15,14 +15,14 @@ function mergeMetadata(urlMeta: HtmlMetaData, originMeta: HtmlMetaData): HtmlMet
   return {
     ...urlMeta,
     name: urlMeta.name || originMeta.name,
-    icon: urlMeta.icon || originMeta.icon
+    icon: urlMeta.icon || originMeta.icon,
   }
 }
 
 function buildPostFromMetadata(
   url: string,
   metadata: HtmlMetaData,
-  originUrl: string
+  originUrl: string,
 ): { post: Post; title: string } {
   // Handle image URLs specially
   let title = metadata.title?.trim() || ''
@@ -49,15 +49,15 @@ function buildPostFromMetadata(
     author: {
       name: metadata.name || title || new URL(url).hostname,
       uri: originUrl,
-      image: { uri: metadata.icon }
-    }
+      image: { uri: metadata.icon },
+    },
   }
 
   return { post, title }
 }
 
 async function fetchMetadataForUrl(
-  url: string
+  url: string,
 ): Promise<{ metadata: HtmlMetaData; originUrl: string }> {
   // Fetch metadata for the URL
   const urlMetadata = await fetchHtmlMetaDataOnly(url)
@@ -111,12 +111,12 @@ export const actions = {
         success: true,
         post: {
           title: title || metadata.name || 'Shared link',
-          icon: metadata.icon
-        }
+          icon: metadata.icon,
+        },
       }
     } catch (e) {
       console.error('Share error:', e)
       return fail(500, { error: 'Failed to fetch URL metadata' })
     }
-  }
+  },
 } satisfies Actions

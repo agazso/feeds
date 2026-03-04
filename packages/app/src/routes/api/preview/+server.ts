@@ -13,7 +13,7 @@ function mergeMetadata(urlMeta: HtmlMetaData, originMeta: HtmlMetaData): HtmlMet
   return {
     ...urlMeta,
     name: urlMeta.name || originMeta.name,
-    icon: urlMeta.icon || originMeta.icon
+    icon: urlMeta.icon || originMeta.icon,
   }
 }
 
@@ -40,13 +40,13 @@ function buildPostFromMetadata(url: string, metadata: HtmlMetaData, originUrl: s
     author: {
       name: metadata.name || title || new URL(url).hostname,
       uri: originUrl,
-      image: { uri: metadata.icon }
-    }
+      image: { uri: metadata.icon },
+    },
   }
 }
 
 async function fetchMetadataForUrl(
-  url: string
+  url: string,
 ): Promise<{ metadata: HtmlMetaData; originUrl: string }> {
   const urlMetadata = await fetchHtmlMetaDataOnly(url)
   const originUrl = new URL(url).origin

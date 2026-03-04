@@ -27,7 +27,7 @@ $effect(() => {
 // Filter from cached posts
 const filteredPosts = $derived.by(() => {
   const tagFiltered = cachedPosts.filter((post) =>
-    selectedTags.every((tag) => post.tags?.includes(tag))
+    selectedTags.every((tag) => post.tags?.includes(tag)),
   )
   return searchQuery ? searchPosts(tagFiltered, searchQuery) : tagFiltered
 })

@@ -29,13 +29,13 @@ const menuItems = $derived.by(() => {
         if (post.link) {
           navigator.clipboard.writeText(post.link)
         }
-      }
-    }
+      },
+    },
   ]
   if (post.feedUrl) {
     items.push({
       label: 'Discover Feed',
-      href: `/discover/${encodeURIComponent(post.feedUrl)}`
+      href: `/discover/${encodeURIComponent(post.feedUrl)}`,
     })
   }
   return items

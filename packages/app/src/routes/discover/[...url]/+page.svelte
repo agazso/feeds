@@ -37,7 +37,7 @@ async function discover() {
     const response = await fetch('/api/discover', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: url.trim() })
+      body: JSON.stringify({ url: url.trim() }),
     })
 
     const responseData = await response.json()

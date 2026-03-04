@@ -30,7 +30,7 @@ async function fetchPreview(urlValue: string) {
     const response = await fetch('/api/preview', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: urlValue })
+      body: JSON.stringify({ url: urlValue }),
     })
     const result = await response.json()
     previewPost = result.preview || null
