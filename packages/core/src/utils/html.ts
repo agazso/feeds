@@ -57,6 +57,20 @@ export function parseHtml(html: string): ParsedNode {
     })
   }
 
+  // Parse script elements (for JSON-LD)
+  const scripts: ParsedNode[] = []
+  const scriptRegex = /<script\s+([^>]*)>([\s\S]*?)<\/script>/gi
+  let scriptMatch: RegExpExecArray | null
+  while ((scriptMatch = scriptRegex.exec(headContent)) !== null) {
+    const attrs = parseAttributes(scriptMatch[1] ?? '')
+    const content = scriptMatch[2] ?? ''
+    scripts.push({
+      nodeName: 'script',
+      childNodes: [{ nodeName: '#text', childNodes: [], value: content }],
+      attrs,
+    })
+  }
+
   return {
     nodeName: '#document',
     childNodes: [
@@ -65,7 +79,7 @@ export function parseHtml(html: string): ParsedNode {
         childNodes: [
           {
             nodeName: 'head',
-            childNodes: [...links, ...metas, ...titles],
+            childNodes: [...links, ...metas, ...titles, ...scripts],
           },
         ],
       },

@@ -24,7 +24,7 @@ function getFirstImage(item: RSSItem): string | undefined {
 function createPostFromItem(
   item: RSSItem,
   feed: { name: string; url: string; favicon: string },
-  enrichedData?: { title?: string; description?: string; image?: string; icon?: string; name?: string }
+  enrichedData?: { title?: string; description?: string; image?: string; icon?: string; name?: string; feedUrl?: string; author?: string }
 ): Post {
   const title = enrichedData?.title || item.title || ''
   const description = enrichedData?.description || htmlToMarkdown(item.description || '')
@@ -41,11 +41,12 @@ function createPostFromItem(
     images: image ? [{ uri: image }] : [],
     link: item.link,
     author: {
-      name: enrichedData?.name || feed.name,
+      name: enrichedData?.author || enrichedData?.name || feed.name,
       uri: feed.url,
       image: { uri: enrichedData?.icon || feed.favicon }
     },
-    rssItem: item
+    rssItem: item,
+    feedUrl: enrichedData?.feedUrl
   }
 }
 
@@ -144,7 +145,9 @@ export const POST: RequestHandler = async ({ request }) => {
           description: metadata.description,
           image: metadata.image,
           icon: metadata.icon,
-          name: metadata.name
+          name: metadata.name,
+          feedUrl: metadata.feedUrl,
+          author: metadata.author
         } : undefined
       )
     })

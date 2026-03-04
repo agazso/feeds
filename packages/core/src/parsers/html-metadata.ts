@@ -5,12 +5,23 @@ import { type OpenGraphData, getHtmlOpenGraphData } from '../utils/opengraph'
 import { createUrlFromUrn } from '../utils/url'
 import { getHeadersForUrl } from '../utils/headers'
 
+const RSSMimeTypes = [
+  'application/rss+xml',
+  'application/x-rss+xml',
+  'application/atom+xml',
+  'application/xml',
+  'text/xml',
+]
+
+const JsonFeedMimeTypes = ['application/feed+json', 'application/json']
+
 export interface HtmlMetaData extends OpenGraphData {
   icon: string
   feedUrl: string
   feedTitle: string
   createdAt: number
   updatedAt: number
+  author: string
 }
 
 export async function fetchHtmlMetaDataOnly(
@@ -21,6 +32,27 @@ export async function fetchHtmlMetaDataOnly(
   const response = await fetch(url, { ...init, headers })
   const html = await response.text()
   return parseHtmlMetaData(url, html)
+}
+
+export function parseFeedUrlFromHtml(html: string, baseUrl: string): string {
+  const document = HtmlUtils.parse(html)
+  const links = HtmlUtils.findPath(document, ['html', 'head', 'link'])
+  const allFeedMimeTypes = [...RSSMimeTypes, ...JsonFeedMimeTypes]
+
+  for (const link of links) {
+    if (!HtmlUtils.matchAttributes(link, [{ name: 'rel', value: 'alternate' }])) {
+      continue
+    }
+    for (const mimeType of allFeedMimeTypes) {
+      if (HtmlUtils.matchAttributes(link, [{ name: 'type', value: mimeType }])) {
+        const feedUrl = HtmlUtils.getAttribute(link, 'href') || ''
+        if (feedUrl !== '') {
+          return createUrlFromUrn(feedUrl, baseUrl)
+        }
+      }
+    }
+  }
+  return ''
 }
 
 export function parseHtmlMetaData(url: string, html: string, feed?: Feed | null): HtmlMetaData {
@@ -34,16 +66,19 @@ export function parseHtmlMetaData(url: string, html: string, feed?: Feed | null)
   const icon = createUrlFromUrn(favicon, baseUrl)
   const createdAt = getPublishedTime(document)
   const updatedAt = getModifiedTime(document, createdAt)
+  // Detect feed URL from HTML if not provided via Feed object
+  const detectedFeedUrl = feed?.feedUrl || parseFeedUrlFromHtml(html, baseUrl)
 
   return {
     ...openGraphData,
     title,
     name,
     icon,
-    feedUrl: feed != null ? feed.feedUrl : '',
+    feedUrl: detectedFeedUrl,
     feedTitle: feedName,
     createdAt,
     updatedAt,
+    author: getArticleAuthor(document),
   }
 }
 
@@ -112,6 +147,52 @@ function getModifiedTime(document: ParsedNode, defaultTime: number): number {
     }
   }
   return defaultTime
+}
+
+function getArticleAuthor(document: ParsedNode): string {
+  const metaNodes = HtmlUtils.findPath(document, ['html', 'head', 'meta'])
+  for (const meta of metaNodes) {
+    if (
+      HtmlUtils.matchAttributes(meta, [{ name: 'property', value: 'article:author' }]) ||
+      HtmlUtils.matchAttributes(meta, [{ name: 'name', value: 'author' }])
+    ) {
+      const content = HtmlUtils.getAttribute(meta, 'content')
+      if (content != null) {
+        return content
+      }
+    }
+  }
+  // Fallback to JSON-LD
+  return getArticleAuthorFromJsonLd(document)
+}
+
+function getArticleAuthorFromJsonLd(document: ParsedNode): string {
+  const scriptNodes = HtmlUtils.findPath(document, ['html', 'head', 'script'])
+  for (const script of scriptNodes) {
+    if (!HtmlUtils.matchAttributes(script, [{ name: 'type', value: 'application/ld+json' }])) {
+      continue
+    }
+    const content = script.childNodes[0]?.value
+    if (!content) continue
+
+    try {
+      const data = JSON.parse(content)
+      // Handle both single object and @graph array
+      const items = Array.isArray(data['@graph']) ? data['@graph'] : [data]
+      for (const item of items) {
+        const type = item['@type']
+        if (type === 'Article' || type === 'NewsArticle' || type === 'BlogPosting') {
+          const author = item.author
+          if (typeof author === 'string') return author
+          if (author?.name) return author.name
+          if (Array.isArray(author) && author[0]?.name) return author[0].name
+        }
+      }
+    } catch {
+      // Invalid JSON, skip
+    }
+  }
+  return ''
 }
 
 function getFirstNonEmpty(items: string[], defaultValue = ''): string {

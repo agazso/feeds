@@ -15,4 +15,5 @@ export interface Post extends PublicPost {
   updatedAt?: number
   rssItem?: RSSItem
   tags?: string[]
+  feedUrl?: string
 }

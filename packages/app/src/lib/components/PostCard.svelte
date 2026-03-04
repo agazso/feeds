@@ -2,6 +2,7 @@
 import type { Post } from '@feeds/core'
 import { getHumanHostname } from '@feeds/core'
 import { postTitle, postText, commentLink, formatTimestamp, thumbnailSrc } from '$lib/text'
+import PostCardMenu, { type MenuItem } from './PostCardMenu.svelte'
 
 interface Props {
   post: Post
@@ -18,11 +19,32 @@ const printableTime = $derived(timestamp ? formatTimestamp(timestamp) : '')
 const hostname = $derived(post.link ? getHumanHostname(post.link) : '')
 const thumbnail = $derived(thumbnailSrc(post))
 const postLink = $derived(post.link || '')
+let avatarError = $state(false)
+
+const menuItems = $derived.by(() => {
+  const items: MenuItem[] = [
+    {
+      label: 'Copy Link',
+      onclick: () => {
+        if (post.link) {
+          navigator.clipboard.writeText(post.link)
+        }
+      }
+    }
+  ]
+  if (post.feedUrl) {
+    items.push({
+      label: 'Discover Feed',
+      href: `/discover/${encodeURIComponent(post.feedUrl)}`
+    })
+  }
+  return items
+})
 
 function handleCardClick(e: MouseEvent) {
   const target = e.target as HTMLElement
   // Don't trigger if clicking on interactive elements
-  if (target.closest('a, button, .tag, .avatar')) {
+  if (target.closest('a, button, .tag, .avatar, .menu-container')) {
     return
   }
   // Don't trigger if text is selected
@@ -55,18 +77,27 @@ function handleImageLoad(e: Event) {
       onclick={(e) => handleFilterClick(e, post.author?.name || '')}
       aria-label="Filter by author"
     >
-      {#if post.author?.image?.uri}
-        <img src={post.author.image.uri} alt="" loading="lazy" />
+      {#if post.author?.image?.uri && !avatarError}
+        <img src={post.author.image.uri} alt="" loading="lazy" onerror={() => avatarError = true} />
       {:else}
         <div class="avatar-placeholder"></div>
       {/if}
     </button>
     <div class="header-text">
-      <div class="author-name">{post.author?.name || ''}</div>
+      <div class="author-name">
+        {post.author?.name || ''}
+        {#if post.feedUrl}
+          <svg class="rss-icon" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-label="Feed available">
+            <circle cx="6.18" cy="17.82" r="2.18"/>
+            <path d="M4 4.44v2.83c7.03 0 12.73 5.7 12.73 12.73h2.83c0-8.59-6.97-15.56-15.56-15.56zm0 5.66v2.83c3.9 0 7.07 3.17 7.07 7.07h2.83c0-5.47-4.43-9.9-9.9-9.9z"/>
+          </svg>
+        {/if}
+      </div>
       <div class="hostname">
         <span class="tooltip" title={printableTime}>{hostname}</span>
       </div>
     </div>
+    <PostCardMenu items={menuItems} />
   </div>
 
   {#if thumbnail}
@@ -167,9 +198,13 @@ function handleImageLoad(e: Event) {
     display: flex;
     flex-direction: column;
     min-width: 0;
+    flex-grow: 1;
   }
 
   .author-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     font-weight: 700;
     font-size: 14px;
     overflow: hidden;
@@ -208,6 +243,11 @@ function handleImageLoad(e: Event) {
 
   .title-text {
     font-weight: bold;
+  }
+
+  .rss-icon {
+    flex-shrink: 0;
+    color: #888;
   }
 
   .body-text a {

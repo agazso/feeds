@@ -2,6 +2,12 @@
 import type { Post } from '@feeds/core'
 import PostList from '$lib/components/PostList.svelte'
 
+interface Props {
+  data: { url: string }
+}
+
+let { data }: Props = $props()
+
 interface DiscoveredFeed {
   name: string
   url: string
@@ -10,11 +16,12 @@ interface DiscoveredFeed {
   itemCount: number
 }
 
-let url = $state('')
+let url = $state(data.url || '')
 let loading = $state(false)
 let error = $state<string | null>(null)
 let discoveredFeed = $state<DiscoveredFeed | null>(null)
 let posts = $state<Post[]>([])
+let faviconError = $state(false)
 
 async function discover() {
   if (!url.trim()) return
@@ -22,23 +29,27 @@ async function discover() {
   loading = true
   error = null
 
+  // Update browser URL to include the discovered URL
+  const encodedUrl = encodeURIComponent(url.trim())
+  history.pushState({}, '', `/discover/${encodedUrl}`)
+
   try {
-    const response = await fetch('/api/import/discover', {
+    const response = await fetch('/api/discover', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url: url.trim() })
     })
 
-    const data = await response.json()
+    const responseData = await response.json()
 
     if (!response.ok) {
-      error = data.error || 'Failed to discover feed'
+      error = responseData.error || 'Failed to discover feed'
       return
     }
 
-    discoveredFeed = data.feed
-    posts = data.posts
-  } catch (e) {
+    discoveredFeed = responseData.feed
+    posts = responseData.posts
+  } catch {
     error = 'Failed to discover feed. Please check the URL and try again.'
   } finally {
     loading = false
@@ -50,24 +61,39 @@ function reset() {
   posts = []
   error = null
   url = ''
+  faviconError = false
+  // Update URL without the parameter
+  history.replaceState({}, '', '/discover')
 }
+
+// Auto-discover if URL parameter is provided
+$effect(() => {
+  if (data.url && !discoveredFeed && !loading && !error) {
+    url = data.url
+    discover()
+  }
+})
 </script>
 
 <svelte:head>
-  <title>Import Feed</title>
+  <title>Discover Feed</title>
 </svelte:head>
 
-<div class="import-page">
+<div class="discover-page">
   {#if discoveredFeed}
     <div class="feed-container">
       <div class="feed-header">
-        {#if discoveredFeed.favicon}
-          <img src={discoveredFeed.favicon} alt="" class="feed-icon" />
+        {#if discoveredFeed.favicon && !faviconError}
+          <img
+            src={discoveredFeed.favicon}
+            alt=""
+            class="feed-icon"
+            onerror={() => faviconError = true}
+          />
         {/if}
         <div class="feed-info">
           <h2>{discoveredFeed.name}</h2>
           <p class="feed-url">{discoveredFeed.feedUrl}</p>
-          <p class="item-count">{posts.length} posts loaded</p>
         </div>
         <button type="button" class="reset-button" onclick={reset}>Clear</button>
       </div>
@@ -100,7 +126,7 @@ function reset() {
 </div>
 
 <style>
-  .import-page {
+  .discover-page {
     display: flex;
     flex-direction: column;
     align-items: center;
