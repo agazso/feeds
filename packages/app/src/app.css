@@ -95,7 +95,6 @@ button {
   padding: var(--padding);
   border: 1px solid #fff8;
   align-self: center;
-  box-shadow: 0.5px 0.5px 1px #fff8;
 }
 
 button:hover {

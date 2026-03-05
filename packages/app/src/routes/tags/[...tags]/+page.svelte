@@ -83,7 +83,6 @@ function handleTagClick(tag: string) {
       <button class="tag" onclick={() => handleTagClick(tag)}>+{tag}</button>
     {/each}
   </div>
-  <div class="feed-count">{data.feedCount} feeds</div>
 </div>
 
 <SearchBar value={searchQuery} onchange={handleSearch} />
@@ -133,11 +132,6 @@ function handleTagClick(tag: string) {
 
   .tag.selected {
     background-color: #88888866;
-  }
-
-  .feed-count {
-    font-size: 12px;
-    color: var(--color-step-30);
   }
 
   .no-results {
