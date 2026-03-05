@@ -1,16 +1,14 @@
 <script lang="ts">
-import type { ActionData } from './$types'
 import type { Post } from '@feeds/core'
-import { enhance } from '$app/forms'
 import { debounce } from '$lib/search'
 import PostCard from '$lib/components/PostCard.svelte'
-
-let { form }: { form: ActionData } = $props()
 
 let loading = $state(false)
 let url = $state('')
 let previewPost = $state<Post | null>(null)
 let previewLoading = $state(false)
+let error = $state<string | null>(null)
+let success = $state<{ title: string; icon?: string } | null>(null)
 
 async function fetchPreview(urlValue: string) {
   if (!urlValue.trim()) {
@@ -46,6 +44,37 @@ const debouncedFetchPreview = debounce(fetchPreview, 500)
 function handleUrlInput() {
   debouncedFetchPreview(url)
 }
+
+async function handleSubmit(e: SubmitEvent) {
+  e.preventDefault()
+  if (!url.trim() || loading) return
+
+  loading = true
+  error = null
+
+  try {
+    const response = await fetch('/api/myfeed', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: url.trim() }),
+    })
+    const result = await response.json()
+
+    if (!response.ok) {
+      error = result.error || 'Failed to share'
+      return
+    }
+
+    success = {
+      title: result.post?.title || 'Shared link',
+      icon: result.post?.icon,
+    }
+  } catch {
+    error = 'Failed to share'
+  } finally {
+    loading = false
+  }
+}
 </script>
 
 <svelte:head>
@@ -53,32 +82,21 @@ function handleUrlInput() {
 </svelte:head>
 
 <div class="share-page">
-  {#if form?.success}
+  {#if success}
     <div class="success-container">
       <div class="success-icon">
-        {#if form.post?.icon}
-          <img src={form.post.icon} alt="" class="site-icon" />
+        {#if success.icon}
+          <img src={success.icon} alt="" class="site-icon" />
         {:else}
           <span class="checkmark">&#10003;</span>
         {/if}
       </div>
       <h2>Shared!</h2>
-      <p class="post-title">{form.post?.title}</p>
+      <p class="post-title">{success.title}</p>
       <a href="/myfeed" class="goto-button">Go to My Feed</a>
     </div>
   {:else}
-    <form
-      method="POST"
-      action="?/share"
-      class="share-form"
-      use:enhance={() => {
-        loading = true
-        return async ({ update }) => {
-          loading = false
-          await update()
-        }
-      }}
-    >
+    <form class="share-form" onsubmit={handleSubmit}>
       <input
         type="url"
         name="url"
@@ -94,8 +112,8 @@ function handleUrlInput() {
       </button>
     </form>
 
-    {#if form?.error}
-      <p class="error">{form.error}</p>
+    {#if error}
+      <p class="error">{error}</p>
     {/if}
 
     {#if previewLoading}

@@ -21,6 +21,21 @@ const thumbnail = $derived(thumbnailSrc(post))
 const postLink = $derived(post.link || '')
 let avatarError = $state(false)
 
+async function addToMyFeed() {
+  try {
+    const response = await fetch('/api/myfeed', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ post }),
+    })
+    if (!response.ok) {
+      console.error('Failed to add to my feed')
+    }
+  } catch (e) {
+    console.error('Failed to add to my feed:', e)
+  }
+}
+
 const menuItems = $derived.by(() => {
   const items: MenuItem[] = [
     {
@@ -30,6 +45,10 @@ const menuItems = $derived.by(() => {
           navigator.clipboard.writeText(post.link)
         }
       },
+    },
+    {
+      label: 'Add to my feed',
+      onclick: addToMyFeed,
     },
   ]
   if (post.feedUrl) {
@@ -247,7 +266,7 @@ function handleImageLoad(e: Event) {
 
   .rss-icon {
     flex-shrink: 0;
-    color: #888;
+    /* color: #888; */
   }
 
   .body-text a {
