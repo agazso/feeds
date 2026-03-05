@@ -4,6 +4,7 @@ import { fetchHtmlMetaDataOnly, fetchFeedsFromUrl, type HtmlMetaData } from '@fe
 import { readFile, writeFile } from 'fs/promises'
 import { join } from 'path'
 import { json } from '@sveltejs/kit'
+import { isXUrl, isTwitterCdnUrl, getXFavicon, embedImage } from '$lib/imageEmbed'
 
 function isImageUrl(url: string): boolean {
   const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp', '.ico']
@@ -51,6 +52,29 @@ function buildPostFromMetadata(
   }
 
   return { post, title }
+}
+
+async function processPostImages(post: Post, url: string): Promise<Post> {
+  // Use hardcoded X favicon for X/Twitter URLs
+  if (isXUrl(url) && post.author) {
+    post.author = {
+      name: post.author.name,
+      uri: post.author.uri,
+      image: { uri: getXFavicon() },
+    }
+  }
+
+  // Embed images from Twitter CDN to avoid hotlinking issues
+  if (post.images?.[0]?.uri && isTwitterCdnUrl(post.images[0].uri)) {
+    try {
+      const embeddedImage = await embedImage(post.images[0].uri)
+      post.images = [{ uri: embeddedImage }]
+    } catch {
+      // Keep original URL if embedding fails
+    }
+  }
+
+  return post
 }
 
 async function fetchMetadataForUrl(
@@ -127,7 +151,10 @@ export const POST: RequestHandler = async ({ request }) => {
 
     try {
       const { metadata, originUrl } = await fetchMetadataForUrl(url)
-      const { post, title } = buildPostFromMetadata(url, metadata, originUrl)
+      let { post, title } = buildPostFromMetadata(url, metadata, originUrl)
+
+      // Process images for X/Twitter URLs (embed to avoid hotlinking issues)
+      post = await processPostImages(post, url)
 
       // Discover feed URL for the origin
       const feedUrl = await discoverFeedUrl(url)
@@ -141,7 +168,7 @@ export const POST: RequestHandler = async ({ request }) => {
         success: true,
         post: {
           title: title || metadata.name || 'Shared link',
-          icon: metadata.icon,
+          icon: post.author?.image?.uri || metadata.icon,
         },
       })
     } catch (e) {
@@ -153,7 +180,7 @@ export const POST: RequestHandler = async ({ request }) => {
   // Post mode: add existing post directly
   if (body.post && typeof body.post === 'object') {
     try {
-      const post = body.post as Post
+      let post = body.post as Post
 
       // If no feedUrl, try to discover one
       if (!post.feedUrl && post.link) {
@@ -161,6 +188,11 @@ export const POST: RequestHandler = async ({ request }) => {
         if (feedUrl) {
           post.feedUrl = feedUrl
         }
+      }
+
+      // Process images for X/Twitter URLs (embed to avoid hotlinking issues)
+      if (post.link) {
+        post = await processPostImages(post, post.link)
       }
 
       // Generate new ID to avoid duplicates

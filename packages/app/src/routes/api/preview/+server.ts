@@ -2,6 +2,7 @@ import { json } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
 import type { Post, Feed } from '@feeds/core'
 import { fetchHtmlMetaDataOnly, fetchFeedsFromUrl, type HtmlMetaData } from '@feeds/core'
+import { isXUrl, isTwitterCdnUrl, getXFavicon, embedImage } from '$lib/imageEmbed'
 
 interface DiscoveredFeed {
   name: string
@@ -50,6 +51,29 @@ function buildPostFromMetadata(url: string, metadata: HtmlMetaData, originUrl: s
       image: { uri: metadata.icon },
     },
   }
+}
+
+async function processPostImages(post: Post, url: string): Promise<Post> {
+  // Use hardcoded X favicon for X/Twitter URLs
+  if (isXUrl(url) && post.author) {
+    post.author = {
+      name: post.author.name,
+      uri: post.author.uri,
+      image: { uri: getXFavicon() },
+    }
+  }
+
+  // Embed images from Twitter CDN to avoid hotlinking issues
+  if (post.images?.[0]?.uri && isTwitterCdnUrl(post.images[0].uri)) {
+    try {
+      const embeddedImage = await embedImage(post.images[0].uri)
+      post.images = [{ uri: embeddedImage }]
+    } catch {
+      // Keep original URL if embedding fails
+    }
+  }
+
+  return post
 }
 
 async function fetchMetadataForUrl(
@@ -119,7 +143,10 @@ export const POST: RequestHandler = async ({ request }) => {
     // Extract feed (optional enhancement)
     const feed = feedResult.status === 'fulfilled' ? feedResult.value : null
 
-    const post = buildPostFromMetadata(url, metadata, originUrl)
+    let post = buildPostFromMetadata(url, metadata, originUrl)
+
+    // Process images for X/Twitter URLs (embed to avoid hotlinking issues)
+    post = await processPostImages(post, url)
 
     // Enrich post with feedUrl if discovered
     if (feed) {
