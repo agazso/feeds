@@ -3,16 +3,27 @@ import type { Post } from '@feeds/core'
 import { debounce } from '$lib/search'
 import PostCard from '$lib/components/PostCard.svelte'
 
+interface DiscoveredFeed {
+  name: string
+  url: string
+  feedUrl: string
+  favicon: string
+}
+
 let loading = $state(false)
 let url = $state('')
 let previewPost = $state<Post | null>(null)
 let previewLoading = $state(false)
 let error = $state<string | null>(null)
 let success = $state<{ title: string; icon?: string } | null>(null)
+let discoveredFeed = $state<DiscoveredFeed | null>(null)
+let faviconError = $state(false)
 
 async function fetchPreview(urlValue: string) {
   if (!urlValue.trim()) {
     previewPost = null
+    discoveredFeed = null
+    faviconError = false
     return
   }
 
@@ -20,6 +31,8 @@ async function fetchPreview(urlValue: string) {
     new URL(urlValue)
   } catch {
     previewPost = null
+    discoveredFeed = null
+    faviconError = false
     return
   }
 
@@ -32,8 +45,12 @@ async function fetchPreview(urlValue: string) {
     })
     const result = await response.json()
     previewPost = result.preview || null
+    discoveredFeed = result.feed || null
+    faviconError = false
   } catch {
     previewPost = null
+    discoveredFeed = null
+    faviconError = false
   } finally {
     previewLoading = false
   }
@@ -114,6 +131,26 @@ async function handleSubmit(e: SubmitEvent) {
 
     {#if error}
       <p class="error">{error}</p>
+    {/if}
+
+    {#if discoveredFeed}
+      <div class="feed-header">
+        {#if discoveredFeed.favicon && !faviconError}
+          <img
+            src={discoveredFeed.favicon}
+            alt=""
+            class="feed-icon"
+            onerror={() => faviconError = true}
+          />
+        {/if}
+        <div class="feed-info">
+          <span class="feed-name">{discoveredFeed.name}</span>
+          <span class="feed-url">{discoveredFeed.feedUrl}</span>
+        </div>
+        <a href="/discover/{encodeURIComponent(discoveredFeed.url)}" class="view-feed-link">
+          View Feed
+        </a>
+      </div>
     {/if}
 
     {#if previewLoading}
@@ -261,5 +298,62 @@ async function handleSubmit(e: SubmitEvent) {
 
   .preview-card {
     width: 100%;
+  }
+
+  .feed-header {
+    display: flex;
+    align-items: center;
+    gap: var(--padding);
+    padding: var(--padding);
+    border: 1px solid #88888888;
+    border-radius: 4px;
+    margin-top: var(--padding);
+    width: 100%;
+    max-width: var(--max-column-width);
+  }
+
+  .feed-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    object-fit: contain;
+  }
+
+  .feed-info {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .feed-name {
+    font-weight: 500;
+    font-size: 16px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .feed-url {
+    color: #888;
+    font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .view-feed-link {
+    padding: var(--half-padding) var(--padding);
+    font-size: 14px;
+    background: transparent;
+    border: 1px solid #88888888;
+    border-radius: 4px;
+    text-decoration: none;
+    color: var(--color);
+    white-space: nowrap;
+  }
+
+  .view-feed-link:hover {
+    opacity: 0.8;
   }
 </style>
