@@ -7,9 +7,10 @@ import PostCardMenu, { type MenuItem } from './PostCardMenu.svelte'
 interface Props {
   post: Post
   onfilter?: (term: string) => void
+  onremove?: (postId: string) => void
 }
 
-let { post, onfilter }: Props = $props()
+let { post, onfilter, onremove }: Props = $props()
 
 const title = $derived(postTitle(post))
 const text = $derived(postText(post))
@@ -36,6 +37,26 @@ async function addToMyFeed() {
   }
 }
 
+async function removeFromMyFeed() {
+  const postId = post._id
+  if (!postId) return
+
+  try {
+    const response = await fetch('/api/myfeed', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: postId }),
+    })
+    if (response.ok) {
+      onremove?.(String(postId))
+    } else {
+      console.error('Failed to remove from my feed')
+    }
+  } catch (e) {
+    console.error('Failed to remove from my feed:', e)
+  }
+}
+
 const menuItems = $derived.by(() => {
   const items: MenuItem[] = [
     {
@@ -46,11 +67,18 @@ const menuItems = $derived.by(() => {
         }
       },
     },
-    {
+  ]
+  if (onremove) {
+    items.push({
+      label: 'Remove',
+      onclick: removeFromMyFeed,
+    })
+  } else {
+    items.push({
       label: 'Add to my feed',
       onclick: addToMyFeed,
-    },
-  ]
+    })
+  }
   if (post.feedUrl) {
     items.push({
       label: 'Discover Feed',

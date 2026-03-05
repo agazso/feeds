@@ -95,6 +95,23 @@ async function savePost(post: Post): Promise<void> {
   await writeFile(filePath, JSON.stringify(newPosts, null, 4))
 }
 
+export const DELETE: RequestHandler = async ({ request }) => {
+  const body = await request.json()
+  const postId = body.id
+
+  if (!postId) {
+    return json({ error: 'Post ID required' }, { status: 400 })
+  }
+
+  const filePath = join(process.cwd(), 'static', 'myposts.json')
+  const content = await readFile(filePath, 'utf-8')
+  const posts: Post[] = JSON.parse(content)
+  const newPosts = posts.filter((p) => p._id !== postId)
+  await writeFile(filePath, JSON.stringify(newPosts, null, 4))
+
+  return json({ success: true })
+}
+
 export const POST: RequestHandler = async ({ request }) => {
   const body = await request.json()
 

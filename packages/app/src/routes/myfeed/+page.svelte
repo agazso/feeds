@@ -6,9 +6,10 @@ import { searchPosts } from '$lib/search'
 
 let { data }: { data: PageData } = $props()
 
+let posts = $state(data.posts)
 let searchQuery = $state('')
 
-const filteredPosts = $derived(searchQuery ? searchPosts(data.posts, searchQuery) : data.posts)
+const filteredPosts = $derived(searchQuery ? searchPosts(posts, searchQuery) : posts)
 
 function handleSearch(query: string) {
   searchQuery = query
@@ -18,6 +19,10 @@ function handleFilter(term: string) {
   searchQuery = term
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
+
+function handleRemove(postId: string) {
+  posts = posts.filter((p) => String(p._id) !== postId)
+}
 </script>
 
 <svelte:head>
@@ -26,7 +31,7 @@ function handleFilter(term: string) {
 
 <SearchBar value={searchQuery} onchange={handleSearch} />
 {#if filteredPosts.length > 0}
-  <PostList posts={filteredPosts} onfilter={handleFilter} />
+  <PostList posts={filteredPosts} onfilter={handleFilter} onremove={handleRemove} />
 {:else if searchQuery}
   <p class="no-results">No posts found matching "{searchQuery}"</p>
 {:else}

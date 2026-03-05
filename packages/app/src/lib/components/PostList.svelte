@@ -6,9 +6,10 @@ import { preferences } from '$lib/stores/preferences.svelte'
 interface Props {
   posts: Post[]
   onfilter?: (term: string) => void
+  onremove?: (postId: string) => void
 }
 
-let { posts, onfilter }: Props = $props()
+let { posts, onfilter, onremove }: Props = $props()
 
 const layoutClass = $derived(preferences.layout)
 </script>
@@ -16,7 +17,7 @@ const layoutClass = $derived(preferences.layout)
 <ul class="post-list {layoutClass}">
   {#each posts as post (post._id)}
     <li>
-      <PostCard {post} {onfilter} />
+      <PostCard {post} {onfilter} {onremove} />
     </li>
   {/each}
 </ul>
