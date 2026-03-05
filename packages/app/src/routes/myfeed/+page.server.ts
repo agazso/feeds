@@ -14,13 +14,7 @@ export const load: PageServerLoad = async () => {
     posts.map((post) => transformPostImages(post, post.link || '')),
   )
 
-  // Add unique suffix to _id to avoid duplicate key errors in Svelte
-  const uniqueIdPosts = transformedPosts.map((post) => ({
-    ...post,
-    _id: `${post._id}-${Math.random().toString(36).slice(2, 8)}`,
-  }))
-
-  const sorted = uniqueIdPosts.sort((a, b) => b.createdAt - a.createdAt)
+  const sorted = transformedPosts.sort((a, b) => b.createdAt - a.createdAt)
 
   return { posts: sorted }
 }

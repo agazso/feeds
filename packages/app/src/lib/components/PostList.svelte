@@ -15,7 +15,7 @@ const layoutClass = $derived(preferences.layout)
 </script>
 
 <ul class="post-list {layoutClass}">
-  {#each posts as post (post._id)}
+  {#each posts as post, index (post._id + '-' + index)}
     <li>
       <PostCard {post} {onfilter} {onremove} />
     </li>
