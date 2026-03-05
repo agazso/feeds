@@ -131,8 +131,6 @@ $effect(() => {
     flex-direction: column;
     align-items: center;
     min-height: 60vh;
-    padding: var(--padding);
-    padding-top: calc(var(--padding) * 4);
   }
 
   .discover-form {
@@ -200,11 +198,9 @@ $effect(() => {
     align-items: center;
     gap: var(--padding);
     padding: var(--padding);
-    border: 1px solid #88888888;
     border-radius: 4px;
-    margin: 0 var(--padding);
-    margin-bottom: var(--padding);
     max-width: var(--max-column-width);
+    margin: var(--padding);
     margin-left: auto;
     margin-right: auto;
   }
