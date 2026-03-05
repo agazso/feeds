@@ -1,12 +1,21 @@
-// Twitter CDN domains that block hotlinking
-const HOTLINK_BLOCKED_DOMAINS = ['pbs.twimg.com', 'abs.twimg.com']
+import type { Post } from '@feeds/core'
+import { isXUrl, isRedditUrl } from '@feeds/core'
+
+// CDN domains that block hotlinking
+const HOTLINK_BLOCKED_DOMAINS = ['pbs.twimg.com', 'abs.twimg.com', 'www.redditstatic.com']
 
 // Pre-cached X/Twitter favicon as base64 data URI
 const X_FAVICON_URL = 'https://abs.twimg.com/favicons/twitter.3.ico'
 const X_FAVICON_BASE64 =
   'data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAB7ElEQVR4Ae1XMZLCMAwUdw0ldJQ8ATpKnkBJByUd8ALyA/gBdJTQUtHS8QT4AaRM5ctmThmfogQ75CYNmhGTbGJr45Vk0yAiQzXaF9VsHwIZAofDgYwxqo9GI/K16/X6cqyxvdVqmdvtZh6PhwmCIHXcw7vdrpFj8ny9XhsYxhe8lwWHw2EycLFYpNh0Ok2w8/nsFHy1WrkE1wnAN5tNMkGv10ux3W6XIab5fD5P3ovldCGrP2Ap4LiW8uRJAcIwe1wpArYU0FJimhQgxaQ9cqX4BZYCgSVmS8HBfRP1JQEsY1xKGSmAcTC+l0QrIWDraicVMBBA4O1265ScpQnAMbkMwphjub1HAI7EkxoDK7n0/gQQGATsCmDMo+z++Hf8E5CjPZ9PiqKIZrMZhWFIl8slxcbjMTWbTTqdTuRrXoz5i2WXRIL+WxWw2+Uml13rnJUT4K9E9nMFaF3SxiojoO1u2rJzl4z3/+oIcHBMLiUp2rDe3ozg+BIYtNee87KjGzLGndPx7JD/0K7xog2Gl30ymaSY1jm9CPhsrXnnBK1zOhHgCWWtF7l2TtA6p3S1E+73exoMBrRcLul4PJKL3e93arfbSUeMA1O/36eYPHU6nWQu7pyaqRlfZnezV05anhSN34va7PPXrHYCP+VaTG3LBV1KAAAAAElFTkSuQmCC'
 
-export function isTwitterCdnUrl(url: string): boolean {
+// Pre-cached Reddit favicon as base64 data URI
+const REDDIT_FAVICON_URL =
+  'https://www.redditstatic.com/desktop2x/img/favicon/android-icon-192x192.png'
+const REDDIT_FAVICON_BASE64 =
+  'data:image/png;base64,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'
+
+function isHotlinkBlockedUrl(url: string): boolean {
   try {
     const hostname = new URL(url).hostname
     return HOTLINK_BLOCKED_DOMAINS.some((d) => hostname === d || hostname.endsWith('.' + d))
@@ -15,28 +24,37 @@ export function isTwitterCdnUrl(url: string): boolean {
   }
 }
 
-export function isXUrl(url: string): boolean {
-  try {
-    const hostname = new URL(url).hostname
-    return (
-      hostname === 'x.com' ||
-      hostname === 'twitter.com' ||
-      hostname.endsWith('.x.com') ||
-      hostname.endsWith('.twitter.com')
-    )
-  } catch {
-    return false
-  }
-}
-
-export function getXFavicon(): string {
+function getXFavicon(): string {
   return X_FAVICON_BASE64
 }
 
-export async function embedImage(url: string): Promise<string> {
+function getRedditFavicon(): string {
+  return REDDIT_FAVICON_BASE64
+}
+
+/**
+ * Get the appropriate favicon for a URL, handling hotlink-blocked sites.
+ * Use this for API responses where we need to return a displayable icon.
+ */
+export function getFaviconForUrl(url: string, originalIcon?: string): string | undefined {
+  if (isXUrl(url)) {
+    return getXFavicon()
+  }
+  if (isRedditUrl(url)) {
+    return getRedditFavicon()
+  }
+  return originalIcon
+}
+
+async function embedImage(url: string): Promise<string> {
   // Return cached X favicon immediately
   if (url === X_FAVICON_URL) {
     return X_FAVICON_BASE64
+  }
+
+  // Return cached Reddit favicon immediately
+  if (url === REDDIT_FAVICON_URL) {
+    return REDDIT_FAVICON_BASE64
   }
 
   const response = await fetch(url, {
@@ -48,4 +66,49 @@ export async function embedImage(url: string): Promise<string> {
   const base64 = Buffer.from(buffer).toString('base64')
   const contentType = response.headers.get('content-type') || 'image/jpeg'
   return `data:${contentType};base64,${base64}`
+}
+
+/**
+ * Transform post images for display by embedding images from hotlink-blocked CDNs.
+ * Use this when rendering posts, not when storing them.
+ */
+export async function transformPostImages(post: Post, url: string): Promise<Post> {
+  // Use hardcoded favicon for X/Twitter URLs
+  if (isXUrl(url) && post.author) {
+    post = {
+      ...post,
+      author: {
+        name: post.author.name,
+        uri: post.author.uri,
+        image: { uri: getXFavicon() },
+      },
+    }
+  }
+
+  // Use hardcoded favicon for Reddit URLs
+  if (isRedditUrl(url) && post.author) {
+    post = {
+      ...post,
+      author: {
+        name: post.author.name,
+        uri: post.author.uri,
+        image: { uri: getRedditFavicon() },
+      },
+    }
+  }
+
+  // Embed images from blocked CDNs to avoid hotlinking issues
+  if (post.images?.[0]?.uri && isHotlinkBlockedUrl(post.images[0].uri)) {
+    try {
+      const embeddedImage = await embedImage(post.images[0].uri)
+      post = {
+        ...post,
+        images: [{ uri: embeddedImage }],
+      }
+    } catch {
+      // Keep original URL if embedding fails
+    }
+  }
+
+  return post
 }

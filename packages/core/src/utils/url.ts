@@ -4,6 +4,36 @@ export const X_COM = 'x.com'
 
 const HTTP_URL_MATCHER = /(http.?:\/\/.*?)( |$)/
 
+const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp', '.ico']
+
+export function isXUrl(url: string): boolean {
+  try {
+    const hostname = new URL(url).hostname
+    return (
+      hostname === X_COM ||
+      hostname === TWITTER_COM ||
+      hostname.endsWith('.' + X_COM) ||
+      hostname.endsWith('.' + TWITTER_COM)
+    )
+  } catch {
+    return false
+  }
+}
+
+export function isRedditUrl(url: string): boolean {
+  try {
+    const hostname = new URL(url).hostname
+    return hostname === REDDIT_COM || hostname.endsWith('.' + REDDIT_COM)
+  } catch {
+    return false
+  }
+}
+
+export function isImageUrl(url: string): boolean {
+  const lowercaseUrl = url.toLowerCase()
+  return IMAGE_EXTENSIONS.some((ext) => lowercaseUrl.includes(ext))
+}
+
 export function getHumanHostname(url: string): string {
   if (!url) {
     return ''
