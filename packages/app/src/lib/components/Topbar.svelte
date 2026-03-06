@@ -1,16 +1,23 @@
 <script lang="ts">
 import { preferences } from '$lib/stores/preferences.svelte'
-
-function handleReload() {
-  window.location.reload()
-}
+import Dropdown from './Dropdown.svelte'
 </script>
 
 <header class="topbar">
-  <button class="logo-btn" onclick={handleReload} aria-label="Reload">
-    <img src="/icon-white-transparent.png" alt="Feeds logo" class="logo" />
-  </button>
-  <a href="/tags" class="nav-link">Tags</a>
+  <div class="nav-dropdown">
+    <Dropdown align="left">
+      {#snippet trigger()}
+        <img src="/icon-white-transparent.png" alt="Feeds logo" class="logo" />
+      {/snippet}
+
+      <div class="menu-dropdown">
+        <a href="/" class="menu-item">Home</a>
+        <a href="/tags" class="menu-item">Tags</a>
+        <a href="/discover" class="menu-item">Discover</a>
+        <a href="/myfeed" class="menu-item">Myfeed</a>
+      </div>
+    </Dropdown>
+  </div>
   <div class="spacer"></div>
   <button class="icon-btn" onclick={() => preferences.toggleLayout()} aria-label="Toggle layout">
     {#if preferences.layout === 'three-column'}
@@ -57,21 +64,17 @@ function handleReload() {
     z-index: 100;
   }
 
-  .logo-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    cursor: pointer;
+  .nav-dropdown {
     padding: var(--half-padding);
-    margin: 0;
-    min-width: unset;
   }
 
-  .logo-btn:hover {
-    background: transparent;
+  .nav-dropdown :global(.dropdown-trigger) {
+    padding: 0;
+  }
+
+  .nav-dropdown :global(.dropdown-trigger:hover),
+  .nav-dropdown :global(.dropdown-trigger.active) {
+    background-color: transparent;
   }
 
   .logo {
@@ -80,15 +83,34 @@ function handleReload() {
     object-fit: contain;
   }
 
-  .nav-link {
-    color: #fff8;
-    text-decoration: none;
-    padding: var(--half-padding) var(--padding);
-    font-size: 14px;
+  .menu-dropdown {
+    min-width: 150px;
+    background-color: var(--background-color);
+    border: 1px solid #88888888;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    padding: var(--padding);
   }
 
-  .nav-link:hover {
-    color: #fff;
+  .menu-item {
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: var(--half-padding) var(--padding);
+    text-align: left;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    color: var(--color);
+    cursor: pointer;
+    font-size: 14px;
+    text-decoration: none;
+    min-width: unset;
+  }
+
+  .menu-item:hover {
+    background-color: #88888844;
   }
 
   .spacer {

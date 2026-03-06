@@ -4,9 +4,10 @@
   interface Props {
     trigger: Snippet
     children: Snippet
+    align?: 'left' | 'right'
   }
 
-  let { trigger, children }: Props = $props()
+  let { trigger, children, align = 'right' }: Props = $props()
 
   const menuId = crypto.randomUUID()
   let open = $state(false)
@@ -51,7 +52,7 @@
     {@render trigger()}
   </button>
   {#if open}
-    <div class="dropdown-content">
+    <div class="dropdown-content" class:align-left={align === 'left'} onclick={() => (open = false)}>
       {@render children()}
     </div>
   {/if}
@@ -81,5 +82,10 @@
     right: 0;
     margin-top: 4px;
     z-index: 100;
+  }
+
+  .dropdown-content.align-left {
+    left: 0;
+    right: auto;
   }
 </style>
