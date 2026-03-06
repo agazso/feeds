@@ -42,7 +42,7 @@ $effect(() => {
 </script>
 
 <div class="menu-container" bind:this={menuElement}>
-  <button type="button" class="menu-trigger" onclick={toggle} aria-label="Menu">
+  <button type="button" class="menu-trigger" class:active={open} onclick={toggle} aria-label="Menu">
     <svg width="20" height="20" viewBox="0 0 32 32" fill="currentColor">
       <circle cx="16" cy="8" r="2"/>
       <circle cx="16" cy="16" r="2"/>
@@ -96,7 +96,8 @@ $effect(() => {
     min-width: unset;
   }
 
-  .menu-trigger:hover {
+  .menu-trigger:hover,
+  .menu-trigger.active {
     background-color: #88888844;
     color: var(--color);
   }
