@@ -56,32 +56,24 @@ const layoutClass = $derived(preferences.layout)
     }
   }
 
-  /* Fallback using column-count for browsers without masonry */
-  @supports not (grid-template-rows: masonry) {
+  /* CSS Grid Level 3 grid-lanes support (experimental) */
+  @supports (display: grid-lanes) {
     .three-column {
-      display: block;
-      column-count: 3;
-      column-gap: var(--padding);
-    }
-
-    .three-column li {
-      break-inside: avoid;
+      display: grid-lanes;
+      grid-template-columns: var(--column-mode);
     }
   }
 
-  @media (max-width: 900px) {
-    @supports not (grid-template-rows: masonry) {
-      .three-column {
-        column-count: 2;
-      }
+  /* Fallback using simple grid for browsers without masonry */
+  @supports not (grid-template-rows: masonry) {
+    .three-column {
+      align-items: start;
     }
   }
 
   @media (max-width: 500px) {
     .three-column {
-      display: grid;
       grid-template-columns: 1fr;
-      column-count: unset;
     }
 
     .one-column {

@@ -20,7 +20,7 @@
   --max-column-width: min(500px, max(100vmin, 320px));
 
   /* Column modes */
-  --three-column-mode: repeat(3, 1fr);
+  --three-column-mode: repeat(3, minmax(0, 1fr));
   --one-column-mode: var(--max-column-width);
   --column-mode: var(--three-column-mode);
 
