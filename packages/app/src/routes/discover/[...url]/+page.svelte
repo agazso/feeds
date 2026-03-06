@@ -150,6 +150,7 @@ $effect(() => {
     color: var(--color);
     height: 48px;
     gap: var(--half-padding);
+    margin: var(--padding);
   }
 
   .url-input {
@@ -181,6 +182,12 @@ $effect(() => {
     color: #888;
     margin-top: var(--padding);
     text-align: center;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
   }
 
   .error {
@@ -224,14 +231,8 @@ $effect(() => {
   .feed-url {
     color: #888;
     font-size: 12px;
-    margin: 4px 0;
-    word-break: break-all;
-  }
-
-  .item-count {
-    color: #888;
-    font-size: 14px;
     margin: 0;
+    word-break: break-all;
   }
 
   .reset-button {

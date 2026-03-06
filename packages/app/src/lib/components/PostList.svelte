@@ -27,7 +27,7 @@ const layoutClass = $derived(preferences.layout)
     display: grid;
     gap: var(--padding);
     padding: 0;
-    margin: 0 var(--padding);
+    margin: 0;
     margin-bottom: 1em;
     justify-content: center;
     list-style-type: none;

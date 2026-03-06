@@ -264,11 +264,6 @@ function handleImageLoad(e: Event) {
     color: gray;
   }
 
-  .tooltip {
-    border-bottom: 1px dotted #333;
-    cursor: help;
-  }
-
   .thumbnail-link {
     display: block;
   }
