@@ -2,6 +2,7 @@
 import type { Post } from '@feeds/core'
 import PostList from '$lib/components/PostList.svelte'
 import TagSelector from '$lib/components/TagSelector.svelte'
+import FeedHeader from '$lib/components/FeedHeader.svelte'
 
 interface Props {
   data: { url: string; availableTags: string[]; existingFeedUrls: string[] }
@@ -22,7 +23,7 @@ let loading = $state(false)
 let error = $state<string | null>(null)
 let discoveredFeed = $state<DiscoveredFeed | null>(null)
 let posts = $state<Post[]>([])
-let faviconError = $state(false)
+
 
 // Add feed mode state
 let addMode = $state(false)
@@ -74,7 +75,6 @@ function reset() {
   posts = []
   error = null
   url = ''
-  faviconError = false
   addMode = false
   selectedTags = []
   successMessage = null
@@ -150,25 +150,13 @@ $effect(() => {
 <div class="discover-page">
   {#if discoveredFeed}
     <div class="feed-container">
-      <div class="feed-header">
-        {#if discoveredFeed.favicon && !faviconError}
-          <img
-            src={discoveredFeed.favicon}
-            alt=""
-            class="feed-icon"
-            onerror={() => faviconError = true}
-          />
-        {/if}
-        <div class="feed-info">
-          <h2>{discoveredFeed.name}</h2>
-          <p class="feed-url">{discoveredFeed.url}</p>
-        </div>
+      <FeedHeader name={discoveredFeed.name} url={discoveredFeed.url} favicon={discoveredFeed.favicon}>
         {#if feedExists}
           <a href="/feeds/{encodeURIComponent(discoveredFeed.feedUrl)}" class="visit-button">Visit feed</a>
         {:else}
           <button type="button" class="add-button" onclick={enterAddMode}>Add feed</button>
         {/if}
-      </div>
+      </FeedHeader>
 
       {#if successMessage}
         <p class="success">{successMessage}</p>
@@ -294,41 +282,6 @@ $effect(() => {
 
   .feed-container {
     width: 100%;
-  }
-
-  .feed-header {
-    display: flex;
-    align-items: center;
-    gap: var(--padding);
-    padding: var(--padding);
-    border-radius: 4px;
-    max-width: var(--max-column-width);
-    margin: var(--padding);
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .feed-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 8px;
-    object-fit: contain;
-  }
-
-  .feed-info {
-    flex-grow: 1;
-  }
-
-  .feed-info h2 {
-    margin: 0;
-    font-size: 18px;
-  }
-
-  .feed-url {
-    color: #888;
-    font-size: 12px;
-    margin: 0;
-    word-break: break-all;
   }
 
   .add-button,
