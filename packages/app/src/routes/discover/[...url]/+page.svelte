@@ -93,7 +93,7 @@ $effect(() => {
         {/if}
         <div class="feed-info">
           <h2>{discoveredFeed.name}</h2>
-          <p class="feed-url">{discoveredFeed.feedUrl}</p>
+          <p class="feed-url">{discoveredFeed.url}</p>
         </div>
         <button type="button" class="reset-button" onclick={reset}>Clear</button>
       </div>
