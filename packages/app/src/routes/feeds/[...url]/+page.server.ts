@@ -23,8 +23,20 @@ export const load: PageServerLoad = async ({ params }) => {
   const posts = await loadPosts([feed])
   const sorted = posts.sort((a, b) => b.createdAt - a.createdAt)
 
+  // Collect available tags from all feeds
+  const tagSet = new Set<string>()
+  for (const f of config.feeds) {
+    if (f.tags) {
+      for (const tag of f.tags) {
+        tagSet.add(tag)
+      }
+    }
+  }
+  const availableTags = Array.from(tagSet).sort()
+
   return {
     feed,
     posts: sorted.slice(0, config.maxPosts),
+    availableTags,
   }
 }

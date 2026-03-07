@@ -8,6 +8,11 @@ interface Props {
 let { availableTags, selectedTags = $bindable([]), onchange }: Props = $props()
 let newTag = $state('')
 
+const allTags = $derived([
+  ...availableTags,
+  ...selectedTags.filter(t => !availableTags.includes(t))
+])
+
 function toggleTag(tag: string) {
   if (selectedTags.includes(tag)) {
     selectedTags = selectedTags.filter(t => t !== tag)
@@ -29,7 +34,7 @@ function addNewTag() {
 
 <div class="tag-selector">
   <div class="tags-list">
-    {#each availableTags as tag}
+    {#each allTags as tag}
       <button
         type="button"
         class="tag-chip"
