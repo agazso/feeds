@@ -9,7 +9,7 @@
 
   let { trigger, children, align = 'right' }: Props = $props()
 
-  const menuId = crypto.randomUUID()
+  const menuId = Math.random().toString(36).substring(2)
   let open = $state(false)
   let containerElement: HTMLDivElement | undefined = $state()
 
