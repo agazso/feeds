@@ -1,7 +1,10 @@
 <script lang="ts">
 import type { Post } from '@feeds/core'
+import type Colcade from 'colcade'
+import { browser } from '$app/environment'
 import PostCard from './PostCard.svelte'
 import { preferences } from '$lib/stores/preferences.svelte'
+import { supportsCSSMasonry } from '$lib/utils/masonry'
 
 interface Props {
   posts: Post[]
@@ -11,12 +14,75 @@ interface Props {
 
 let { posts, onfilter, onremove }: Props = $props()
 
+let listElement: HTMLUListElement | undefined = $state()
+let colcadeInstance: Colcade | undefined = $state()
+
 const layoutClass = $derived(preferences.layout)
+const needsJSMasonry = $derived(
+  browser && layoutClass === 'three-column' && !supportsCSSMasonry()
+)
+
+// Initialize/destroy Colcade when needed
+$effect(() => {
+  if (needsJSMasonry && listElement) {
+    const element = listElement
+    import('colcade').then((module) => {
+      const Colcade = module.default
+      colcadeInstance = new Colcade(element, {
+        columns: '.masonry-col',
+        items: '.post-item'
+      })
+    })
+  }
+
+  return () => {
+    if (colcadeInstance) {
+      colcadeInstance.destroy()
+      colcadeInstance = undefined
+    }
+  }
+})
+
+// Re-layout when posts change
+$effect(() => {
+  if (colcadeInstance && posts) {
+    // Trigger re-layout after DOM updates
+    requestAnimationFrame(() => {
+      colcadeInstance?.layout()
+    })
+  }
+})
+
+// Resize handler with debounce
+$effect(() => {
+  if (!browser || !colcadeInstance) return
+
+  let resizeTimeout: ReturnType<typeof setTimeout>
+
+  const handleResize = () => {
+    clearTimeout(resizeTimeout)
+    resizeTimeout = setTimeout(() => {
+      colcadeInstance?.layout()
+    }, 100)
+  }
+
+  window.addEventListener('resize', handleResize)
+
+  return () => {
+    clearTimeout(resizeTimeout)
+    window.removeEventListener('resize', handleResize)
+  }
+})
 </script>
 
-<ul class="post-list {layoutClass}">
+<ul bind:this={listElement} class="post-list {layoutClass}" class:js-masonry={needsJSMasonry}>
+  {#if needsJSMasonry}
+    <li class="masonry-col"></li>
+    <li class="masonry-col"></li>
+    <li class="masonry-col"></li>
+  {/if}
   {#each posts as post, index (post._id + '-' + index)}
-    <li>
+    <li class="post-item">
       <PostCard {post} {onfilter} {onremove} />
     </li>
   {/each}
@@ -71,6 +137,31 @@ const layoutClass = $derived(preferences.layout)
     }
   }
 
+  /* JS Masonry fallback (Colcade) */
+  .js-masonry {
+    display: block !important;
+  }
+
+  .js-masonry .masonry-col {
+    float: left;
+    width: calc(33.333% - var(--padding) * 2 / 3);
+    margin-right: var(--padding);
+  }
+
+  .js-masonry .masonry-col:last-of-type {
+    margin-right: 0;
+  }
+
+  .js-masonry .post-item {
+    margin-bottom: var(--padding);
+  }
+
+  .js-masonry::after {
+    content: '';
+    display: block;
+    clear: both;
+  }
+
   @media (max-width: 500px) {
     .three-column {
       grid-template-columns: 1fr;
@@ -78,6 +169,11 @@ const layoutClass = $derived(preferences.layout)
 
     .one-column {
       max-width: none;
+    }
+
+    .js-masonry .masonry-col {
+      width: 100%;
+      margin-right: 0;
     }
   }
 </style>

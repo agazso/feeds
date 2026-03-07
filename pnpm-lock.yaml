@@ -29,6 +29,9 @@ importers:
       '@feeds/core':
         specifier: workspace:*
         version: link:../core
+      colcade:
+        specifier: ^0.2.0
+        version: 0.2.0
     devDependencies:
       '@sveltejs/adapter-node':
         specifier: ^5.2.0
@@ -749,6 +752,9 @@ packages:
   clsx@2.1.1:
     resolution: {integrity: sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA==}
     engines: {node: '>=6'}
+
+  colcade@0.2.0:
+    resolution: {integrity: sha512-ccbmKzL0iZZvR1MZeR7r8wIDRSGGQxZI27NyILMjH8F6zOK8Xf04fEVJi2ajUlVgvY1uIRKml5KqHUv1eewBZw==}
 
   commander@12.1.0:
     resolution: {integrity: sha512-Vw8qHK3bZM9y/P10u3Vib8o/DdkvA2OtPtZvD871QKjy74Wj1WSKFILMPRPSdUSx5RFK1arlJzEtA4PkFgnbuA==}
@@ -1644,6 +1650,8 @@ snapshots:
       readdirp: 4.1.2
 
   clsx@2.1.1: {}
+
+  colcade@0.2.0: {}
 
   commander@12.1.0: {}
 
