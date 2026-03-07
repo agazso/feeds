@@ -15,8 +15,11 @@ function normalizeString(s: string | undefined): string {
   }
   return s
     .normalize('NFD')
+    // Remove diacritical marks (accents) from characters
     .replace(/\p{Diacritic}/gu, '')
-    .replace(/[^\p{Letter}0-9 -]/gu, '')
+    // Keep only letters, digits, spaces, and hyphens (for negative search)
+    // Note: hyphen must be at start of character class to be treated literally
+    .replace(/[^-\p{Letter}0-9 ]/gu, '')
     .toLowerCase()
 }
 
