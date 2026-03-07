@@ -5,511 +5,767 @@
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCdPhfpCogT7vtDwSwAz19Og",
       "name": "TheMushTube",
       "favicon": "https://www.youtube.com/s/desktop/3205cbb0/img/logos/favicon_144x144.png",
-      "tags": ["b-movies", "youtube"]
+      "tags": [
+        "b-movies",
+        "youtube"
+      ]
     },
     {
       "url": "https://www.youtube.com/@TheBadMovieBible",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCBtIQfuoPEpeXo9QGVVr8Sw",
       "name": "The Bad Movie Bible",
       "favicon": "https://www.youtube.com/s/desktop/3205cbb0/img/logos/favicon_144x144.png",
-      "tags": ["b-movies", "youtube"]
+      "tags": [
+        "b-movies",
+        "youtube"
+      ]
     },
     {
       "url": "https://www.youtube.com/@FilmixMovies",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UC0igugFRsUPMvGLrv86DIog",
       "name": "FILMIX",
       "favicon": "https://www.youtube.com/s/desktop/3205cbb0/img/logos/favicon_144x144.png",
-      "tags": ["b-movies", "youtube"]
+      "tags": [
+        "b-movies",
+        "youtube"
+      ]
     },
     {
       "url": "https://www.youtube.com/@JasonBrant",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCzS5vcCGhwBzmDWYznpGclg",
       "name": "Jason Brant",
       "favicon": "https://www.youtube.com/s/desktop/be7304fd/img/logos/favicon_144x144.png",
-      "tags": ["b-movies", "youtube"]
+      "tags": [
+        "b-movies",
+        "youtube"
+      ]
     },
     {
       "url": "https://www.youtube.com/@TheBrandonTenold",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UC51tRQjet4Z45Of3n1Qxn8A",
       "name": "Brandon Tenold",
       "favicon": "https://www.youtube.com/s/desktop/ba3a814f/img/logos/favicon_144x144.png",
-      "tags": ["b-movies", "youtube"]
+      "tags": [
+        "b-movies",
+        "youtube"
+      ]
     },
     {
       "url": "https://www.youtube.com/@GeorgRockallSchmidt",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCG5h8yHSUS4n7zPnh0dG0SA",
       "name": "Georg Rockall-Schmidt",
       "favicon": "https://www.youtube.com/s/desktop/f048a476/img/logos/favicon_144x144.png",
-      "tags": ["b-movies", "youtube"]
+      "tags": [
+        "b-movies",
+        "youtube"
+      ]
     },
     {
       "url": "https://www.youtube.com/@RedLetterMedia",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCrTNhL_yO3tPTdQ5XgmmWjA",
       "name": "RedLetterMedia",
       "favicon": "https://www.youtube.com/s/desktop/a444dc7a/img/favicon_144x144.png",
-      "tags": ["b-movies", "youtube"]
+      "tags": [
+        "b-movies",
+        "youtube"
+      ]
     },
     {
       "url": "https://www.coindesk.com/",
       "feedUrl": "https://www.coindesk.com/arc/outboundfeeds/rss/",
       "name": "CoinDesk: Bitcoin, Ethereum, Crypto News and Price Data",
       "favicon": "https://www.coindesk.com/pf/resources/favicons/production/android-chrome-512x512.png?d=349",
-      "tags": ["crypto", "news"]
+      "tags": [
+        "crypto",
+        "news"
+      ]
     },
     {
       "url": "https://decrypt.co/",
       "feedUrl": "https://decrypt.co/rss",
       "name": "Decrypt: AI, Bitcoin, Culture, Gaming, and Crypto News",
       "favicon": "https://cdn.decrypt.co/wp-content/themes/decrypt-media/assets/images/favicon-32x32.png",
-      "tags": ["crypto", "news"]
+      "tags": [
+        "crypto",
+        "news"
+      ]
     },
     {
       "url": "https://bitcoinist.com/",
       "feedUrl": "https://bitcoinist.com/feed/",
       "name": "Bitcoin News, Recent Updates, Price and Analysis – Bitcoinist",
       "favicon": "https://bitcoinist.com/wp-content/uploads/2021/04/cropped-cropped-cropped-Icon.png?fit=192%2C192",
-      "tags": ["crypto", "news"]
+      "tags": [
+        "crypto",
+        "news"
+      ]
     },
     {
       "url": "https://www.newsbtc.com/",
       "feedUrl": "https://www.newsbtc.com/feed/",
       "name": "Bitcoin & Altcoin News, Price, Information & Analysis | NewsBTC",
       "favicon": "https://www.newsbtc.com/wp-content/uploads/2020/06/cropped-cropped-cropped-favicon.png?fit=192%2C192",
-      "tags": ["crypto", "news"]
+      "tags": [
+        "crypto",
+        "news"
+      ]
     },
     {
       "url": "https://news.bitcoin.com/",
       "feedUrl": "https://news.bitcoin.com/feed/",
       "name": "Bitcoin.com News",
       "favicon": "https://news.bitcoin.com/icons/icon-192x192.png",
-      "tags": ["crypto", "news"]
+      "tags": [
+        "crypto",
+        "news"
+      ]
     },
     {
       "url": "https://cryptopotato.com/",
       "feedUrl": "https://cryptopotato.com/feed/",
       "name": "CryptoPotato",
       "favicon": "https://cdn.shortpixel.ai/spai/q_lossless+ret_img/https://cryptopotato.com/wp-content/uploads/2020/07/cropped-potato-fav2-192x192.jpg",
-      "tags": ["crypto", "news"]
+      "tags": [
+        "crypto",
+        "news"
+      ]
     },
     {
       "url": "https://cryptoslate.com/",
       "feedUrl": "https://cryptoslate.com/feed/",
       "name": "CryptoSlate",
       "favicon": "https://cryptoslate.com/wp-content/themes/cryptoslate-2020/icons/android-icon-192x192.png",
-      "tags": ["crypto", "news"]
+      "tags": [
+        "crypto",
+        "news"
+      ]
     },
     {
       "url": "https://cryptobriefing.com/",
       "feedUrl": "https://cryptobriefing.com/feed/",
       "name": "Crypto Briefing",
       "favicon": "https://static.cryptobriefing.com/wp-content/uploads/2020/02/02093517/ios-144.png",
-      "tags": ["crypto", "news"]
+      "tags": [
+        "crypto",
+        "news"
+      ]
     },
     {
       "url": "https://www.reddit.com/r/Fire/",
       "feedUrl": "https://reddit.com/r/Fire.rss",
       "name": "FI/RE - Financial Independence & Retiring Early",
       "favicon": "https://styles.redditmedia.com/t5_2qx4j/styles/communityIcon_8wnnp7ykwr6b1.jpg?width=256&s=2f679bb36bae3d70fb9631eb32190d6ce1702249",
-      "tags": ["fire", "reddit"]
+      "tags": [
+        "fire",
+        "reddit"
+      ]
     },
     {
       "url": "https://www.reddit.com/r/EuropeFIRE/",
       "feedUrl": "https://reddit.com/r/EuropeFIRE.rss",
       "name": "financial independence/retire early in Europe",
       "favicon": "https://www.redditstatic.com/desktop2x/img/favicon/android-icon-192x192.png",
-      "tags": ["fire", "reddit"]
+      "tags": [
+        "fire",
+        "reddit"
+      ]
     },
     {
       "url": "https://www.reddit.com/r/personalfinance/",
       "feedUrl": "https://reddit.com/r/personalfinance.rss",
       "name": "Personal Finance",
       "favicon": "https://www.redditstatic.com/desktop2x/img/favicon/android-icon-192x192.png",
-      "tags": ["finance", "reddit"]
+      "tags": [
+        "finance",
+        "reddit"
+      ]
     },
     {
       "url": "https://www.reddit.com/r/eupersonalfinance/",
       "feedUrl": "https://reddit.com/r/eupersonalfinance.rss",
       "name": "EU Personal Finance",
       "favicon": "https://b.thumbs.redditmedia.com/SLf3d57wX61Mrc0p573gnQ_pB5olbJcrUzK-XRtC1nY.png",
-      "tags": ["finance", "reddit"]
+      "tags": [
+        "finance",
+        "reddit"
+      ]
     },
     {
       "url": "https://www.reddit.com/r/financialindependence/",
       "feedUrl": "https://reddit.com/r/financialindependence.rss",
       "name": "Financial Independence / Retire Early",
       "favicon": "https://www.redditstatic.com/desktop2x/img/favicon/android-icon-192x192.png",
-      "tags": ["fire", "reddit"]
+      "tags": [
+        "fire",
+        "reddit"
+      ]
     },
     {
       "url": "https://www.reddit.com/r/coastFIRE/",
       "feedUrl": "https://reddit.com/r/coastFIRE.rss",
       "name": "CoastFIRE",
       "favicon": "https://styles.redditmedia.com/t5_2am5z4/styles/communityIcon_8p8ogdmm4ga71.jpg?width=256&s=c0ca60bf8184982c54155ce756e1bbed6d847410",
-      "tags": ["fire", "reddit"]
+      "tags": [
+        "fire",
+        "reddit"
+      ]
     },
     {
       "url": "https://www.reddit.com/r/ChubbyFIRE/",
       "feedUrl": "https://reddit.com/r/ChubbyFIRE.rss",
       "name": "ChubbyFIRE",
       "favicon": "https://www.redditstatic.com/desktop2x/img/favicon/android-icon-192x192.png",
-      "tags": ["fire", "reddit"]
+      "tags": [
+        "fire",
+        "reddit"
+      ]
     },
     {
       "url": "https://www.reddit.com/r/fatFIRE/",
       "feedUrl": "https://reddit.com/r/fatFIRE.rss",
       "name": "Wealth and Financial Independence/Retire Early",
       "favicon": "https://b.thumbs.redditmedia.com/IixmKnSGS1SrXiLkf3gsF37mfS3mmrPw_WbLF-v1J3s.png",
-      "tags": ["fire", "reddit"]
+      "tags": [
+        "fire",
+        "reddit"
+      ]
     },
     {
       "url": "https://www.reddit.com/r/leanfire/",
       "feedUrl": "https://reddit.com/r/leanfire.rss",
       "name": "leanfire",
       "favicon": "https://styles.redditmedia.com/t5_38u7g/styles/communityIcon_azrx0ic0kqc61.png?width=256&s=a18f1416a180297fc72c8e52769bd2a4f86e5768",
-      "tags": ["fire", "reddit"]
+      "tags": [
+        "fire",
+        "reddit"
+      ]
     },
     {
       "url": "https://www.reddit.com/r/investing/",
       "feedUrl": "https://reddit.com/r/investing.rss",
       "name": "Lose money with friends!",
       "favicon": "https://styles.redditmedia.com/t5_2qhhq/styles/communityIcon_rfponci4qog61.png?width=256&s=f01c7840d6bd3e083b9c18129d4e5b2044259dca",
-      "tags": ["investing", "reddit"]
+      "tags": [
+        "investing",
+        "reddit"
+      ]
     },
     {
       "url": "https://www.reddit.com/r/investingforbeginners/",
       "feedUrl": "https://reddit.com/r/investingforbeginners.rss",
       "name": "Investing for Beginners: No Indexing or Betting Here",
       "favicon": "https://styles.redditmedia.com/t5_3oeva/styles/communityIcon_jje60v3tlep61.png?width=256&s=2d3d72b4bf182bbb54b018e197223bdbedb40709",
-      "tags": ["investing", "reddit"]
+      "tags": [
+        "investing",
+        "reddit"
+      ]
     },
     {
       "url": "https://www.reddit.com/r/TheRaceTo10Million/",
       "feedUrl": "https://reddit.com/r/TheRaceTo10Million.rss",
       "name": "TheRaceTo10Million",
       "favicon": "https://styles.redditmedia.com/t5_4jsist/styles/communityIcon_4ckk01eysjlc1.png?width=256&s=9311ab66dafd6e15ac381bae1e537f7fd0b4796d",
-      "tags": ["investing", "reddit"]
+      "tags": [
+        "investing",
+        "reddit"
+      ]
     },
     {
       "url": "https://www.reddit.com/r/TheMoneyGuy/",
       "feedUrl": "https://reddit.com/r/TheMoneyGuy.rss",
       "name": "TheMoneyGuy",
       "favicon": "https://styles.redditmedia.com/t5_4mra67/styles/communityIcon_vcng9c2z4g4c1.png?width=256&s=6e55956d0f516e898f6f562f7321d4a387c17047",
-      "tags": ["finance", "reddit"]
+      "tags": [
+        "finance",
+        "reddit"
+      ]
     },
     {
       "url": "https://www.reddit.com/r/FIREUK/",
       "feedUrl": "https://reddit.com/r/FIREUK.rss",
       "name": "Financial Independence Retiring Early UK",
       "favicon": "https://www.redditstatic.com/desktop2x/img/favicon/android-icon-192x192.png",
-      "tags": ["fire", "reddit"]
+      "tags": [
+        "fire",
+        "reddit"
+      ]
     },
     {
       "url": "https://www.reddit.com/r/SwissPersonalFinance/",
       "feedUrl": "https://reddit.com/r/SwissPersonalFinance.rss",
       "name": "SwissPersonalFinance",
       "favicon": "https://styles.redditmedia.com/t5_28r9kd/styles/communityIcon_tvitln7077471.png?width=256&s=95bfd553ab8724c33e60dcf7c6a2e4d533864bb3",
-      "tags": ["finance", "reddit"]
+      "tags": [
+        "finance",
+        "reddit"
+      ]
     },
     {
       "url": "https://www.youtube.com/@RickBeato",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCJquYOG5EL82sKTfH9aMA9Q",
       "name": "Rick Beato",
       "favicon": "https://www.youtube.com/s/desktop/1c21ae68/img/favicon_144x144.png",
-      "tags": ["youtube", "music"]
+      "tags": [
+        "youtube",
+        "music"
+      ]
     },
     {
       "url": "https://www.youtube.com/@truecuckoo",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCOojfmX4Wq3Ww-XP_IkvviQ",
       "name": "True Cuckoo",
       "favicon": "https://www.youtube.com/s/desktop/1c21ae68/img/favicon_144x144.png",
-      "tags": ["youtube", "music"]
+      "tags": [
+        "youtube",
+        "music"
+      ]
     },
     {
       "url": "https://www.youtube.com/@Mr.Tabs.Guitar.Lessons",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UC_cm0YPagB8p2nXd8Z8Y_TA",
       "name": "Mr. Tabs",
       "favicon": "https://www.youtube.com/s/desktop/0f128ffd/img/favicon_144x144.png",
-      "tags": ["youtube", "music", "guitar"]
+      "tags": [
+        "youtube",
+        "music",
+        "guitar"
+      ]
     },
     {
       "url": "https://www.youtube.com/@nikolagugoski",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCLdCUDlzx4qmwVlyVfUHxdg",
       "name": "Nikola Gugoski",
       "favicon": "https://www.youtube.com/s/desktop/0f128ffd/img/favicon_144x144.png",
-      "tags": ["youtube", "music", "guitar"]
+      "tags": [
+        "youtube",
+        "music",
+        "guitar"
+      ]
     },
     {
       "url": "https://www.youtube.com/@licklibrary",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCfvdirLsoCLpdBt4bJ8ZH2Q",
       "name": "Licklibrary",
       "favicon": "https://www.youtube.com/s/desktop/fe730087/img/favicon_144x144.png",
-      "tags": ["youtube", "music", "guitar"]
+      "tags": [
+        "youtube",
+        "music",
+        "guitar"
+      ]
     },
     {
       "url": "https://www.youtube.com/@PaulDavids",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UC_Oa7Ph3v94om5OyxY1nPKg",
       "name": "Paul Davids",
       "favicon": "https://www.youtube.com/s/desktop/4feff1e2/img/favicon_144x144.png",
-      "tags": ["youtube", "music", "guitar"]
+      "tags": [
+        "youtube",
+        "music",
+        "guitar"
+      ]
     },
     {
       "url": "https://www.youtube.com/@Davie504",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCgFvT6pUq9HLOvKBYERzXSQ",
       "name": "Davie504",
       "favicon": "https://www.youtube.com/s/desktop/4feff1e2/img/favicon_144x144.png",
-      "tags": ["youtube", "music", "bass"]
+      "tags": [
+        "youtube",
+        "music",
+        "bass"
+      ]
     },
     {
       "url": "https://www.youtube.com/@sebascabreraguitar",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UC1RPTnoY0zwQkfN5VVIrD_g",
       "name": "Sebas Cabrera Guitar",
       "favicon": "https://www.youtube.com/s/desktop/accca349/img/favicon_144x144.png",
-      "tags": ["youtube", "music", "guitar"]
+      "tags": [
+        "youtube",
+        "music",
+        "guitar"
+      ]
     },
     {
       "url": "https://www.youtube.com/@MatteoMancusoofficial",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCVAE3R1A1Ketudt-0-idAUg",
       "name": "Matteo Mancuso",
       "favicon": "https://www.youtube.com/s/desktop/6849c09d/img/logos/favicon_144x144.png",
-      "tags": ["youtube", "music", "guitar"]
+      "tags": [
+        "youtube",
+        "music",
+        "guitar"
+      ]
     },
     {
       "url": "https://www.youtube.com/@Sorhands",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCvU30B7fOtF1IEuTLmsnbgg",
       "name": "Sor Hands",
       "favicon": "https://www.youtube.com/s/desktop/30100020/img/logos/favicon_144x144.png",
-      "tags": ["youtube", "music", "guitar"]
+      "tags": [
+        "youtube",
+        "music",
+        "guitar"
+      ]
     },
     {
       "url": "https://www.youtube.com/@BenEller",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCcLsvLJOecfCL6RplXhaO4Q",
       "name": "Ben Eller",
       "favicon": "https://www.youtube.com/s/desktop/c90d512c/img/favicon_144x144.png",
-      "tags": ["youtube", "music", "guitar"]
+      "tags": [
+        "youtube",
+        "music",
+        "guitar"
+      ]
     },
     {
       "url": "https://www.youtube.com/",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCJ8V9aiz50m6NVn0ix5v8RQ",
       "name": "decino",
       "favicon": "https://www.youtube.com/s/desktop/548ab433/img/favicon_144x144.png",
-      "tags": ["youtube", "retrogaming", "doom"]
+      "tags": [
+        "youtube",
+        "retrogaming",
+        "doom"
+      ]
     },
     {
       "url": "https://www.youtube.com/",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCLx053rWZxCiYWsBETgdKrQ",
       "name": "LGR",
       "favicon": "https://www.youtube.com/s/desktop/548ab433/img/favicon_144x144.png",
-      "tags": ["youtube", "retrogaming"]
+      "tags": [
+        "youtube",
+        "retrogaming"
+      ]
     },
     {
       "url": "https://www.youtube.com/",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UC7qPftDWPw9XuExpSgfkmJQ",
       "name": "Nostalgia Nerd",
       "favicon": "https://www.youtube.com/s/desktop/548ab433/img/favicon_144x144.png",
-      "tags": ["youtube", "retrogaming"]
+      "tags": [
+        "youtube",
+        "retrogaming"
+      ]
     },
     {
       "url": "https://www.youtube.com/",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UC8uT9cgJorJPWu7ITLGo9Ww",
       "name": "The 8-Bit Guy",
       "favicon": "https://www.youtube.com/s/desktop/548ab433/img/favicon_144x144.png",
-      "tags": ["youtube", "retrogaming"]
+      "tags": [
+        "youtube",
+        "retrogaming"
+      ]
     },
     {
       "url": "https://www.youtube.com/",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCS0N5baNlQWJCUrhCEo8WlA",
       "name": "Ben Eater",
       "favicon": "https://www.youtube.com/s/desktop/548ab433/img/favicon_144x144.png",
-      "tags": ["youtube", "retrogaming"]
+      "tags": [
+        "youtube",
+        "retrogaming"
+      ]
     },
     {
       "url": "https://www.youtube.com/",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UC21uZkfXpT8rPY-gPgMiCwA",
       "name": "Civvie 11",
       "favicon": "https://www.youtube.com/s/desktop/548ab433/img/favicon_144x144.png",
-      "tags": ["youtube", "retrogaming"]
+      "tags": [
+        "youtube",
+        "retrogaming"
+      ]
     },
     {
       "url": "https://www.youtube.com/",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UC96Cy4S6WlGAdQuv2AM8orA",
       "name": "Vytaan",
       "favicon": "https://www.youtube.com/s/desktop/00d32223/img/favicon_144x144.png",
-      "tags": ["youtube", "retrogaming", "doom"]
+      "tags": [
+        "youtube",
+        "retrogaming",
+        "doom"
+      ]
     },
     {
       "url": "https://www.youtube.com/",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UC5aIjCUK6VWTbeOJu59RCdQ",
       "name": "SoBad",
       "favicon": "https://www.youtube.com/s/desktop/932eb6a8/img/favicon_144x144.png",
-      "tags": ["youtube", "retrogaming", "doom"]
+      "tags": [
+        "youtube",
+        "retrogaming",
+        "doom"
+      ]
     },
     {
       "url": "https://www.youtube.com/",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCxnBwejqvWiVKb1eCLZNOLQ",
       "name": "Coincident",
       "favicon": "https://www.youtube.com/s/desktop/932eb6a8/img/favicon_144x144.png",
-      "tags": ["youtube", "retrogaming", "doom"]
+      "tags": [
+        "youtube",
+        "retrogaming",
+        "doom"
+      ]
     },
     {
       "url": "https://www.youtube.com/",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCZHHc2KHt2q8M2eoBtlF_ew",
       "name": "BeefGee",
       "favicon": "https://www.youtube.com/s/desktop/932eb6a8/img/favicon_144x144.png",
-      "tags": ["youtube", "retrogaming", "doom"]
+      "tags": [
+        "youtube",
+        "retrogaming",
+        "doom"
+      ]
     },
     {
       "url": "https://www.youtube.com/",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UClGeE_IvJ2eCybJGGRIpuWg",
       "name": "Doomkid",
       "favicon": "https://www.youtube.com/s/desktop/932eb6a8/img/favicon_144x144.png",
-      "tags": ["youtube", "retrogaming", "doom"]
+      "tags": [
+        "youtube",
+        "retrogaming",
+        "doom"
+      ]
     },
     {
       "url": "https://www.youtube.com/",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCmpbMLSJ9jsaUsRVVt0gZGQ",
       "name": "LVENdead",
       "favicon": "https://www.youtube.com/s/desktop/66e817d4/img/favicon_144x144.png",
-      "tags": ["youtube", "retrogaming", "doom"]
+      "tags": [
+        "youtube",
+        "retrogaming",
+        "doom"
+      ]
     },
     {
       "url": "https://www.youtube.com/",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCrYr2EMXw976tEpLxHhr1Rg",
       "name": "MtPain27",
       "favicon": "https://www.youtube.com/s/desktop/66e817d4/img/favicon_144x144.png",
-      "tags": ["youtube", "retrogaming", "doom"]
+      "tags": [
+        "youtube",
+        "retrogaming",
+        "doom"
+      ]
     },
     {
       "url": "https://www.youtube.com/",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCE1jXbVAGJQEORz9nZqb5bQ",
       "name": "Ahoy",
       "favicon": "https://www.youtube.com/s/desktop/7c155e84/img/favicon_144x144.png",
-      "tags": ["youtube", "retrogaming"]
+      "tags": [
+        "youtube",
+        "retrogaming"
+      ]
     },
     {
       "url": "https://www.youtube.com/",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UC3ltptWa0xfrDweghW94Acg",
       "name": "Karl Jobst",
       "favicon": "https://www.youtube.com/s/desktop/7c155e84/img/favicon_144x144.png",
-      "tags": ["youtube", "retrogaming"]
+      "tags": [
+        "youtube",
+        "retrogaming"
+      ]
     },
     {
       "url": "https://www.youtube.com/@Gggmanlives",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCKlUrYO3i9MDlL45Ia6j5EA",
       "name": "GmanLives",
       "favicon": "https://www.youtube.com/s/desktop/7c155e84/img/favicon_144x144.png",
-      "tags": ["youtube", "retrogaming"]
+      "tags": [
+        "youtube",
+        "retrogaming"
+      ]
     },
     {
       "url": "https://www.youtube.com/@quakespeedrunsexplained",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCqjTN5ZTN69baab1pJgYW0w",
       "name": "Quake Speedruns Explained",
       "favicon": "https://www.youtube.com/s/desktop/7c155e84/img/favicon_144x144.png",
-      "tags": ["youtube", "retrogaming", "quake"]
+      "tags": [
+        "youtube",
+        "retrogaming",
+        "quake"
+      ]
     },
     {
       "url": "https://www.youtube.com/@ICARUSLIV3S",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCgp_adxCQiesfxKYIqIE9yQ",
       "name": "IcarusLIVES",
       "favicon": "https://www.youtube.com/s/desktop/7a13cbe7/img/favicon_144x144.png",
-      "tags": ["youtube", "retrogaming", "doom"]
+      "tags": [
+        "youtube",
+        "retrogaming",
+        "doom"
+      ]
     },
     {
       "url": "https://www.youtube.com/@EduardoAndFriends",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCHjpU9L6Cyhowufve8Eif6A",
       "name": "EduardoAndFriends",
       "favicon": "https://www.youtube.com/s/desktop/7ea5dfab/img/favicon_144x144.png",
-      "tags": ["youtube", "retrogaming", "doom"]
+      "tags": [
+        "youtube",
+        "retrogaming",
+        "doom"
+      ]
     },
     {
       "url": "https://www.youtube.com/@BigMacDavis",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCdR_bTf68oaUNNGYRwjdo1Q",
       "name": "BigMacDavis",
       "favicon": "https://www.youtube.com/s/desktop/7ea5dfab/img/favicon_144x144.png",
-      "tags": ["youtube", "retrogaming", "doom"]
+      "tags": [
+        "youtube",
+        "retrogaming",
+        "doom"
+      ]
     },
     {
       "url": "https://www.youtube.com/@pjplaysdoom",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCnqItPGDHvWuRwI1KzPxXsw",
       "name": "PJ Plays Doom",
       "favicon": "https://www.youtube.com/s/desktop/7ea5dfab/img/favicon_144x144.png",
-      "tags": ["youtube", "retrogaming", "doom"]
+      "tags": [
+        "youtube",
+        "retrogaming",
+        "doom"
+      ]
     },
     {
       "url": "https://www.youtube.com/@ModernVintageGamer",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCjFaPUcJU1vwk193mnW_w1w",
       "name": "Modern Vintage Gamer",
       "favicon": "https://www.youtube.com/s/desktop/6ee70b2c/img/favicon_144x144.png",
-      "tags": ["youtube", "retrogaming"]
+      "tags": [
+        "youtube",
+        "retrogaming"
+      ]
     },
     {
       "url": "https://www.youtube.com/@MancubianCandidate",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCu8nZ1IQqblg8lXvlXzYrRw",
       "name": "Mancubian Candidate",
       "favicon": "https://www.youtube.com/s/desktop/6ee70b2c/img/favicon_144x144.png",
-      "tags": ["youtube", "retrogaming", "doom"]
+      "tags": [
+        "youtube",
+        "retrogaming",
+        "doom"
+      ]
     },
     {
       "url": "https://www.youtube.com/@Acerola_t",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCQG40havu4kNpB4pxUDQhYQ",
       "name": "Acerola",
       "favicon": "https://www.youtube.com/s/desktop/6ee70b2c/img/favicon_144x144.png",
-      "tags": ["youtube", "graphics", "programming"]
+      "tags": [
+        "youtube",
+        "graphics",
+        "programming"
+      ]
     },
     {
       "url": "https://www.youtube.com/@jdh",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCUzQJ3JBuQ9w-po4TXRJHiA",
       "name": "jdh",
       "favicon": "https://www.youtube.com/s/desktop/6ee70b2c/img/favicon_144x144.png",
-      "tags": ["youtube", "graphics", "programming"]
+      "tags": [
+        "youtube",
+        "graphics",
+        "programming"
+      ]
     },
     {
       "url": "https://www.youtube.com/@borogk",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UC1N7_GXA3oQo_H8Xq_CcBEg",
       "name": "borogk",
       "favicon": "https://www.youtube.com/s/desktop/e8a634d7/img/favicon_144x144.png",
-      "tags": ["youtube", "retrogaming", "doom"]
+      "tags": [
+        "youtube",
+        "retrogaming",
+        "doom"
+      ]
     },
     {
       "url": "https://www.youtube.com/@BastichB64K",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCQ9wMZNpJn07oufDIfWhgtw",
       "name": "BastichB 64K",
       "favicon": "https://www.youtube.com/s/desktop/e4d15d2c/img/favicon_144x144.png",
-      "tags": ["youtube", "retrogaming", "c64"]
+      "tags": [
+        "youtube",
+        "retrogaming",
+        "c64"
+      ]
     },
     {
       "url": "https://www.youtube.com/@OldAndNewVideoGames",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCt4zixe5D5JnWwVD7b_GQNw",
       "name": "OldAndNewVideoGames",
       "favicon": "https://www.youtube.com/s/desktop/29d8088d/img/favicon_144x144.png",
-      "tags": ["youtube", "retrogaming"]
+      "tags": [
+        "youtube",
+        "retrogaming"
+      ]
     },
     {
       "url": "https://www.youtube.com/@Midnighthalo",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCwg6sSfADHl7sqJWUYZST2g",
       "name": "Midnight",
       "favicon": "https://www.youtube.com/s/desktop/711fd789/img/logos/favicon_144x144.png",
-      "tags": ["doom", "retrogaming", "youtube"]
+      "tags": [
+        "doom",
+        "retrogaming",
+        "youtube"
+      ]
     },
     {
       "url": "https://www.youtube.com/@Romero666",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCtN2A8bFL_NoxClFyklbMRQ",
       "name": "John Romero",
       "favicon": "https://www.youtube.com/s/desktop/6cd492c3/img/favicon_144x144.png",
-      "tags": ["retrogaming", "youtube"]
+      "tags": [
+        "retrogaming",
+        "youtube"
+      ]
     },
     {
       "url": "https://www.youtube.com/@SabbaticalTommy",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCib80j_q5o_C5XsCA9YsAFg",
       "name": "Sabbatical",
       "favicon": "https://www.youtube.com/s/desktop/1c9f2583/img/favicon_144x144.png",
-      "tags": ["travel", "youtube"]
+      "tags": [
+        "travel",
+        "youtube"
+      ]
     },
     {
       "url": "https://www.youtube.com/@MarkWiens",
       "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCyEd6QBSgat5kkC6svyjudA",
       "name": "Mark Wiens",
       "favicon": "https://www.youtube.com/s/desktop/1c9f2583/img/favicon_144x144.png",
-      "tags": ["travel", "youtube"]
+      "tags": [
+        "travel",
+        "youtube"
+      ]
+    },
+    {
+      "name": "Jacques Mattheij",
+      "url": "https://jacquesmattheij.com/",
+      "feedUrl": "https://jacquesmattheij.com/rss.xml",
+      "favicon": "https://jacquesmattheij.com/favicon.png",
+      "tags": [
+        "programming"
+      ]
     }
   ],
   "maxPosts": 100

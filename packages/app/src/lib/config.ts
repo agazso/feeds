@@ -1,5 +1,5 @@
 import type { Feed } from '@feeds/core'
-import { readFile } from 'node:fs/promises'
+import { readFile, writeFile } from 'node:fs/promises'
 import { join, isAbsolute } from 'node:path'
 
 export interface AppConfig {
@@ -60,4 +60,9 @@ export async function loadConfig(): Promise<AppConfig> {
   // Load from static/feeds.json
   const staticConfig = await loadJsonFile(join(process.cwd(), 'static', 'feeds.json'))
   return staticConfig ?? DEFAULT_CONFIG
+}
+
+export async function saveConfig(config: AppConfig): Promise<void> {
+  const path = join(process.cwd(), 'static', 'feeds.json')
+  await writeFile(path, JSON.stringify(config, null, 2))
 }

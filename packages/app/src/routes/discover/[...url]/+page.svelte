@@ -1,9 +1,10 @@
 <script lang="ts">
 import type { Post } from '@feeds/core'
 import PostList from '$lib/components/PostList.svelte'
+import TagSelector from '$lib/components/TagSelector.svelte'
 
 interface Props {
-  data: { url: string }
+  data: { url: string; availableTags: string[]; existingFeedUrls: string[] }
 }
 
 let { data }: Props = $props()
@@ -22,6 +23,18 @@ let error = $state<string | null>(null)
 let discoveredFeed = $state<DiscoveredFeed | null>(null)
 let posts = $state<Post[]>([])
 let faviconError = $state(false)
+
+// Add feed mode state
+let addMode = $state(false)
+let selectedTags = $state<string[]>([])
+let saving = $state(false)
+let successMessage = $state<string | null>(null)
+let feedAdded = $state(false)
+
+// Check if the discovered feed already exists
+const feedExists = $derived(
+  discoveredFeed ? data.existingFeedUrls.includes(discoveredFeed.feedUrl) || feedAdded : false
+)
 
 async function discover() {
   if (!url.trim()) return
@@ -62,8 +75,63 @@ function reset() {
   error = null
   url = ''
   faviconError = false
+  addMode = false
+  selectedTags = []
+  successMessage = null
+  feedAdded = false
   // Update URL without the parameter
   history.replaceState({}, '', '/discover')
+}
+
+function enterAddMode() {
+  addMode = true
+  selectedTags = []
+  successMessage = null
+}
+
+function cancelAddMode() {
+  addMode = false
+  selectedTags = []
+  successMessage = null
+}
+
+async function saveFeed() {
+  if (!discoveredFeed) return
+
+  saving = true
+  successMessage = null
+
+  try {
+    const response = await fetch('/api/feeds', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        feed: {
+          name: discoveredFeed.name,
+          url: discoveredFeed.url,
+          feedUrl: discoveredFeed.feedUrl,
+          favicon: discoveredFeed.favicon,
+          tags: selectedTags,
+        },
+      }),
+    })
+
+    const result = await response.json()
+
+    if (!response.ok) {
+      error = result.error || 'Failed to save feed'
+      return
+    }
+
+    successMessage = `Feed "${discoveredFeed.name}" added successfully!`
+    addMode = false
+    selectedTags = []
+    feedAdded = true
+  } catch {
+    error = 'Failed to save feed. Please try again.'
+  } finally {
+    saving = false
+  }
 }
 
 // Auto-discover if URL parameter is provided
@@ -95,10 +163,38 @@ $effect(() => {
           <h2>{discoveredFeed.name}</h2>
           <p class="feed-url">{discoveredFeed.url}</p>
         </div>
-        <button type="button" class="reset-button" onclick={reset}>Clear</button>
+        {#if feedExists}
+          <a href="/feeds/{encodeURIComponent(discoveredFeed.feedUrl)}" class="visit-button">Visit feed</a>
+        {:else}
+          <button type="button" class="add-button" onclick={enterAddMode}>Add feed</button>
+        {/if}
       </div>
 
-      <PostList {posts} />
+      {#if successMessage}
+        <p class="success">{successMessage}</p>
+      {/if}
+
+      {#if addMode}
+        <div class="add-feed-screen">
+          <h3>Add "{discoveredFeed.name}" to your feeds</h3>
+          <p class="feed-url-info">{discoveredFeed.feedUrl}</p>
+
+          <TagSelector availableTags={data.availableTags} bind:selectedTags />
+
+          <div class="actions">
+            <button type="button" class="save-button" onclick={saveFeed} disabled={saving}>
+              {saving ? 'Saving...' : 'Save Feed'}
+            </button>
+            <button type="button" class="cancel-button" onclick={cancelAddMode}>Cancel</button>
+          </div>
+
+          {#if error}
+            <p class="error">{error}</p>
+          {/if}
+        </div>
+      {:else}
+        <PostList {posts} />
+      {/if}
     </div>
   {:else}
     <div class="discover-form">
@@ -235,10 +331,72 @@ $effect(() => {
     word-break: break-all;
   }
 
-  .reset-button {
+  .add-button,
+  .visit-button {
+    padding: var(--half-padding) var(--padding);
+    font-size: 14px;
+  }
+
+  .visit-button {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+    background-color: inherit;
+    color: #fff8;
+    border: 1px solid #fff8;
+    border-radius: 4px;
+  }
+
+  .visit-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .add-feed-screen {
+    max-width: var(--max-column-width);
+    margin: 0 auto;
+    padding: var(--padding);
+  }
+
+  .add-feed-screen h3 {
+    margin: 0 0 var(--half-padding) 0;
+    font-size: 18px;
+  }
+
+  .feed-url-info {
+    color: #888;
+    font-size: 12px;
+    margin: 0 0 var(--padding) 0;
+    word-break: break-all;
+  }
+
+  .actions {
+    display: flex;
+    gap: var(--half-padding);
+    margin-top: var(--padding);
+  }
+
+  .save-button {
+    padding: var(--half-padding) var(--padding);
+    font-size: 14px;
+  }
+
+  .save-button:disabled {
+    opacity: 0.6;
+  }
+
+  .cancel-button {
     padding: var(--half-padding) var(--padding);
     font-size: 14px;
     background: transparent;
     border: 1px solid #88888888;
+  }
+
+  .success {
+    color: #27ae60;
+    margin: var(--padding);
+    text-align: center;
+    max-width: var(--max-column-width);
+    margin-left: auto;
+    margin-right: auto;
   }
 </style>
