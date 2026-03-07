@@ -12,6 +12,7 @@ import Dropdown from './Dropdown.svelte'
 
       <div class="menu-dropdown">
         <a href="/" class="menu-item">Home</a>
+        <a href="/feeds" class="menu-item">Feeds</a>
         <a href="/tags" class="menu-item">Tags</a>
         <a href="/discover" class="menu-item">Discover</a>
         <a href="/myfeed" class="menu-item">Myfeed</a>
