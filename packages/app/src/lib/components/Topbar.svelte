@@ -78,7 +78,7 @@ import Dropdown from './Dropdown.svelte'
     width: 100%;
     height: var(--header-height);
     background-color: var(--color-step-10);
-    position: sticky;
+    position: fixed;
     top: 0;
     z-index: 100;
   }

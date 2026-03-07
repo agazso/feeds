@@ -35,7 +35,9 @@ onMount(() => {
 
 <style>
   main {
-    min-height: calc(100vh - var(--header-height));
+    margin-top: var(--header-height);
+    height: calc(100vh - var(--header-height));
+    overflow-y: auto;
   }
 
   .loading-overlay {
