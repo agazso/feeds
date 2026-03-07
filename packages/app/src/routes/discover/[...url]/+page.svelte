@@ -29,7 +29,6 @@ let posts = $state<Post[]>([])
 let addMode = $state(false)
 let selectedTags = $state<string[]>([])
 let saving = $state(false)
-let successMessage = $state<string | null>(null)
 let feedAdded = $state(false)
 
 // Check if the discovered feed already exists
@@ -77,7 +76,6 @@ function reset() {
   url = ''
   addMode = false
   selectedTags = []
-  successMessage = null
   feedAdded = false
   // Update URL without the parameter
   history.replaceState({}, '', '/discover')
@@ -86,20 +84,17 @@ function reset() {
 function enterAddMode() {
   addMode = true
   selectedTags = []
-  successMessage = null
 }
 
 function cancelAddMode() {
   addMode = false
   selectedTags = []
-  successMessage = null
 }
 
 async function saveFeed() {
   if (!discoveredFeed) return
 
   saving = true
-  successMessage = null
 
   try {
     const response = await fetch('/api/feeds', {
@@ -123,7 +118,6 @@ async function saveFeed() {
       return
     }
 
-    successMessage = `Feed "${discoveredFeed.name}" added successfully!`
     addMode = false
     selectedTags = []
     feedAdded = true
@@ -152,15 +146,12 @@ $effect(() => {
     <div class="feed-container">
       <FeedHeader name={discoveredFeed.name} url={discoveredFeed.url} favicon={discoveredFeed.favicon}>
         {#if feedExists}
-          <a href="/feeds/{encodeURIComponent(discoveredFeed.feedUrl)}" class="visit-button">Visit feed</a>
+          <a href="/feeds/{encodeURIComponent(discoveredFeed.url)}" class="visit-button">Visit feed</a>
         {:else}
           <button type="button" class="add-button" onclick={enterAddMode}>Add feed</button>
         {/if}
       </FeedHeader>
 
-      {#if successMessage}
-        <p class="success">{successMessage}</p>
-      {/if}
 
       {#if addMode}
         <div class="add-feed-screen">
@@ -342,14 +333,5 @@ $effect(() => {
     font-size: 14px;
     background: transparent;
     border: 1px solid #88888888;
-  }
-
-  .success {
-    color: #27ae60;
-    margin: var(--padding);
-    text-align: center;
-    max-width: var(--max-column-width);
-    margin-left: auto;
-    margin-right: auto;
   }
 </style>
