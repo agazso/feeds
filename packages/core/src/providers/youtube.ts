@@ -51,7 +51,7 @@ export async function fetchYoutubeFeed(
     )
     if (feed != null) {
       if (!Array.isArray(feed) && parsedUrl.pathname?.startsWith('/@')) {
-        const youtubeUrl = feed.url + parsedUrl.pathname.split('/')[1]
+        const youtubeUrl = `${parsedUrl.origin}/${parsedUrl.pathname.split('/')[1]}`
         return {
           ...feed,
           url: youtubeUrl,

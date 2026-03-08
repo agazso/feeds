@@ -81,6 +81,7 @@ export const POST: RequestHandler = async ({ request }) => {
             createEnrichedPost(item.link, {
               rssItem: item,
               createdAt: item.created,
+              feedName: discoveredFeed.name,
             }),
           )
 
@@ -98,6 +99,7 @@ export const POST: RequestHandler = async ({ request }) => {
             originUrl: discoveredFeed.url,
             rssItem: item,
             createdAt: item.created,
+            feedName: discoveredFeed.name,
           }).post
         }),
       )

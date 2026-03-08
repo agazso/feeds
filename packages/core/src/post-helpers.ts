@@ -3,13 +3,31 @@ import type { Post } from './models/post'
 import type { RSSItem } from './models/rss'
 import { fetchFeedsFromUrl } from './feed-helpers'
 import { type HtmlMetaData, fetchHtmlMetaDataOnly } from './parsers/html-metadata'
+import { isYoutubeLink } from './providers/youtube'
 import { createUrlFromUrn, isImageUrl } from './utils/url'
 
 export function formatAuthorName(name?: string, author?: string, fallback?: string): string {
-  if (name && author) {
+  if (name && author && name !== author) {
     return `${name} | ${author}`
   }
   return name || author || fallback || ''
+}
+
+/**
+ * Determines whether to use feedName over siteIdentity for author attribution.
+ *
+ * Simple rule: YouTube URLs should use feedName (channel name) over generic "YouTube".
+ * For everything else (aggregators like HN, regular blogs), use siteIdentity from article.
+ */
+function shouldUseFeedName(
+  feedName: string | undefined,
+  siteIdentity: string | undefined,
+  articleUrl: string,
+): boolean {
+  if (!feedName || feedName === siteIdentity) return false
+
+  // YouTube URLs should use feedName (channel name) over generic "YouTube"
+  return isYoutubeLink(articleUrl)
 }
 
 export interface CreatePostParams {
@@ -36,6 +54,10 @@ export function createPost(params: CreatePostParams): { post: Post; title: strin
   }
 
   const siteIdentity = metadata.name || metadata.siteName
+  // Use feedName for YouTube (channel name), otherwise use article's siteIdentity
+  const authorIdentity = shouldUseFeedName(feedName, siteIdentity, url)
+    ? feedName
+    : siteIdentity
 
   const text =
     siteIdentity && title
@@ -51,7 +73,7 @@ export function createPost(params: CreatePostParams): { post: Post; title: strin
     images: image ? [{ uri: image }] : [],
     link: url,
     author: {
-      name: formatAuthorName(siteIdentity, metadata.author, feedName || new URL(url).hostname),
+      name: formatAuthorName(authorIdentity, metadata.author, new URL(url).hostname),
       uri: originUrl,
       image: { uri: metadata.icon },
     },

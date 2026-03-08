@@ -66,7 +66,30 @@ program
   .action(async (url: string) => {
     const { metadata } = await fetchEnrichedMetadata(url)
 
-    // If no feedUrl found in metadata, try well-known paths
+    // Try to discover feed using the same logic as the web app
+    const feedResult = await fetchFeedsFromUrl(url)
+    if (feedResult) {
+      const feed = Array.isArray(feedResult) ? feedResult[0] : feedResult
+      if (feed) {
+        // Use feed name if available and more specific than the generic site name
+        // (e.g., "The Cobwebs Channel" is better than "YouTube")
+        if (feed.name && feed.name !== metadata.siteName) {
+          metadata.name = feed.name
+        }
+        if (feed.feedUrl) {
+          metadata.feedUrl = feed.feedUrl
+        }
+        // Store the page URL (important for YouTube channels)
+        if (feed.url) {
+          metadata.url = feed.url
+        }
+        if (feed.favicon && typeof feed.favicon === 'string') {
+          metadata.icon = metadata.icon || feed.favicon
+        }
+      }
+    }
+
+    // If still no feedUrl found in metadata, try well-known paths
     if (!metadata.feedUrl) {
       const baseUrl = getBaseUrl(url)
       const discoveredFeedUrl = await discoverFeedUrlFromWellKnownPaths(baseUrl)
