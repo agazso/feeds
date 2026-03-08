@@ -84,6 +84,7 @@ export const POST: RequestHandler = async ({ request }) => {
               feedName: discoveredFeed.name,
               feedIcon: discoveredFeed.favicon,
               feedOrigin: discoveredFeed.url,
+              skipFeedDiscovery: true,
             }),
           )
 

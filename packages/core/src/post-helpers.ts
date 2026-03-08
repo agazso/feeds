@@ -297,6 +297,7 @@ export interface CreateEnrichedPostOptions {
   feedIcon?: string // Fallback author icon (from feed discovery)
   feedOrigin?: string // Feed's origin URL (for aggregator detection)
   createdAt?: number // From RSS item timestamp
+  skipFeedDiscovery?: boolean // Skip feed URL discovery (for preview/discover mode)
 }
 
 export async function createEnrichedPost(
@@ -308,7 +309,7 @@ export async function createEnrichedPost(
 
   // 2. Use provided feedUrl, or discover from metadata, or probe origin
   let feedUrl: string | undefined = options?.feedUrl || metadata.feedUrl
-  if (!feedUrl) {
+  if (!feedUrl && !options?.skipFeedDiscovery) {
     feedUrl = await discoverFeedUrl(originUrl)
   }
 
