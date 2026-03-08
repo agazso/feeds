@@ -3,6 +3,7 @@ import type { Post } from '@feeds/core'
 import PostList from '$lib/components/PostList.svelte'
 import TagSelector from '$lib/components/TagSelector.svelte'
 import FeedHeader from '$lib/components/FeedHeader.svelte'
+import { goto } from '$app/navigation'
 
 interface Props {
   data: { url: string; availableTags: string[]; existingFeedUrls: string[] }
@@ -44,7 +45,7 @@ async function discover() {
 
   // Update browser URL to include the discovered URL
   const encodedUrl = encodeURIComponent(url.trim())
-  history.pushState({}, '', `/discover/${encodedUrl}`)
+  goto(`/discover/${encodedUrl}`)
 
   try {
     const response = await fetch('/api/discover', {
@@ -78,7 +79,7 @@ function reset() {
   selectedTags = []
   feedAdded = false
   // Update URL without the parameter
-  history.replaceState({}, '', '/discover')
+  goto('/discover')
 }
 
 function enterAddMode() {
@@ -133,6 +134,19 @@ $effect(() => {
   if (data.url && !discoveredFeed && !loading && !error) {
     url = data.url
     discover()
+  }
+})
+
+// Reset state when navigating to /discover without URL param (handles menu navigation)
+$effect(() => {
+  if (!data.url) {
+    discoveredFeed = null
+    posts = []
+    error = null
+    url = ''
+    addMode = false
+    selectedTags = []
+    feedAdded = false
   }
 })
 </script>

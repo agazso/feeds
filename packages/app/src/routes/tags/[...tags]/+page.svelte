@@ -55,7 +55,7 @@ function handleTagClick(tag: string) {
     } else if (canUseCache) {
       // Filter client-side from cached posts
       selectedTags = newTags
-      history.replaceState({}, '', `/tags/${formatTagsForPath(newTags)}`)
+      goto(`/tags/${formatTagsForPath(newTags)}`, { replaceState: true })
     } else {
       // Need broader data from server
       goto(`/tags/${formatTagsForPath(newTags)}`)
@@ -63,7 +63,7 @@ function handleTagClick(tag: string) {
   } else {
     // Adding a tag - always filter client-side
     selectedTags = [...selectedTags, tag]
-    history.replaceState({}, '', `/tags/${formatTagsForPath(selectedTags)}`)
+    goto(`/tags/${formatTagsForPath(selectedTags)}`, { replaceState: true })
   }
 }
 </script>
