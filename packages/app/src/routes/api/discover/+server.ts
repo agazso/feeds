@@ -1,7 +1,13 @@
 import { json } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
-import type { Post, RSSItem, RSSFeed, HtmlMetaData } from '@feeds/core'
-import { fetchFeedsFromUrl, fetchFeed, htmlToMarkdown, fetchHtmlMetaDataOnly } from '@feeds/core'
+import type { Post, RSSFeed } from '@feeds/core'
+import {
+  fetchFeedsFromUrl,
+  fetchFeed,
+  htmlToMarkdown,
+  createEnrichedPost,
+  createPost,
+} from '@feeds/core'
 
 interface DiscoveredFeed {
   name: string
@@ -11,93 +17,21 @@ interface DiscoveredFeed {
   itemCount: number
 }
 
-function getFirstImage(item: RSSItem): string | undefined {
-  if (item.media?.thumbnail?.[0]?.url?.[0]) {
-    return item.media.thumbnail[0].url[0]
-  }
-  if (item.enclosures?.[0]?.type?.startsWith('image/')) {
-    return item.enclosures[0].url
-  }
-  return undefined
-}
-
-function createPostFromItem(
-  item: RSSItem,
-  feed: { name: string; url: string; favicon: string },
-  enrichedData?: {
-    title?: string
-    description?: string
-    image?: string
-    icon?: string
-    name?: string
-    feedUrl?: string
-    author?: string
-  },
-): Post {
-  const title = enrichedData?.title || item.title || ''
-  const description = enrichedData?.description || htmlToMarkdown(item.description || '')
-  const image = enrichedData?.image || getFirstImage(item)
-
-  const text = title && description ? `**${title}**\n\n${description}` : title || description
-
-  return {
-    _id: `${item.link}-${Math.random().toString(36).slice(2, 8)}`,
-    text,
-    createdAt: item.created || Date.now(),
-    images: image ? [{ uri: image }] : [],
-    link: item.link,
-    author: {
-      name: enrichedData?.author || enrichedData?.name || feed.name,
-      uri: feed.url,
-      image: { uri: enrichedData?.icon || feed.favicon },
-    },
-    rssItem: item,
-    feedUrl: enrichedData?.feedUrl,
-  }
-}
-
-async function enrichItemWithTimeout(
-  url: string,
+async function enrichWithTimeout<T>(
+  promise: Promise<T>,
   timeoutMs: number = 5000,
-): Promise<HtmlMetaData | null> {
+): Promise<T | null> {
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
 
   try {
-    const metadata = await fetchHtmlMetaDataOnly(url, { signal: controller.signal })
+    const result = await promise
     clearTimeout(timeoutId)
-    return metadata
+    return result
   } catch {
     clearTimeout(timeoutId)
     return null
   }
-}
-
-async function enrichAllItems(
-  items: RSSItem[],
-  concurrencyLimit: number = 30,
-): Promise<Map<string, HtmlMetaData>> {
-  const results = new Map<string, HtmlMetaData>()
-
-  // Process items in batches
-  for (let i = 0; i < items.length; i += concurrencyLimit) {
-    const batch = items.slice(i, i + concurrencyLimit)
-    const batchResults = await Promise.all(
-      batch.map(async (item) => {
-        if (!item.link) return { link: '', metadata: null }
-        const metadata = await enrichItemWithTimeout(item.link)
-        return { link: item.link, metadata }
-      }),
-    )
-
-    for (const { link, metadata } of batchResults) {
-      if (link && metadata) {
-        results.set(link, metadata)
-      }
-    }
-  }
-
-  return results
 }
 
 export const POST: RequestHandler = async ({ request }) => {
@@ -137,28 +71,37 @@ export const POST: RequestHandler = async ({ request }) => {
       itemCount: rssFeed.items.length,
     }
 
-    // Enrich all items automatically
-    const enrichedData = await enrichAllItems(rssFeed.items)
+    // Enrich all items using createEnrichedPost
+    const posts: Post[] = (
+      await Promise.all(
+        rssFeed.items.map(async (item) => {
+          if (!item.link) return null
 
-    // Create posts from all items
-    const posts: Post[] = rssFeed.items.map((item) => {
-      const metadata = item.link ? enrichedData.get(item.link) : undefined
-      return createPostFromItem(
-        item,
-        { name: discoveredFeed.name, url: discoveredFeed.url, favicon: discoveredFeed.favicon },
-        metadata
-          ? {
-              title: metadata.title,
-              description: metadata.description,
-              image: metadata.image,
-              icon: metadata.icon,
-              name: metadata.name,
-              feedUrl: metadata.feedUrl,
-              author: metadata.author,
-            }
-          : undefined,
+          const enrichedResult = await enrichWithTimeout(
+            createEnrichedPost(item.link, {
+              rssItem: item,
+              createdAt: item.created,
+            }),
+          )
+
+          if (enrichedResult) {
+            return enrichedResult.post
+          }
+
+          // Fallback: create post from RSS item only (no enrichment)
+          return createPost({
+            url: item.link,
+            metadata: {
+              title: item.title,
+              description: htmlToMarkdown(item.description || ''),
+            },
+            originUrl: discoveredFeed.url,
+            rssItem: item,
+            createdAt: item.created,
+          }).post
+        }),
       )
-    })
+    ).filter((post): post is Post => post !== null)
 
     return json({ feed: discoveredFeed, posts })
   } catch (e) {

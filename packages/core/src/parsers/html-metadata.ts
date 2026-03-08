@@ -22,6 +22,7 @@ export interface HtmlMetaData extends OpenGraphData {
   createdAt: number
   updatedAt: number
   author: string
+  siteName: string
 }
 
 export async function fetchHtmlMetaDataOnly(
@@ -61,6 +62,12 @@ export function parseHtmlMetaData(url: string, html: string, feed?: Feed | null)
   const openGraphData = getHtmlOpenGraphData(document, url)
   const feedName = feed ? feed.name : ''
   const name = getFirstNonEmpty([getMetaName(document), openGraphData.name, feedName])
+  // Fallback chain: og:site_name → JSON-LD publisher → twitter:site
+  const siteName = getFirstNonEmpty([
+    openGraphData.siteName,
+    getPublisherFromJsonLd(document),
+    getTwitterSite(document),
+  ])
   const title = getHtmlTitle(document, openGraphData.title)
   const favicon = parseFaviconFromHtml(html) || DEFAULT_FAVICON
   const icon = createUrlFromUrn(favicon, baseUrl)
@@ -73,6 +80,7 @@ export function parseHtmlMetaData(url: string, html: string, feed?: Feed | null)
     ...openGraphData,
     title,
     name,
+    siteName,
     icon,
     feedUrl: detectedFeedUrl,
     feedTitle: feedName,
@@ -190,6 +198,52 @@ function getArticleAuthorFromJsonLd(document: ParsedNode): string {
       }
     } catch {
       // Invalid JSON, skip
+    }
+  }
+  return ''
+}
+
+function getPublisherFromJsonLd(document: ParsedNode): string {
+  const scriptNodes = HtmlUtils.findPath(document, ['html', 'head', 'script'])
+  for (const script of scriptNodes) {
+    if (!HtmlUtils.matchAttributes(script, [{ name: 'type', value: 'application/ld+json' }])) {
+      continue
+    }
+    const content = script.childNodes[0]?.value
+    if (!content) continue
+
+    try {
+      const data = JSON.parse(content)
+      // Handle both single object and @graph array
+      const items = Array.isArray(data['@graph']) ? data['@graph'] : [data]
+      for (const item of items) {
+        const type = item['@type']
+        if (type === 'Article' || type === 'NewsArticle' || type === 'BlogPosting' || type === 'WebPage') {
+          const publisher = item.publisher
+          if (typeof publisher === 'string') return publisher
+          if (publisher?.name) return publisher.name
+        }
+        // Also check Organization type at root level
+        if (type === 'Organization' && item.name) {
+          return item.name
+        }
+      }
+    } catch {
+      // Invalid JSON, skip
+    }
+  }
+  return ''
+}
+
+function getTwitterSite(document: ParsedNode): string {
+  const metaNodes = HtmlUtils.findPath(document, ['html', 'head', 'meta'])
+  for (const meta of metaNodes) {
+    if (HtmlUtils.matchAttributes(meta, [{ name: 'name', value: 'twitter:site' }])) {
+      const content = HtmlUtils.getAttribute(meta, 'content')
+      if (content) {
+        // Remove @ prefix if present (e.g., "@sitename" -> "sitename")
+        return content.startsWith('@') ? content.slice(1) : content
+      }
     }
   }
   return ''

@@ -1,6 +1,6 @@
 import type { RequestHandler } from './$types'
 import type { Post } from '@feeds/core'
-import { fetchFeedsFromUrl, fetchEnrichedMetadata, buildPostFromMetadata } from '@feeds/core'
+import { fetchFeedsFromUrl, createEnrichedPost } from '@feeds/core'
 import { getFaviconForUrl } from '$lib/imageEmbed'
 import { readFile, writeFile } from 'fs/promises'
 import { join } from 'path'
@@ -59,22 +59,15 @@ export const POST: RequestHandler = async ({ request }) => {
     }
 
     try {
-      const { metadata, originUrl } = await fetchEnrichedMetadata(url)
-      const { post, title } = buildPostFromMetadata(url, metadata, originUrl)
-
-      // Discover feed URL for the origin
-      const feedUrl = await discoverFeedUrl(url)
-      if (feedUrl) {
-        post.feedUrl = feedUrl
-      }
+      const { post, title } = await createEnrichedPost(url)
 
       await savePost(post)
 
       return json({
         success: true,
         post: {
-          title: title || metadata.name || 'Shared link',
-          icon: getFaviconForUrl(url, metadata.icon),
+          title: title || post.author?.name || 'Shared link',
+          icon: getFaviconForUrl(url, post.author?.image?.uri),
         },
       })
     } catch (e) {

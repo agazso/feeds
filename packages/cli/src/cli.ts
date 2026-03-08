@@ -3,10 +3,13 @@ import {
   type Feed,
   type Post,
   convertOPMLFeed,
+  discoverFeedUrlFromWellKnownPaths,
+  fetchEnrichedMetadata,
   fetchFeedFromUrl,
   fetchFeedsFromUrl,
   fetchHtmlMetaDataOnly,
   fetchOpenGraphData,
+  getBaseUrl,
   getCanonicalUrl,
   loadPosts,
   mergeUpdatedPosts,
@@ -54,6 +57,25 @@ program
   .action(async (url: string) => {
     const data = await fetchHtmlMetaDataOnly(url)
     console.log(JSON.stringify(data, null, 2))
+  })
+
+// Discover command - comprehensive metadata with feed discovery
+program
+  .command('discover <url>')
+  .description('Fetch all metadata including feed discovery from well-known paths')
+  .action(async (url: string) => {
+    const { metadata } = await fetchEnrichedMetadata(url)
+
+    // If no feedUrl found in metadata, try well-known paths
+    if (!metadata.feedUrl) {
+      const baseUrl = getBaseUrl(url)
+      const discoveredFeedUrl = await discoverFeedUrlFromWellKnownPaths(baseUrl)
+      if (discoveredFeedUrl) {
+        metadata.feedUrl = discoveredFeedUrl
+      }
+    }
+
+    console.log(JSON.stringify(metadata, null, 2))
   })
 
 // OPML command

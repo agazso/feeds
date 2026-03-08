@@ -27,6 +27,18 @@ const RSSMimeTypes = [
 
 const JsonFeedMimeTypes = ['application/feed+json', 'application/json']
 
+export const altFeedLocations = [
+  '/rss',
+  '/rss/',
+  '/rss/index.rss',
+  '/feed',
+  '/social-media/feed/',
+  '/feed/',
+  '/feed/rss/',
+  '/index.xml',
+  '/',
+]
+
 function getFeedUrlFromHtmlLink(link: ParsedNode): string {
   const allFeedMimeTypes = [...RSSMimeTypes, ...JsonFeedMimeTypes]
   for (const mimeType of allFeedMimeTypes) {
@@ -162,7 +174,7 @@ export function isFeedMimeType(mimeType: string): boolean {
   return isRssMimeType(mimeType) || isJsonFeedMimeType(mimeType)
 }
 
-async function fetchRSSFeedUrlFromUrl(url: string): Promise<ContentWithMimeType | null> {
+export async function fetchRSSFeedUrlFromUrl(url: string): Promise<ContentWithMimeType | null> {
   const contentWithMimeType = await fetchContentWithMimeType(url)
   if (!contentWithMimeType) {
     return null
@@ -175,18 +187,18 @@ async function fetchRSSFeedUrlFromUrl(url: string): Promise<ContentWithMimeType 
   return null
 }
 
+export async function discoverFeedUrlFromWellKnownPaths(baseUrl: string): Promise<string> {
+  for (const path of altFeedLocations) {
+    const url = urlUtils.createUrlFromUrn(path, baseUrl)
+    const result = await fetchRSSFeedUrlFromUrl(url)
+    if (result && isRssMimeType(result.mimeType)) {
+      return url
+    }
+  }
+  return ''
+}
+
 async function tryFetchFeedFromAltLocations(baseUrl: string, feed: Feed): Promise<Feed | null> {
-  const altFeedLocations = [
-    '/rss',
-    '/rss/',
-    '/rss/index.rss',
-    '/feed',
-    '/social-media/feed/',
-    '/feed/',
-    '/feed/rss/',
-    '/index.xml',
-    '/',
-  ]
   for (const altFeedLocation of altFeedLocations) {
     const altUrl = urlUtils.createUrlFromUrn(altFeedLocation, baseUrl)
     const rssContentWithMimeType = await fetchRSSFeedUrlFromUrl(altUrl)

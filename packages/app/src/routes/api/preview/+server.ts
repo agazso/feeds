@@ -1,7 +1,6 @@
 import { json } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
-import type { Post } from '@feeds/core'
-import { fetchFeedsFromUrl, fetchEnrichedMetadata, buildPostFromMetadata } from '@feeds/core'
+import { fetchFeedsFromUrl, createEnrichedPost } from '@feeds/core'
 import { transformPostImages } from '$lib/imageEmbed'
 
 interface DiscoveredFeed {
@@ -45,29 +44,23 @@ export const POST: RequestHandler = async ({ request }) => {
   }
 
   try {
-    const [metadataResult, feedResult] = await Promise.allSettled([
-      fetchEnrichedMetadata(url),
+    // Use createEnrichedPost for unified post creation
+    const [postResult, feedResult] = await Promise.allSettled([
+      createEnrichedPost(url),
       discoverFeedFromUrl(url),
     ])
 
-    // Extract metadata (required)
-    if (metadataResult.status !== 'fulfilled') {
+    if (postResult.status !== 'fulfilled') {
       return json({ preview: null, feed: null })
     }
-    const { metadata, originUrl } = metadataResult.value
 
-    // Extract feed (optional enhancement)
-    const feed = feedResult.status === 'fulfilled' ? feedResult.value : null
-
-    let { post } = buildPostFromMetadata(url, metadata, originUrl)
+    let { post } = postResult.value
 
     // Transform images for display (handle hotlink-blocked CDNs)
     post = await transformPostImages(post, url)
 
-    // Enrich post with feedUrl if discovered
-    if (feed) {
-      post.feedUrl = feed.feedUrl
-    }
+    // Extract feed for UI (separate from post's feedUrl)
+    const feed = feedResult.status === 'fulfilled' ? feedResult.value : null
 
     return json({ preview: post, feed })
   } catch (e) {

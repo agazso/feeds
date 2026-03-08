@@ -6,6 +6,7 @@ export interface OpenGraphData {
   description: string
   image: string
   name: string
+  siteName: string
   url: string
 }
 
@@ -21,6 +22,7 @@ export async function fetchOpenGraphData(url: string): Promise<OpenGraphData> {
       description: '',
       image: '',
       name: '',
+      siteName: '',
       url,
     }
   }
@@ -37,6 +39,7 @@ export function getHtmlOpenGraphData(document: ParsedNode, url: string): OpenGra
     description: '',
     image: '',
     name: '',
+    siteName: '',
     url,
   }
 
@@ -47,6 +50,7 @@ export function getHtmlOpenGraphData(document: ParsedNode, url: string): OpenGra
     ogData.description = getPropertyIfValueNotSet(ogData.description, meta, 'og:description')
     ogData.image = getPropertyIfValueNotSet(ogData.image, meta, 'og:image')
     ogData.name = getPropertyIfValueNotSet(ogData.name, meta, 'og:site_name')
+    ogData.siteName = getPropertyIfValueNotSet(ogData.siteName, meta, 'og:site_name')
     ogData.url = getPropertyIfValueNotSet(ogData.url, meta, 'og:url')
   }
 
@@ -100,7 +104,11 @@ function getPropertyIfValueNotSet(value: string, node: ParsedNode, name: string)
 }
 
 function getOpenGraphPropertyContent(node: ParsedNode, name: string): string | null {
-  if (HtmlUtils.matchAttributes(node, [{ name: 'property', value: name }])) {
+  // Check both 'property' (correct) and 'name' (common mistake) attributes
+  if (
+    HtmlUtils.matchAttributes(node, [{ name: 'property', value: name }]) ||
+    HtmlUtils.matchAttributes(node, [{ name: 'name', value: name }])
+  ) {
     return HtmlUtils.getAttribute(node, 'content')
   }
   return null
