@@ -23,6 +23,7 @@ export interface RSSItem {
   enclosures?: RSSEnclosure[]
   media?: RSSMedia
   content?: string
+  comments?: string
 }
 
 export interface RSSFeed {

@@ -340,6 +340,9 @@ function parseRSSChannel(channel: any, items?: [] | undefined): RSSFeed {
           ? val['content:encoded'][0]
           : val['content:encoded']
       }
+      if (val.comments) {
+        obj.comments = Array.isArray(val.comments) ? val.comments[0] : val.comments
+      }
       rss.items.push(obj)
     })
   }

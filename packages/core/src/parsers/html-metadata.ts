@@ -251,13 +251,16 @@ function getTwitterSite(document: ParsedNode): string {
 }
 
 function getRssFeedTitle(document: ParsedNode): string {
+  const genericTitles = ['rss', 'atom', 'feed', 'rss feed', 'atom feed']
   const links = HtmlUtils.findPath(document, ['html', 'head', 'link'])
   for (const link of links) {
     if (HtmlUtils.matchAttributes(link, [{ name: 'rel', value: 'alternate' }])) {
       const type = HtmlUtils.getAttribute(link, 'type') || ''
       if (type.includes('rss') || type.includes('atom') || type.includes('xml')) {
         const title = HtmlUtils.getAttribute(link, 'title')
-        if (title) return title
+        if (title && !genericTitles.includes(title.toLowerCase())) {
+          return title
+        }
       }
     }
   }

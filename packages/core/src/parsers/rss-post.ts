@@ -472,10 +472,11 @@ function convertRSSFeedtoPosts(
           : item.title === '(Untitled)'
             ? ''
             : '**' + item.title + '**' + '\n\n'
+        const commentsLink = item.comments ? `\n\n[Comments](${item.comments})` : ''
 
         const post: Post = {
           _id: feedUrl + '/' + item.link,
-          text: (title + text).trim(),
+          text: (title + text + commentsLink).trim(),
           createdAt: adjustCreatedAt(item.created),
           images,
           link: item.link,

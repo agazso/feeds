@@ -25,6 +25,11 @@ describe('formatAuthorName', () => {
   test('returns empty string when no name, author, or fallback', () => {
     expect(formatAuthorName(undefined, undefined, undefined)).toBe('')
   })
+
+  test('hostname fallback is formatted (capitalized, no www)', () => {
+    expect(formatAuthorName(undefined, undefined, 'Tropes.fyi')).toBe('Tropes.fyi')
+    expect(formatAuthorName(undefined, undefined, 'Example.com')).toBe('Example.com')
+  })
 })
 
 describe('createPost author name', () => {
@@ -98,12 +103,84 @@ describe('createPost author name', () => {
     expect(result.post.author.name).toBe('Ars Technica | Staff Writer')
   })
 
-  test('no feedName or siteIdentity: uses hostname fallback', () => {
+  test('no feedName or siteIdentity: uses formatted hostname fallback', () => {
     const result = createPost({
       url: 'https://example.com/post',
       metadata: {},
       originUrl: 'https://example.com',
     })
-    expect(result.post.author.name).toBe('example.com')
+    expect(result.post.author.name).toBe('Example.com')
+  })
+
+  test('YouTube from aggregator (HN): uses siteIdentity not feedName', () => {
+    const result = createPost({
+      url: 'https://www.youtube.com/watch?v=abc123',
+      metadata: { siteName: 'YouTube' },
+      originUrl: 'https://news.ycombinator.com',
+      feedName: 'Hacker News',
+    })
+    // YouTube videos from HN should show "YouTube", not "Hacker News"
+    expect(result.post.author.name).toBe('YouTube')
+  })
+
+  test('external article no metadata: uses formatted hostname (not feedName)', () => {
+    const result = createPost({
+      url: 'https://blocked-site.com/article',
+      metadata: {}, // Empty metadata (e.g., captcha page)
+      originUrl: 'https://news.ycombinator.com',
+      feedName: 'Hacker News',
+    })
+    // External articles without metadata show their hostname, not the aggregator name
+    expect(result.post.author.name).toBe('Blocked-site.com')
+  })
+
+  test('same-host article no metadata: uses feedName', () => {
+    const result = createPost({
+      url: 'https://news.ycombinator.com/item?id=12345',
+      metadata: {}, // HN self-post with no metadata
+      originUrl: 'https://news.ycombinator.com',
+      feedName: 'Hacker News',
+    })
+    // Same-host posts can fall back to feedName
+    expect(result.post.author.name).toBe('Hacker News')
+  })
+})
+
+describe('createPost comments link', () => {
+  test('adds comments link when rssItem has comments', () => {
+    const result = createPost({
+      url: 'https://example.com/article',
+      metadata: { title: 'Article Title', description: 'Description' },
+      originUrl: 'https://news.ycombinator.com',
+      feedName: 'Hacker News',
+      rssItem: {
+        title: 'Article Title',
+        link: 'https://example.com/article',
+        comments: 'https://news.ycombinator.com/item?id=12345',
+      },
+    })
+    expect(result.post.text).toContain('[Comments](https://news.ycombinator.com/item?id=12345)')
+  })
+
+  test('no comments link when rssItem has no comments field', () => {
+    const result = createPost({
+      url: 'https://example.com/article',
+      metadata: { title: 'Article Title', description: 'Description' },
+      originUrl: 'https://example.com',
+      rssItem: {
+        title: 'Article Title',
+        link: 'https://example.com/article',
+      },
+    })
+    expect(result.post.text).not.toContain('[Comments]')
+  })
+
+  test('no comments link when no rssItem', () => {
+    const result = createPost({
+      url: 'https://example.com/article',
+      metadata: { title: 'Article Title', description: 'Description' },
+      originUrl: 'https://example.com',
+    })
+    expect(result.post.text).not.toContain('[Comments]')
   })
 })

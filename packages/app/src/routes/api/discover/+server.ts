@@ -82,6 +82,7 @@ export const POST: RequestHandler = async ({ request }) => {
               rssItem: item,
               createdAt: item.created,
               feedName: discoveredFeed.name,
+              feedOrigin: discoveredFeed.url,
             }),
           )
 

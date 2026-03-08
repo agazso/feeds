@@ -45,20 +45,48 @@ export function formatAuthorName(name?: string, author?: string, fallback?: stri
 }
 
 /**
+ * Check if two URLs have the same hostname (ignoring www prefix).
+ */
+function isSameHost(url1: string, url2: string): boolean {
+  try {
+    const host1 = new URL(url1).hostname.replace(/^www\./, '')
+    const host2 = new URL(url2).hostname.replace(/^www\./, '')
+    return host1 === host2
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Format a hostname for display (remove www, capitalize first letter).
+ */
+function formatHostname(hostname: string): string {
+  const clean = hostname.replace(/^www\./, '')
+  return clean.charAt(0).toUpperCase() + clean.slice(1)
+}
+
+/**
  * Determines whether to use feedName over siteIdentity for author attribution.
  *
- * Simple rule: YouTube URLs should use feedName (channel name) over generic "YouTube".
- * For everything else (aggregators like HN, regular blogs), use siteIdentity from article.
+ * YouTube URLs should use feedName (channel name) only when the origin is also YouTube.
+ * This handles YouTube channel feeds while avoiding misattribution when aggregators
+ * (like Hacker News) link to YouTube videos.
  */
 function shouldUseFeedName(
   feedName: string | undefined,
   siteIdentity: string | undefined,
   articleUrl: string,
+  originUrl: string,
 ): boolean {
   if (!feedName || feedName === siteIdentity) return false
 
-  // YouTube URLs should use feedName (channel name) over generic "YouTube"
-  return isYoutubeLink(articleUrl)
+  // YouTube: use feedName (channel name) only when origin is also YouTube
+  // This handles YouTube channel feeds while avoiding aggregator misattribution
+  if (isYoutubeLink(articleUrl)) {
+    return isYoutubeLink(originUrl)
+  }
+
+  return false
 }
 
 export interface CreatePostParams {
@@ -85,17 +113,23 @@ export function createPost(params: CreatePostParams): { post: Post; title: strin
   }
 
   const siteIdentity = metadata.name || metadata.siteName
-  // Use feedName for YouTube (channel name), otherwise use article's siteIdentity
-  const authorIdentity = shouldUseFeedName(feedName, siteIdentity, url)
+  // Use feedName for YouTube (channel name) when origin is also YouTube,
+  // otherwise use article's siteIdentity (feedName only for same-host posts)
+  const authorIdentity = shouldUseFeedName(feedName, siteIdentity, url, originUrl)
     ? feedName
-    : siteIdentity
+    : siteIdentity || (isSameHost(url, originUrl) ? feedName : undefined)
 
-  const text =
+  let text =
     siteIdentity && title
       ? `**${title}**\n\n${description}`
       : title && description
         ? `**${title}**\n\n${description}`
         : description || title || ''
+
+  // Add comments link if available (e.g., from Hacker News)
+  if (rssItem?.comments) {
+    text = `${text}\n\n[Comments](${rssItem.comments})`
+  }
 
   const post: Post = {
     _id: `${url}-${Math.random().toString(36).slice(2, 8)}`,
@@ -104,7 +138,7 @@ export function createPost(params: CreatePostParams): { post: Post; title: strin
     images: image ? [{ uri: image }] : [],
     link: url,
     author: {
-      name: formatAuthorName(authorIdentity, metadata.author, new URL(url).hostname),
+      name: formatAuthorName(authorIdentity, metadata.author, formatHostname(new URL(url).hostname)),
       uri: originUrl,
       image: { uri: metadata.icon },
     },
@@ -243,6 +277,7 @@ export interface CreateEnrichedPostOptions {
   rssItem?: RSSItem // For /discover - include original RSS item
   feedName?: string // Fallback author name (e.g., from RSS feed title)
   feedUrl?: string // If known, skip feed URL discovery
+  feedOrigin?: string // Feed's origin URL (for aggregator detection)
   createdAt?: number // From RSS item timestamp
 }
 
@@ -260,10 +295,11 @@ export async function createEnrichedPost(
   }
 
   // 3. Create post with all data
+  // Use feedOrigin for author attribution (distinguishes external articles from same-host posts)
   return createPost({
     url,
     metadata,
-    originUrl,
+    originUrl: options?.feedOrigin || originUrl,
     feedUrl,
     rssItem: options?.rssItem,
     feedName: options?.feedName,
