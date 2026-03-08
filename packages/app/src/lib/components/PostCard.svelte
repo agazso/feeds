@@ -22,21 +22,6 @@ const thumbnail = $derived(thumbnailSrc(post))
 const postLink = $derived(post.link || '')
 let avatarError = $state(false)
 
-async function addToMyFeed() {
-  try {
-    const response = await fetch('/api/myfeed', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ post }),
-    })
-    if (!response.ok) {
-      console.error('Failed to add to my feed')
-    }
-  } catch (e) {
-    console.error('Failed to add to my feed:', e)
-  }
-}
-
 async function removeFromMyFeed() {
   const postId = post._id
   if (!postId) return
@@ -73,10 +58,10 @@ const menuItems = $derived.by(() => {
       label: 'Remove',
       onclick: removeFromMyFeed,
     })
-  } else {
+  } else if (post.link) {
     items.push({
       label: 'Add to my feed',
-      onclick: addToMyFeed,
+      href: `/share/${encodeURIComponent(post.link)}`,
     })
   }
   if (post.feedUrl) {

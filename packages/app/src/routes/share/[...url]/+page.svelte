@@ -1,0 +1,280 @@
+<script lang="ts">
+import type { Post } from '@feeds/core'
+import PostCard from '$lib/components/PostCard.svelte'
+import TagSelector from '$lib/components/TagSelector.svelte'
+
+interface Props {
+  data: {
+    url: string
+    availableTags: string[]
+  }
+}
+
+let { data }: Props = $props()
+
+let loading = $state(true)
+let saving = $state(false)
+let previewPost = $state<Post | null>(null)
+let error = $state<string | null>(null)
+let success = $state<{ title: string; icon?: string } | null>(null)
+let selectedTags = $state<string[]>([])
+
+async function fetchPreview() {
+  if (!data.url) {
+    loading = false
+    error = 'No URL provided'
+    return
+  }
+
+  // Check sessionStorage for cached preview
+  const cacheKey = `share-preview:${data.url}`
+  const cached = sessionStorage.getItem(cacheKey)
+  if (cached) {
+    sessionStorage.removeItem(cacheKey)
+    try {
+      previewPost = JSON.parse(cached)
+      loading = false
+      return
+    } catch {
+      // Invalid JSON, fall through to fetch
+    }
+  }
+
+  try {
+    const response = await fetch('/api/preview', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: data.url }),
+    })
+    const result = await response.json()
+    previewPost = result.preview || null
+    if (!previewPost) {
+      error = 'Could not fetch preview for this URL'
+    }
+  } catch {
+    error = 'Failed to fetch preview'
+  } finally {
+    loading = false
+  }
+}
+
+async function save() {
+  if (saving) return
+
+  saving = true
+  error = null
+
+  try {
+    const response = await fetch('/api/myfeed', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url: data.url,
+        tags: selectedTags.length > 0 ? selectedTags : undefined
+      }),
+    })
+    const result = await response.json()
+
+    if (!response.ok) {
+      error = result.error || 'Failed to save'
+      return
+    }
+
+    success = {
+      title: result.post?.title || 'Shared link',
+      icon: result.post?.icon,
+    }
+  } catch {
+    error = 'Failed to save'
+  } finally {
+    saving = false
+  }
+}
+
+$effect(() => {
+  fetchPreview()
+})
+</script>
+
+<svelte:head>
+  <title>Share</title>
+</svelte:head>
+
+<div class="share-page">
+  {#if success}
+    <div class="success-container">
+      <div class="success-icon">
+        {#if success.icon}
+          <img src={success.icon} alt="" class="site-icon" />
+        {:else}
+          <span class="checkmark">&#10003;</span>
+        {/if}
+      </div>
+      <h2>Saved!</h2>
+      <p class="post-title">{success.title}</p>
+      {#if selectedTags.length > 0}
+        <div class="saved-tags">
+          {#each selectedTags as tag}
+            <span class="tag">#{tag}</span>
+          {/each}
+        </div>
+      {/if}
+      <a href="/myfeed" class="goto-button">Go to My Feed</a>
+    </div>
+  {:else if loading}
+    <div class="loading-container">
+      <p>Loading preview...</p>
+    </div>
+  {:else if error && !previewPost}
+    <div class="error-container">
+      <p class="error">{error}</p>
+      <a href="/share" class="back-link">Try another URL</a>
+    </div>
+  {:else if previewPost}
+    <div class="preview-section">
+      <p class="section-label">Preview</p>
+      <div class="preview-card">
+        <PostCard post={previewPost} />
+      </div>
+    </div>
+
+    <div class="tags-section">
+      <p class="section-label">Tags (optional)</p>
+      <TagSelector availableTags={data.availableTags} bind:selectedTags />
+    </div>
+
+    {#if error}
+      <p class="error">{error}</p>
+    {/if}
+
+    <button class="save-button" onclick={save} disabled={saving}>
+      {saving ? 'Saving...' : 'Save to My Feed'}
+    </button>
+  {/if}
+</div>
+
+<style>
+  .share-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 60vh;
+    padding: var(--padding);
+    padding-top: calc(var(--padding) * 4);
+    gap: calc(var(--padding) * 2);
+  }
+
+  .loading-container,
+  .error-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--padding);
+  }
+
+  .success-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: var(--padding);
+  }
+
+  .success-icon {
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .site-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 8px;
+    object-fit: contain;
+  }
+
+  .checkmark {
+    font-size: 48px;
+    color: #27ae60;
+  }
+
+  .success-container h2 {
+    margin: 0;
+    font-size: 24px;
+  }
+
+  .post-title {
+    color: #888;
+    margin: 0;
+    max-width: var(--max-column-width);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .saved-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--half-padding);
+    justify-content: center;
+  }
+
+  .tag {
+    padding: var(--half-padding) var(--padding);
+    font-size: 14px;
+    background: var(--accent-color);
+    border-radius: 16px;
+    color: white;
+  }
+
+  .goto-button {
+    padding: var(--padding);
+    background: var(--background-color);
+    color: var(--color);
+    text-decoration: none;
+    border-radius: 4px;
+    border: 1px solid #88888888;
+    margin-top: var(--padding);
+  }
+
+  .goto-button:hover {
+    opacity: 0.9;
+  }
+
+  .preview-section,
+  .tags-section {
+    width: 100%;
+    max-width: var(--max-column-width);
+  }
+
+  .section-label {
+    color: #888;
+    font-size: 14px;
+    margin-bottom: var(--half-padding);
+  }
+
+  .preview-card {
+    width: 100%;
+  }
+
+  .error {
+    color: #e74c3c;
+    text-align: center;
+  }
+
+  .back-link {
+    color: var(--color);
+  }
+
+  .save-button {
+    padding: var(--padding) calc(var(--padding) * 2);
+    font-size: 16px;
+    min-width: 200px;
+  }
+
+  .save-button:disabled {
+    opacity: 0.6;
+  }
+</style>

@@ -51,6 +51,7 @@ export const POST: RequestHandler = async ({ request }) => {
   // URL mode: fetch metadata and build post
   if (body.url && typeof body.url === 'string') {
     const url = body.url.trim()
+    const tags = Array.isArray(body.tags) ? body.tags : undefined
 
     try {
       new URL(url)
@@ -60,6 +61,10 @@ export const POST: RequestHandler = async ({ request }) => {
 
     try {
       const { post, title } = await createEnrichedPost(url)
+
+      if (tags && tags.length > 0) {
+        post.tags = tags
+      }
 
       await savePost(post)
 
