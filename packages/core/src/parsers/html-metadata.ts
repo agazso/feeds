@@ -62,11 +62,12 @@ export function parseHtmlMetaData(url: string, html: string, feed?: Feed | null)
   const openGraphData = getHtmlOpenGraphData(document, url)
   const feedName = feed ? feed.name : ''
   const name = getFirstNonEmpty([getMetaName(document), openGraphData.name, feedName])
-  // Fallback chain: og:site_name → JSON-LD publisher → twitter:site
+  // Fallback chain: og:site_name → JSON-LD publisher → twitter:site → RSS feed title
   const siteName = getFirstNonEmpty([
     openGraphData.siteName,
     getPublisherFromJsonLd(document),
     getTwitterSite(document),
+    getRssFeedTitle(document),
   ])
   const title = getHtmlTitle(document, openGraphData.title)
   const favicon = parseFaviconFromHtml(html) || DEFAULT_FAVICON
@@ -243,6 +244,20 @@ function getTwitterSite(document: ParsedNode): string {
       if (content) {
         // Remove @ prefix if present (e.g., "@sitename" -> "sitename")
         return content.startsWith('@') ? content.slice(1) : content
+      }
+    }
+  }
+  return ''
+}
+
+function getRssFeedTitle(document: ParsedNode): string {
+  const links = HtmlUtils.findPath(document, ['html', 'head', 'link'])
+  for (const link of links) {
+    if (HtmlUtils.matchAttributes(link, [{ name: 'rel', value: 'alternate' }])) {
+      const type = HtmlUtils.getAttribute(link, 'type') || ''
+      if (type.includes('rss') || type.includes('atom') || type.includes('xml')) {
+        const title = HtmlUtils.getAttribute(link, 'title')
+        if (title) return title
       }
     }
   }

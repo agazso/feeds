@@ -15,8 +15,16 @@ export interface ParsedNode {
  * Uses regex-based parsing for head elements only.
  */
 export function parseHtml(html: string): ParsedNode {
-  const headMatch = html.match(/<head[^>]*>([\s\S]*?)<\/head>/i)
-  const headContent = headMatch?.[1] ?? ''
+  // Try standard <head>...</head> first
+  let headMatch = html.match(/<head[^>]*>([\s\S]*?)<\/head>/i)
+  let headContent = headMatch?.[1] ?? ''
+
+  // Fallback: Handle malformed HTML where <head> is missing but </head> exists
+  // Extract content between <html> and </head> or <body>
+  if (!headContent) {
+    const fallbackMatch = html.match(/<html[^>]*>([\s\S]*?)(?:<\/head>|<body)/i)
+    headContent = fallbackMatch?.[1] ?? ''
+  }
 
   const links: ParsedNode[] = []
   const metas: ParsedNode[] = []
