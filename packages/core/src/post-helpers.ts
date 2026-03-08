@@ -6,6 +6,37 @@ import { type HtmlMetaData, fetchHtmlMetaDataOnly } from './parsers/html-metadat
 import { isYoutubeLink } from './providers/youtube'
 import { createUrlFromUrn, isImageUrl } from './utils/url'
 
+/**
+ * Extract author-specific path for multi-author sites.
+ * Returns the author's main page URL if a pattern matches.
+ *
+ * Supported patterns:
+ * - /sites/{author}/... (Forbes, etc.)
+ * - /@{author}/... (Medium, Substack usernames)
+ * - /authors/{author}/... (various blogs)
+ */
+function extractAuthorPath(url: string): string | null {
+  const parsedUrl = new URL(url)
+  const pathParts = parsedUrl.pathname.split('/').filter(Boolean)
+
+  // Pattern: /sites/{author}/...
+  if (pathParts[0] === 'sites' && pathParts.length > 1) {
+    return `${parsedUrl.origin}/sites/${pathParts[1]}/`
+  }
+
+  // Pattern: /@{author}/...
+  if (pathParts[0]?.startsWith('@') && pathParts.length > 1) {
+    return `${parsedUrl.origin}/${pathParts[0]}/`
+  }
+
+  // Pattern: /authors/{author}/...
+  if (pathParts[0] === 'authors' && pathParts.length > 1) {
+    return `${parsedUrl.origin}/authors/${pathParts[1]}/`
+  }
+
+  return null
+}
+
 export function formatAuthorName(name?: string, author?: string, fallback?: string): string {
   if (name && author && name !== author) {
     return `${name} | ${author}`
@@ -90,11 +121,13 @@ export function mergeHtmlMetadata(
 ): HtmlMetaData {
   return {
     ...urlMeta,
-    // Use origin's name/siteName/title as fallback for name
-    name: urlMeta.name || originMeta.name || originMeta.siteName || originMeta.title,
+    // Only use explicit identity fields, NOT title (title is not identity)
+    name: urlMeta.name || originMeta.name || originMeta.siteName,
     siteName: urlMeta.siteName || originMeta.siteName,
     author: urlMeta.author || originMeta.author,
     icon: urlMeta.icon || originMeta.icon,
+    // Use origin's feedUrl if article page didn't have one
+    feedUrl: urlMeta.feedUrl || originMeta.feedUrl,
   }
 }
 
@@ -107,6 +140,14 @@ export function buildPostFromMetadata(
   return createPost({ url, metadata, originUrl })
 }
 
+/**
+ * Check if metadata has useful identity info (name, siteName, or author).
+ * Used to filter out blocked/captcha pages that only return a title.
+ */
+function hasIdentityData(meta: HtmlMetaData): boolean {
+  return !!(meta.name || meta.siteName || meta.author)
+}
+
 export async function fetchEnrichedMetadata(
   url: string,
   init?: RequestInit,
@@ -117,14 +158,36 @@ export async function fetchEnrichedMetadata(
   const originUrl = parsedUrl.origin
   const isSubpage = parsedUrl.pathname !== '/'
   const missingIdentity = !urlMetadata.name && !urlMetadata.siteName && !urlMetadata.author
+  // Also check for missing content (captcha pages have no title/description)
+  const missingContent = !urlMetadata.title || !urlMetadata.description
 
   let originMetadata: HtmlMetaData | null = null
-  if (isSubpage && missingIdentity) {
+
+  // Try author path first for multi-author sites
+  if (isSubpage && (missingIdentity || missingContent)) {
+    const authorPath = extractAuthorPath(url)
+    if (authorPath) {
+      try {
+        originMetadata = await fetchHtmlMetaDataOnly(authorPath, init)
+      } catch {
+        // Author path fetch failed, continue
+      }
+    }
+  }
+
+  // Fallback: try origin if author path didn't work
+  if (!originMetadata && isSubpage && missingIdentity) {
     try {
       originMetadata = await fetchHtmlMetaDataOnly(`${originUrl}/`, init)
     } catch {
       // Origin fetch failed, continue without it
     }
+  }
+
+  // Only use origin metadata if it has useful identity data
+  // (filters out captcha/blocked pages that only return a title)
+  if (originMetadata && !hasIdentityData(originMetadata)) {
+    originMetadata = null
   }
 
   let metadata = originMetadata ? mergeHtmlMetadata(urlMetadata, originMetadata) : urlMetadata
