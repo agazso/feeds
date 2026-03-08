@@ -232,8 +232,12 @@ export async function augmentFeedWithMetadata(
   rssFeed: RSSFeedWithMetrics,
   html?: string,
 ): Promise<Feed | null> {
-  const feedUrl = (rssFeed.feed && rssFeed.feed.url) || undefined
-  const baseUrl = urlUtils.getBaseUrl(feedUrl || url).replace('http://', 'https://')
+  const channelLink = (rssFeed.feed && rssFeed.feed.url) || undefined
+  // Use RSS channel link directly if available (preserves author path for multi-author platforms)
+  // Fall back to getBaseUrl() only when channel link is not available
+  const baseUrl = channelLink
+    ? urlUtils.getCanonicalUrl(channelLink).replace('http://', 'https://')
+    : urlUtils.getBaseUrl(url).replace('http://', 'https://')
   const name = normalizeName(feedName || rssFeed.feed.title)
   const feed: Feed = {
     url: urlUtils.getCanonicalUrl(baseUrl),
