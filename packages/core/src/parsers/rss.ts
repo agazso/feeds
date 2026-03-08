@@ -97,20 +97,24 @@ function parseRedditJson(
     }
 
     if (postData.post_hint == null) {
+      // Text post or link post without media - link goes to external URL
       return {
-        title: '',
-        description: postData.title + `<p/>[Comments](${redditMobileLink})`,
+        title: postData.title,
+        description: '',
         link: postData.url,
         url: postData.url,
+        comments: redditMobileLink,
         created,
         media: { thumbnail },
       }
     }
+    // Media post (image/video) - link goes to Reddit comments
     return {
-      title: '',
-      description: postData.title,
+      title: postData.title,
+      description: '',
       link: redditMobileLink,
       url: redditMobileLink,
+      comments: redditMobileLink,
       created,
       media: { thumbnail },
     }

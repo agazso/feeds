@@ -82,6 +82,7 @@ export const POST: RequestHandler = async ({ request }) => {
               rssItem: item,
               createdAt: item.created,
               feedName: discoveredFeed.name,
+              feedIcon: discoveredFeed.favicon,
               feedOrigin: discoveredFeed.url,
             }),
           )
@@ -96,11 +97,13 @@ export const POST: RequestHandler = async ({ request }) => {
             metadata: {
               title: item.title,
               description: htmlToMarkdown(item.description || ''),
+              icon: discoveredFeed.favicon,
             },
             originUrl: discoveredFeed.url,
             rssItem: item,
             createdAt: item.created,
             feedName: discoveredFeed.name,
+            feedIcon: discoveredFeed.favicon,
           }).post
         }),
       )

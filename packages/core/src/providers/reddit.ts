@@ -202,10 +202,10 @@ export function makeCanonicalRedditLink(url: string): RedditLink | undefined {
 
 function getAboutIcon(about: RedditAbout): string | undefined {
   if (about.data.icon_img != null && about.data.icon_img !== '') {
-    return about.data.icon_img
+    return about.data.icon_img.replace(/&amp;/g, '&')
   }
   if (about.data.community_icon != null && about.data.community_icon !== '') {
-    return about.data.community_icon
+    return about.data.community_icon.replace(/&amp;/g, '&')
   }
   return undefined
 }

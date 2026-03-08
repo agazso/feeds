@@ -95,16 +95,33 @@ export interface CreatePostParams {
   originUrl: string
   feedName?: string // Fallback for author name
   feedUrl?: string // RSS feed URL
+  feedIcon?: string // Fallback for author icon (from feed discovery)
   rssItem?: RSSItem // Original RSS item (for /discover)
   createdAt?: number // From RSS item or Date.now()
 }
 
-export function createPost(params: CreatePostParams): { post: Post; title: string } {
-  const { url, metadata, originUrl, feedName, feedUrl, rssItem, createdAt } = params
+// Generic titles that indicate metadata fetch failed to get real content
+const GENERIC_TITLES = ['reddit - the heart of the internet']
 
-  let title = metadata.title?.trim() || ''
-  let description = metadata.description?.trim() || ''
-  let image = metadata.image
+function isGenericTitle(title: string | undefined): boolean {
+  if (!title) return true
+  return GENERIC_TITLES.includes(title.toLowerCase().trim())
+}
+
+function extractRssItemImage(rssItem: RSSItem | undefined): string | undefined {
+  const thumbnail = rssItem?.media?.thumbnail?.[0]
+  return thumbnail?.url?.[0]
+}
+
+export function createPost(params: CreatePostParams): { post: Post; title: string } {
+  const { url, metadata, originUrl, feedName, feedUrl, feedIcon, rssItem, createdAt } = params
+
+  // Prefer RSS item title when metadata has generic/missing title (e.g., Reddit)
+  const useRssItemData = isGenericTitle(metadata.title) && rssItem?.title
+  let title = useRssItemData ? rssItem.title : (metadata.title?.trim() || '')
+  let description = useRssItemData ? (rssItem.description || '') : (metadata.description?.trim() || '')
+  // For Reddit: prefer RSS item image (from media.thumbnail), fall back to metadata
+  let image = useRssItemData ? (extractRssItemImage(rssItem) || metadata.image) : metadata.image
 
   if (isImageUrl(url)) {
     image = url
@@ -140,7 +157,7 @@ export function createPost(params: CreatePostParams): { post: Post; title: strin
     author: {
       name: formatAuthorName(authorIdentity, metadata.author, formatHostname(new URL(url).hostname)),
       uri: originUrl,
-      image: { uri: metadata.icon },
+      image: { uri: useRssItemData ? (feedIcon || metadata.icon) : (metadata.icon || feedIcon) },
     },
     rssItem,
     feedUrl,
@@ -277,6 +294,7 @@ export interface CreateEnrichedPostOptions {
   rssItem?: RSSItem // For /discover - include original RSS item
   feedName?: string // Fallback author name (e.g., from RSS feed title)
   feedUrl?: string // If known, skip feed URL discovery
+  feedIcon?: string // Fallback author icon (from feed discovery)
   feedOrigin?: string // Feed's origin URL (for aggregator detection)
   createdAt?: number // From RSS item timestamp
 }
@@ -301,6 +319,7 @@ export async function createEnrichedPost(
     metadata,
     originUrl: options?.feedOrigin || originUrl,
     feedUrl,
+    feedIcon: options?.feedIcon,
     rssItem: options?.rssItem,
     feedName: options?.feedName,
     createdAt: options?.createdAt,
