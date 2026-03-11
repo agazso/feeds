@@ -5,6 +5,7 @@ import { fetchFeedsFromUrl } from './feed-helpers'
 import { type HtmlMetaData, fetchHtmlMetaDataOnly } from './parsers/html-metadata'
 import { isYoutubeLink } from './providers/youtube'
 import { createUrlFromUrn, isImageUrl } from './utils/url'
+import { htmlToMarkdown } from './parsers/rss-post'
 
 /**
  * Extract author-specific path for multi-author sites.
@@ -118,7 +119,7 @@ export function createPost(params: CreatePostParams): { post: Post; title: strin
 
   // Prefer RSS item title when metadata has generic/missing title (e.g., Reddit)
   const useRssItemData = isGenericTitle(metadata.title) && rssItem?.title
-  let title = useRssItemData ? rssItem.title : (metadata.title?.trim() || '')
+  let title = useRssItemData ? htmlToMarkdown(rssItem.title || '') : (metadata.title?.trim() || '')
   let description = useRssItemData ? (rssItem.description || '') : (metadata.description?.trim() || '')
   // For Reddit: prefer RSS item image (from media.thumbnail), fall back to metadata
   let image = useRssItemData ? (extractRssItemImage(rssItem) || metadata.image) : metadata.image

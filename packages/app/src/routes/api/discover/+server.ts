@@ -96,7 +96,7 @@ export const POST: RequestHandler = async ({ request }) => {
           return createPost({
             url: item.link,
             metadata: {
-              title: item.title,
+              title: htmlToMarkdown(item.title || ''),
               description: htmlToMarkdown(item.description || ''),
               icon: discoveredFeed.favicon,
             },

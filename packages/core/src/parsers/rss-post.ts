@@ -471,7 +471,7 @@ function convertRSSFeedtoPosts(
           ? ''
           : item.title === '(Untitled)'
             ? ''
-            : '**' + item.title + '**' + '\n\n'
+            : '**' + htmlToMarkdown(item.title || '') + '**' + '\n\n'
         const commentsLink = item.comments ? `\n\n[Comments](${item.comments})` : ''
 
         const post: Post = {
