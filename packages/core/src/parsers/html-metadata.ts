@@ -70,8 +70,8 @@ export function parseHtmlMetaData(url: string, html: string, feed?: Feed | null)
     getRssFeedTitle(document),
   ])
   const title = getHtmlTitle(document, openGraphData.title)
-  const favicon = parseFaviconFromHtml(html) || DEFAULT_FAVICON
-  const icon = createUrlFromUrn(favicon, baseUrl)
+  const favicon = parseFaviconFromHtml(html)
+  const icon = favicon ? createUrlFromUrn(favicon, baseUrl) : ''
   const createdAt = getPublishedTime(document)
   const updatedAt = getModifiedTime(document, createdAt)
   // Detect feed URL from HTML if not provided via Feed object
