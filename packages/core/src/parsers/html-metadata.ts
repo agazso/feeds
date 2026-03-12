@@ -1,5 +1,5 @@
 import type { Feed } from '../models/feed'
-import { DEFAULT_FAVICON, parseFaviconFromHtml } from '../utils/favicon'
+import { parseFaviconFromHtml } from '../utils/favicon'
 import { HtmlUtils, type ParsedNode } from '../utils/html'
 import { type OpenGraphData, getHtmlOpenGraphData } from '../utils/opengraph'
 import { createUrlFromUrn } from '../utils/url'
