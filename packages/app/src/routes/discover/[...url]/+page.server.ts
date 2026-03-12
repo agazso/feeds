@@ -1,5 +1,7 @@
 import type { PageServerLoad } from './$types'
 import { loadConfig } from '$lib/config'
+import { loadMyfeedPosts } from '$lib/myfeed'
+import { getTagsFromPosts } from '$lib/tags'
 
 export const load: PageServerLoad = async ({ params }) => {
   // The rest parameter captures everything after /discover/
@@ -18,6 +20,12 @@ export const load: PageServerLoad = async ({ params }) => {
         tagSet.add(tag)
       }
     }
+  }
+
+  // Add myfeed tags
+  const myfeedPosts = await loadMyfeedPosts()
+  for (const tag of getTagsFromPosts(myfeedPosts)) {
+    tagSet.add(tag)
   }
 
   const availableTags = Array.from(tagSet).sort()

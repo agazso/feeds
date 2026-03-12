@@ -1,6 +1,8 @@
 import type { PageServerLoad } from './$types'
 import { loadPosts } from '@feeds/core'
 import { loadConfig } from '$lib/config'
+import { loadMyfeedPosts } from '$lib/myfeed'
+import { getTagsFromPosts } from '$lib/tags'
 import { error } from '@sveltejs/kit'
 
 export const load: PageServerLoad = async ({ params }) => {
@@ -32,6 +34,13 @@ export const load: PageServerLoad = async ({ params }) => {
       }
     }
   }
+
+  // Add myfeed tags
+  const myfeedPosts = await loadMyfeedPosts()
+  for (const tag of getTagsFromPosts(myfeedPosts)) {
+    tagSet.add(tag)
+  }
+
   const availableTags = Array.from(tagSet).sort()
 
   return {
