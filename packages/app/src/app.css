@@ -16,6 +16,7 @@
   /* Layout */
   --padding: 10px;
   --half-padding: calc(var(--padding) / 2);
+  --double-padding: calc(var(--padding) * 2);
   --header-height: calc(var(--padding) * 6);
   --max-column-width: min(500px, max(100vmin, 320px));
 
