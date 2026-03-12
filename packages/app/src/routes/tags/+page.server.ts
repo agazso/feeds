@@ -1,12 +1,15 @@
 import type { PageServerLoad } from './$types'
 import { loadConfig } from '$lib/config'
-import { getAllTags } from '$lib/tags'
+import { getAllTags, getTagsFromPosts } from '$lib/tags'
+import { loadMyfeedPosts } from '$lib/myfeed'
 
 export const load: PageServerLoad = async () => {
   const config = await loadConfig()
-  const tags = getAllTags(config.feeds)
+  const myfeedPosts = await loadMyfeedPosts()
 
-  return {
-    tags,
-  }
+  const feedTags = getAllTags(config.feeds)
+  const myfeedTags = getTagsFromPosts(myfeedPosts)
+  const tags = [...new Set([...feedTags, ...myfeedTags])].sort()
+
+  return { tags }
 }

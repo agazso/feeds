@@ -1,4 +1,4 @@
-import type { Feed } from '@feeds/core'
+import type { Feed, Post } from '@feeds/core'
 
 /**
  * Filter feeds to only those that have ALL specified tags
@@ -48,4 +48,34 @@ export function parseTagsFromPath(path: string): string[] {
  */
 export function formatTagsForPath(tags: string[]): string {
   return tags.map((tag) => encodeURIComponent(tag)).join('+')
+}
+
+/**
+ * Get all unique tags from posts, sorted alphabetically
+ */
+export function getTagsFromPosts(posts: Post[]): string[] {
+  const tagSet = new Set<string>()
+  for (const post of posts) {
+    if (post.tags) {
+      for (const tag of post.tags) {
+        tagSet.add(tag)
+      }
+    }
+  }
+  return Array.from(tagSet).sort()
+}
+
+/**
+ * Filter posts to only those that have ALL specified tags
+ */
+export function filterPostsByTags(posts: Post[], tags: string[]): Post[] {
+  if (tags.length === 0) {
+    return posts
+  }
+  return posts.filter((post) => {
+    if (!post.tags || post.tags.length === 0) {
+      return false
+    }
+    return tags.every((tag) => post.tags!.includes(tag))
+  })
 }
