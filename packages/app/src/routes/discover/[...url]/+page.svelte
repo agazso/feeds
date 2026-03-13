@@ -38,9 +38,12 @@ let addMode = $state(false)
 let selectedTags = $state<string[]>([])
 let saving = $state(false)
 let feedAdded = $state(false)
+let embeddingSuggestions = $state<string[]>([])
 
 const cooccurrence = $derived(buildTagCooccurrence(data.feeds, data.myfeedPosts))
-const suggestedTags = $derived(getSuggestedTags(selectedTags, cooccurrence))
+const suggestedTags = $derived(
+  [...new Set([...embeddingSuggestions, ...getSuggestedTags(selectedTags, cooccurrence)])].slice(0, 5)
+)
 
 // Check if the discovered feed already exists
 const feedExists = $derived(
@@ -73,6 +76,7 @@ async function discover() {
 
     discoveredFeed = responseData.feed
     posts = responseData.posts
+    fetchEmbeddingSuggestions()
   } catch {
     error = 'Failed to discover feed. Please check the URL and try again.'
   } finally {
@@ -88,6 +92,7 @@ function reset() {
   addMode = false
   selectedTags = []
   feedAdded = false
+  embeddingSuggestions = []
   // Update URL without the parameter
   goto('/discover')
 }
@@ -100,6 +105,26 @@ function enterAddMode() {
 function cancelAddMode() {
   addMode = false
   selectedTags = []
+}
+
+async function fetchEmbeddingSuggestions() {
+  if (!discoveredFeed || !posts.length) return
+  const text = [
+    discoveredFeed.name,
+    ...posts.slice(0, 5).map(p => p.rssItem?.title || p.text.slice(0, 100))
+  ].join('. ')
+
+  try {
+    const res = await fetch('/api/suggest-tags', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    })
+    const data = await res.json()
+    embeddingSuggestions = data.tags || []
+  } catch {
+    // Ignore errors, fall back to co-occurrence only
+  }
 }
 
 async function saveFeed() {
@@ -157,6 +182,7 @@ $effect(() => {
     addMode = false
     selectedTags = []
     feedAdded = false
+    embeddingSuggestions = []
   }
 })
 </script>
