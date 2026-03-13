@@ -5,6 +5,7 @@ import PostList from '$lib/components/PostList.svelte'
 import FeedHeader from '$lib/components/FeedHeader.svelte'
 import TagSelector from '$lib/components/TagSelector.svelte'
 import { searchPosts } from '$lib/search'
+import { buildTagCooccurrence, getSuggestedTags } from '$lib/tags'
 
 let { data }: { data: PageData } = $props()
 
@@ -12,6 +13,9 @@ let searchQuery = $state('')
 let isEditingTags = $state(false)
 let editedTags = $state<string[]>([])
 let isSaving = $state(false)
+
+const cooccurrence = $derived(buildTagCooccurrence(data.feeds, data.myfeedPosts))
+const suggestedTags = $derived(getSuggestedTags(editedTags, cooccurrence))
 
 const filteredPosts = $derived(searchQuery ? searchPosts(data.posts, searchQuery) : data.posts)
 
@@ -71,6 +75,7 @@ async function saveTags() {
         <TagSelector
           availableTags={data.availableTags}
           bind:selectedTags={editedTags}
+          {suggestedTags}
         />
         <div class="tag-editor-actions">
           <button type="button" onclick={cancelEditingTags} disabled={isSaving}>Cancel</button>

@@ -79,3 +79,83 @@ export function filterPostsByTags(posts: Post[], tags: string[]): Post[] {
     return tags.every((tag) => post.tags!.includes(tag))
   })
 }
+
+/**
+ * Build co-occurrence map: for each tag, count how often other tags appear with it
+ */
+export function buildTagCooccurrence(feeds: Feed[], posts: Post[] = []): Map<string, Map<string, number>> {
+  const cooccurrence = new Map<string, Map<string, number>>()
+
+  // Process all items with tags
+  const taggedItems = [
+    ...feeds.filter(f => f.tags?.length),
+    ...posts.filter(p => p.tags?.length)
+  ]
+
+  for (const item of taggedItems) {
+    const tags = item.tags!
+    for (const tag of tags) {
+      if (!cooccurrence.has(tag)) {
+        cooccurrence.set(tag, new Map())
+      }
+      const tagMap = cooccurrence.get(tag)!
+      for (const otherTag of tags) {
+        if (otherTag !== tag) {
+          tagMap.set(otherTag, (tagMap.get(otherTag) || 0) + 1)
+        }
+      }
+    }
+  }
+
+  return cooccurrence
+}
+
+/**
+ * Get suggested tags based on selected tags, ranked by co-occurrence frequency
+ */
+export function getSuggestedTags(
+  selectedTags: string[],
+  cooccurrence: Map<string, Map<string, number>>,
+  limit: number = 5
+): string[] {
+  if (selectedTags.length === 0) return []
+
+  // Aggregate scores from all selected tags
+  const scores = new Map<string, number>()
+
+  for (const selectedTag of selectedTags) {
+    const related = cooccurrence.get(selectedTag)
+    if (related) {
+      for (const [tag, count] of related) {
+        if (!selectedTags.includes(tag)) {
+          scores.set(tag, (scores.get(tag) || 0) + count)
+        }
+      }
+    }
+  }
+
+  // Sort by score descending, return top N
+  return Array.from(scores.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([tag]) => tag)
+}
+
+/**
+ * Get suggested tags by matching available tags against text content
+ * Matches whole words only, case-insensitive
+ */
+export function getContentBasedTags(
+  text: string,
+  availableTags: string[],
+  limit: number = 5
+): string[] {
+  if (!text || availableTags.length === 0) return []
+
+  const words = text.toLowerCase().split(/\W+/).filter(w => w.length > 0)
+  const wordSet = new Set(words)
+
+  return availableTags
+    .filter(tag => wordSet.has(tag.toLowerCase()))
+    .slice(0, limit)
+}

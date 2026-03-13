@@ -1,12 +1,19 @@
 <script lang="ts">
-import type { Post } from '@feeds/core'
+import type { Post, Feed } from '@feeds/core'
 import PostList from '$lib/components/PostList.svelte'
 import TagSelector from '$lib/components/TagSelector.svelte'
 import FeedHeader from '$lib/components/FeedHeader.svelte'
 import { goto } from '$app/navigation'
+import { buildTagCooccurrence, getSuggestedTags } from '$lib/tags'
 
 interface Props {
-  data: { url: string; availableTags: string[]; existingFeedUrls: string[] }
+  data: {
+    url: string
+    availableTags: string[]
+    existingFeedUrls: string[]
+    feeds: Feed[]
+    myfeedPosts: Post[]
+  }
 }
 
 let { data }: Props = $props()
@@ -31,6 +38,9 @@ let addMode = $state(false)
 let selectedTags = $state<string[]>([])
 let saving = $state(false)
 let feedAdded = $state(false)
+
+const cooccurrence = $derived(buildTagCooccurrence(data.feeds, data.myfeedPosts))
+const suggestedTags = $derived(getSuggestedTags(selectedTags, cooccurrence))
 
 // Check if the discovered feed already exists
 const feedExists = $derived(
@@ -172,7 +182,7 @@ $effect(() => {
           <h3>Add "{discoveredFeed.name}" to your feeds</h3>
           <p class="feed-url-info">{discoveredFeed.feedUrl}</p>
 
-          <TagSelector availableTags={data.availableTags} bind:selectedTags />
+          <TagSelector availableTags={data.availableTags} bind:selectedTags {suggestedTags} />
 
           <div class="actions">
             <button type="button" class="save-button" onclick={saveFeed} disabled={saving}>

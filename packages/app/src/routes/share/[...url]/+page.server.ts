@@ -26,6 +26,8 @@ export const load: PageServerLoad = async ({ params }) => {
 
   return {
     url: decodeURIComponent(url),
-    availableTags: Array.from(tagSet).sort()
+    availableTags: Array.from(tagSet).sort(),
+    feeds: config.feeds,
+    myfeedPosts
   }
 }

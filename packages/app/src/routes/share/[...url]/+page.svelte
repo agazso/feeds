@@ -1,12 +1,15 @@
 <script lang="ts">
-import type { Post } from '@feeds/core'
+import type { Post, Feed } from '@feeds/core'
 import PostCard from '$lib/components/PostCard.svelte'
 import TagSelector from '$lib/components/TagSelector.svelte'
+import { buildTagCooccurrence, getSuggestedTags, getContentBasedTags } from '$lib/tags'
 
 interface Props {
   data: {
     url: string
     availableTags: string[]
+    feeds: Feed[]
+    myfeedPosts: Post[]
   }
 }
 
@@ -18,6 +21,23 @@ let previewPost = $state<Post | null>(null)
 let error = $state<string | null>(null)
 let success = $state<{ title: string; icon?: string } | null>(null)
 let selectedTags = $state<string[]>([])
+
+const cooccurrence = $derived(buildTagCooccurrence(data.feeds, data.myfeedPosts))
+
+// Combine all text fields for tag matching
+function getPostText(post: Post | null): string {
+  if (!post) return ''
+  return [
+    post.rssItem?.title,
+    post.rssItem?.description,
+    post.text,
+    post.author?.name
+  ].filter(Boolean).join(' ')
+}
+
+const suggestedTags = $derived(
+  getContentBasedTags(getPostText(previewPost), data.availableTags)
+)
 
 async function fetchPreview() {
   if (!data.url) {
@@ -140,7 +160,7 @@ $effect(() => {
 
     <div class="tags-section">
       <p class="section-label">Tags (optional)</p>
-      <TagSelector availableTags={data.availableTags} bind:selectedTags />
+      <TagSelector availableTags={data.availableTags} bind:selectedTags {suggestedTags} />
     </div>
 
     {#if error}

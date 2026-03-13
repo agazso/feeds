@@ -47,5 +47,7 @@ export const load: PageServerLoad = async ({ params }) => {
     feed,
     posts: sorted.slice(0, config.maxPosts),
     availableTags,
+    feeds: config.feeds,
+    myfeedPosts,
   }
 }

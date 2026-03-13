@@ -2,16 +2,22 @@
 interface Props {
   availableTags: string[]
   selectedTags?: string[]
+  suggestedTags?: string[]
   onchange?: (tags: string[]) => void
 }
 
-let { availableTags, selectedTags = $bindable([]), onchange }: Props = $props()
+let { availableTags, selectedTags = $bindable([]), suggestedTags = [], onchange }: Props = $props()
 let newTag = $state('')
 
 const allTags = $derived([
   ...availableTags,
   ...selectedTags.filter(t => !availableTags.includes(t))
 ])
+
+// Filter suggested tags to exclude already selected ones
+const filteredSuggestions = $derived(
+  suggestedTags.filter(t => !selectedTags.includes(t))
+)
 
 function toggleTag(tag: string) {
   if (selectedTags.includes(tag)) {
@@ -33,6 +39,23 @@ function addNewTag() {
 </script>
 
 <div class="tag-selector">
+  {#if filteredSuggestions.length > 0}
+    <div class="suggested-section">
+      <span class="suggested-label">Suggested:</span>
+      <div class="suggested-tags">
+        {#each filteredSuggestions as tag}
+          <button
+            type="button"
+            class="tag-chip suggested"
+            onclick={() => toggleTag(tag)}
+          >
+            #{tag}
+          </button>
+        {/each}
+      </div>
+    </div>
+  {/if}
+
   <div class="tags-list">
     {#each allTags as tag}
       <button
@@ -88,6 +111,36 @@ function addNewTag() {
     background: var(--accent-color);
     border-color: var(--accent-color);
     color: white;
+  }
+
+  .tag-chip.suggested {
+    border-color: var(--accent-color);
+    border-style: dashed;
+    color: var(--accent-color);
+  }
+
+  .tag-chip.suggested:hover {
+    background: var(--accent-color);
+    color: white;
+    border-style: solid;
+  }
+
+  .suggested-section {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--half-padding);
+  }
+
+  .suggested-label {
+    font-size: 12px;
+    color: #888;
+  }
+
+  .suggested-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--half-padding);
   }
 
   .new-tag {

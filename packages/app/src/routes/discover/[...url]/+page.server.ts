@@ -30,5 +30,11 @@ export const load: PageServerLoad = async ({ params }) => {
 
   const availableTags = Array.from(tagSet).sort()
 
-  return { url, availableTags, existingFeedUrls: Array.from(existingFeedUrls) }
+  return {
+    url,
+    availableTags,
+    existingFeedUrls: Array.from(existingFeedUrls),
+    feeds: config.feeds,
+    myfeedPosts
+  }
 }
