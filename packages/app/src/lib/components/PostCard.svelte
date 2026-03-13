@@ -8,9 +8,10 @@ interface Props {
   post: Post
   onfilter?: (term: string) => void
   onremove?: (postId: string) => void
+  feedUrlToPageUrl?: Record<string, string>
 }
 
-let { post, onfilter, onremove }: Props = $props()
+let { post, onfilter, onremove, feedUrlToPageUrl }: Props = $props()
 
 const title = $derived(postTitle(post))
 const text = $derived(postText(post))
@@ -65,10 +66,20 @@ const menuItems = $derived.by(() => {
     })
   }
   if (post.feedUrl) {
-    items.push({
-      label: 'Discover Feed',
-      href: `/discover/${encodeURIComponent(post.feedUrl)}`,
-    })
+    const feedPageUrl = feedUrlToPageUrl?.[post.feedUrl]
+    if (feedPageUrl) {
+      // Feed is already followed - show "View feed" only
+      items.push({
+        label: 'View feed',
+        href: `/feeds/${encodeURIComponent(feedPageUrl)}`,
+      })
+    } else {
+      // Feed is not followed - show "Discover Feed" only
+      items.push({
+        label: 'Discover Feed',
+        href: `/discover/${encodeURIComponent(post.feedUrl)}`,
+      })
+    }
   }
   return items
 })

@@ -10,9 +10,10 @@ interface Props {
   posts: Post[]
   onfilter?: (term: string) => void
   onremove?: (postId: string) => void
+  feedUrlToPageUrl?: Record<string, string>
 }
 
-let { posts, onfilter, onremove }: Props = $props()
+let { posts, onfilter, onremove, feedUrlToPageUrl }: Props = $props()
 
 let listElement: HTMLUListElement | undefined = $state()
 let colcadeInstance: Colcade | undefined = $state()
@@ -83,7 +84,7 @@ $effect(() => {
   {/if}
   {#each posts as post, index (post._id + '-' + index)}
     <li class="post-item">
-      <PostCard {post} {onfilter} {onremove} />
+      <PostCard {post} {onfilter} {onremove} {feedUrlToPageUrl} />
     </li>
   {/each}
 </ul>

@@ -78,6 +78,7 @@
     box-shadow: none;
     color: var(--color);
     cursor: pointer;
+    font: inherit;
     font-size: 14px;
     text-decoration: none;
     min-width: unset;

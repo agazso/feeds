@@ -32,10 +32,17 @@ export const load: PageServerLoad = async ({ params }) => {
   const myfeedTags = getTagsFromPosts(myfeedPosts)
   const allTags = [...new Set([...feedTags, ...myfeedTags])].sort()
 
+  // Build feedUrl -> pageUrl map for "View feed" links
+  const feedUrlToPageUrl: Record<string, string> = {}
+  for (const feed of config.feeds) {
+    feedUrlToPageUrl[feed.feedUrl] = feed.url
+  }
+
   return {
     posts: allPosts,
     selectedTags,
     allTags,
     feedCount: filteredFeeds.length,
+    feedUrlToPageUrl,
   }
 }

@@ -480,6 +480,7 @@ function convertRSSFeedtoPosts(
           createdAt: adjustCreatedAt(item.created),
           images,
           link: item.link,
+          feedUrl,
           author: {
             name: feedName,
             uri: feedUrl,

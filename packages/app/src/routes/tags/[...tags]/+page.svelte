@@ -87,7 +87,7 @@ function handleTagClick(tag: string) {
 
 <SearchBar value={searchQuery} onchange={handleSearch} />
 {#if filteredPosts.length > 0}
-  <PostList posts={filteredPosts} onfilter={handleFilter} />
+  <PostList posts={filteredPosts} onfilter={handleFilter} feedUrlToPageUrl={data.feedUrlToPageUrl} />
 {:else if searchQuery}
   <p class="no-results">No posts found matching "{searchQuery}"</p>
 {:else}
