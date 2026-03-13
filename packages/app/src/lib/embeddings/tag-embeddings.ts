@@ -1,0 +1,196 @@
+import type { Feed, Post } from '@feeds/core'
+import { embed, embedBatch } from './embedder'
+import { rankBySimilarity, type ScoredItem } from './similarity'
+import fs from 'fs'
+import path from 'path'
+
+export interface TagEmbedding {
+  tag: string
+  vector: number[]
+  context: string // The text used to generate the embedding
+}
+
+export interface TagEmbeddingCache {
+  version: number
+  embeddings: TagEmbedding[]
+}
+
+const CACHE_VERSION = 1
+const CACHE_FILE = 'tag-embeddings.json'
+
+/**
+ * Clean text by removing markdown markup and normalizing whitespace
+ */
+function cleanText(text: string): string {
+  return text
+    .replace(/[*_~`#\[\]()·]/g, ' ') // Remove markdown chars
+    .replace(/\s+/g, ' ') // Normalize whitespace
+    .trim()
+}
+
+/**
+ * Get static directory path for cache storage
+ */
+function getCachePath(): string {
+  // In SvelteKit, static files are in the static/ directory at project root
+  // During build/dev, we can write to it
+  return path.join(process.cwd(), 'static', CACHE_FILE)
+}
+
+/**
+ * Build context text for a tag based on how it's used in feeds and posts
+ */
+export function buildTagContext(tag: string, feeds: Feed[], posts: Post[]): string {
+  const contextParts: string[] = [tag]
+
+  // Add names from feeds with this tag
+  const taggedFeeds = feeds.filter((f) => f.tags?.includes(tag))
+  for (const feed of taggedFeeds.slice(0, 10)) {
+    if (feed.name) {
+      contextParts.push(feed.name)
+    }
+  }
+
+  // Add titles/text from posts with this tag
+  const taggedPosts = posts.filter((p) => p.tags?.includes(tag))
+  for (const post of taggedPosts.slice(0, 10)) {
+    if (post.rssItem?.title) {
+      contextParts.push(post.rssItem.title)
+    }
+    if (post.text) {
+      contextParts.push(post.text.slice(0, 200))
+    }
+  }
+
+  return contextParts.join('. ')
+}
+
+/**
+ * Load tag embeddings from cache file
+ */
+export function loadTagEmbeddings(): TagEmbeddingCache | null {
+  try {
+    const cachePath = getCachePath()
+    if (!fs.existsSync(cachePath)) {
+      return null
+    }
+
+    const data = JSON.parse(fs.readFileSync(cachePath, 'utf-8'))
+
+    if (data.version !== CACHE_VERSION) {
+      return null // Version mismatch, regenerate
+    }
+
+    return data
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Save tag embeddings to cache file
+ */
+export function saveTagEmbeddings(cache: TagEmbeddingCache): void {
+  try {
+    const cachePath = getCachePath()
+    fs.writeFileSync(cachePath, JSON.stringify(cache, null, 2))
+  } catch (e) {
+    console.error('Failed to save tag embeddings cache:', e)
+  }
+}
+
+/**
+ * Get embeddings for all tags, using cache when possible
+ */
+export async function getTagEmbeddings(
+  tags: string[],
+  feeds: Feed[],
+  posts: Post[]
+): Promise<TagEmbedding[]> {
+  if (tags.length === 0) return []
+
+  // Try to load from cache
+  const cache = loadTagEmbeddings()
+  const cachedTags = new Map<string, TagEmbedding>()
+
+  if (cache) {
+    for (const embedding of cache.embeddings) {
+      cachedTags.set(embedding.tag, embedding)
+    }
+  }
+
+  // Find tags that need new embeddings
+  const result: TagEmbedding[] = []
+  const tagsToEmbed: Array<{ tag: string; context: string }> = []
+
+  for (const tag of tags) {
+    const cached = cachedTags.get(tag)
+    if (cached) {
+      result.push(cached)
+    } else {
+      const context = buildTagContext(tag, feeds, posts)
+      tagsToEmbed.push({ tag, context })
+    }
+  }
+
+  // Generate embeddings for missing tags
+  if (tagsToEmbed.length > 0) {
+    const contexts = tagsToEmbed.map((t) => t.context)
+    const vectors = await embedBatch(contexts)
+
+    for (let i = 0; i < tagsToEmbed.length; i++) {
+      const embedding: TagEmbedding = {
+        tag: tagsToEmbed[i].tag,
+        vector: vectors[i],
+        context: tagsToEmbed[i].context
+      }
+      result.push(embedding)
+    }
+
+    // Update cache with all embeddings
+    saveTagEmbeddings({
+      version: CACHE_VERSION,
+      embeddings: result
+    })
+  }
+
+  return result
+}
+
+/**
+ * Get suggested tags based on semantic similarity to input text
+ */
+export async function getEmbeddingBasedTags(
+  text: string,
+  availableTags: string[],
+  feeds: Feed[],
+  posts: Post[],
+  limit: number = 5,
+  minScore: number = 0.15
+): Promise<string[]> {
+  if (!text || availableTags.length === 0) {
+    return []
+  }
+
+  try {
+    // Clean text and get embeddings for it
+    const cleanedText = cleanText(text)
+    const textVector = await embed(cleanedText)
+
+    // Get embeddings for all available tags
+    const tagEmbeddings = await getTagEmbeddings(availableTags, feeds, posts)
+
+    // Rank tags by similarity
+    const candidates = tagEmbeddings.map((te) => ({
+      item: te.tag,
+      vector: te.vector
+    }))
+
+    const ranked: ScoredItem<string>[] = rankBySimilarity(textVector, candidates, limit, minScore)
+
+    return ranked.map((r) => r.item)
+  } catch (e) {
+    console.error('Embedding-based tag suggestion failed:', e)
+    return []
+  }
+}

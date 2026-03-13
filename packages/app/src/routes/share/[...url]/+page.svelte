@@ -21,6 +21,7 @@ let previewPost = $state<Post | null>(null)
 let error = $state<string | null>(null)
 let success = $state<{ title: string; icon?: string } | null>(null)
 let selectedTags = $state<string[]>([])
+let embeddingTags = $state<string[]>([])
 
 const cooccurrence = $derived(buildTagCooccurrence(data.feeds, data.myfeedPosts))
 
@@ -38,11 +39,28 @@ function getPostText(post: Post | null): string {
 // Get tags from feeds matching this URL's hostname
 const feedTags = $derived(getTagsFromMatchingFeeds(data.url, data.feeds))
 
-// Combine feed tags (priority) with content-based tags, deduplicated
+// Fetch embedding-based tags when preview loads
+$effect(() => {
+  const text = getPostText(previewPost)
+  if (text) {
+    fetch('/api/suggest-tags', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    })
+      .then(res => res.json())
+      .then(result => { embeddingTags = result.tags || [] })
+      .catch(() => { embeddingTags = [] })
+  } else {
+    embeddingTags = []
+  }
+})
+
+// Combine feed tags (priority) + embedding + content-based tags, deduplicated
 const suggestedTags = $derived.by(() => {
   const contentTags = getContentBasedTags(getPostText(previewPost), data.availableTags)
-  const combined = [...feedTags, ...contentTags.filter(t => !feedTags.includes(t))]
-  return combined.slice(0, 5)
+  const all = [...feedTags, ...embeddingTags, ...contentTags]
+  return [...new Set(all)].slice(0, 5)
 })
 
 async function fetchPreview() {

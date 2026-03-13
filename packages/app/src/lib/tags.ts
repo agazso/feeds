@@ -1,5 +1,8 @@
 import type { Feed, Post } from '@feeds/core'
 
+// Re-export embedding-based tag functions
+export { getEmbeddingBasedTags } from './embeddings'
+
 /**
  * Filter feeds to only those that have ALL specified tags
  */
