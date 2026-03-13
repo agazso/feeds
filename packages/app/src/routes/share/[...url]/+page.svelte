@@ -2,7 +2,7 @@
 import type { Post, Feed } from '@feeds/core'
 import PostCard from '$lib/components/PostCard.svelte'
 import TagSelector from '$lib/components/TagSelector.svelte'
-import { buildTagCooccurrence, getSuggestedTags, getContentBasedTags } from '$lib/tags'
+import { buildTagCooccurrence, getSuggestedTags, getContentBasedTags, getTagsFromMatchingFeeds } from '$lib/tags'
 
 interface Props {
   data: {
@@ -35,9 +35,15 @@ function getPostText(post: Post | null): string {
   ].filter(Boolean).join(' ')
 }
 
-const suggestedTags = $derived(
-  getContentBasedTags(getPostText(previewPost), data.availableTags)
-)
+// Get tags from feeds matching this URL's hostname
+const feedTags = $derived(getTagsFromMatchingFeeds(data.url, data.feeds))
+
+// Combine feed tags (priority) with content-based tags, deduplicated
+const suggestedTags = $derived.by(() => {
+  const contentTags = getContentBasedTags(getPostText(previewPost), data.availableTags)
+  const combined = [...feedTags, ...contentTags.filter(t => !feedTags.includes(t))]
+  return combined.slice(0, 5)
+})
 
 async function fetchPreview() {
   if (!data.url) {

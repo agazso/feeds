@@ -159,3 +159,36 @@ export function getContentBasedTags(
     .filter(tag => wordSet.has(tag.toLowerCase()))
     .slice(0, limit)
 }
+
+/**
+ * Get tags from feeds whose URL hostname matches the given URL's hostname
+ */
+export function getTagsFromMatchingFeeds(
+  url: string,
+  feeds: Feed[]
+): string[] {
+  if (!url || feeds.length === 0) return []
+
+  let targetHost: string
+  try {
+    targetHost = new URL(url).hostname
+  } catch {
+    return []
+  }
+
+  const tagSet = new Set<string>()
+  for (const feed of feeds) {
+    try {
+      const feedHost = new URL(feed.url).hostname
+      if (feedHost === targetHost && feed.tags) {
+        for (const tag of feed.tags) {
+          tagSet.add(tag)
+        }
+      }
+    } catch {
+      // Skip feeds with invalid URLs
+    }
+  }
+
+  return Array.from(tagSet)
+}
