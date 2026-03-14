@@ -98,11 +98,13 @@ function parseRedditJson(
 
     if (postData.post_hint == null) {
       // Text post or link post without media - link goes to external URL
+      // For self-posts, postData.url is a relative URL, so use the comments link instead
+      const linkUrl = postData.url.startsWith('/') ? redditMobileLink : postData.url
       return {
         title: postData.title,
         description: '',
-        link: postData.url,
-        url: postData.url,
+        link: linkUrl,
+        url: linkUrl,
         comments: redditMobileLink,
         created,
         media: { thumbnail },

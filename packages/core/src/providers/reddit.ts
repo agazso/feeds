@@ -2,6 +2,7 @@ import type { Feed } from '../models/feed'
 import type { RSSFeed, RSSFeedWithMetrics, RSSItem, RSSThumbnail } from '../models/rss'
 import { fetchFaviconUrl } from '../utils/favicon'
 import { safeFetch } from '../utils/fetch'
+import { HEADERS_WITH_FELFELE } from '../utils/headers'
 import * as urlUtils from '../utils/url'
 
 interface RedditImageData {
@@ -221,7 +222,7 @@ export async function fetchRedditFeed(url: string): Promise<Feed | undefined> {
   const aboutJsonUrl = canonicalUrl + '/about.json'
 
   try {
-    const response = await safeFetch(aboutJsonUrl)
+    const response = await safeFetch(aboutJsonUrl, { headers: HEADERS_WITH_FELFELE })
     const about = (await response.json()) as RedditAbout
     if (about.data.title == null) {
       return undefined
