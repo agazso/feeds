@@ -32,3 +32,4 @@ coverage/
 # User data
 packages/app/static/myposts.json
 packages/app/static/feeds.json
+packages/app/static/tag-embeddings.json
