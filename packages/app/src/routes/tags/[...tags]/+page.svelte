@@ -5,17 +5,18 @@ import PostList from '$lib/components/PostList.svelte'
 import { searchPosts } from '$lib/search'
 import { formatTagsForPath } from '$lib/tags'
 import { goto } from '$app/navigation'
+import { untrack } from 'svelte'
 
 let { data }: { data: PageData } = $props()
 
 let searchQuery = $state('')
 
 // Local state for selected tags - allows client-side filtering when adding tags
-let selectedTags = $state<string[]>(data.selectedTags)
+let selectedTags = $state<string[]>(untrack(() => data.selectedTags))
 
 // Track the base tags from server load (the "broadest" cached state)
-let baseTags = $state<string[]>(data.selectedTags)
-let cachedPosts = $state(data.posts)
+let baseTags = $state<string[]>(untrack(() => data.selectedTags))
+let cachedPosts = $state(untrack(() => data.posts))
 
 // Sync cache when data changes from server navigation
 $effect(() => {

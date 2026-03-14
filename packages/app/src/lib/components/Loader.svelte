@@ -5,10 +5,8 @@
 	}
 	let { dimension = 'default' }: Props = $props()
 
-	let size = dimensionToSize(dimension)
-
-	function dimensionToSize(dimension: Dimension): number {
-		switch (dimension) {
+	function dimensionToSize(d: Dimension): number {
+		switch (d) {
 			case 'large':
 				return 32
 			case 'default':
@@ -19,6 +17,8 @@
 				return 16
 		}
 	}
+
+	const size = $derived(dimensionToSize(dimension))
 </script>
 
 <div class="loader" style="width: {size}px"></div>

@@ -5,6 +5,7 @@ import TagSelector from '$lib/components/TagSelector.svelte'
 import FeedHeader from '$lib/components/FeedHeader.svelte'
 import { goto } from '$app/navigation'
 import { buildTagCooccurrence, getSuggestedTags } from '$lib/tags'
+import { untrack } from 'svelte'
 
 interface Props {
   data: {
@@ -26,7 +27,7 @@ interface DiscoveredFeed {
   itemCount: number
 }
 
-let url = $state(data.url || '')
+let url = $state(untrack(() => data.url) || '')
 let loading = $state(false)
 let error = $state<string | null>(null)
 let discoveredFeed = $state<DiscoveredFeed | null>(null)

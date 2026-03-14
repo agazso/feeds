@@ -52,7 +52,7 @@
     {@render trigger()}
   </button>
   {#if open}
-    <div class="dropdown-content" class:align-left={align === 'left'} onclick={() => (open = false)}>
+    <div class="dropdown-content" class:align-left={align === 'left'} onclick={() => (open = false)} onkeydown={(e) => e.key === 'Escape' && (open = false)} role="menu" tabindex="-1">
       {@render children()}
     </div>
   {/if}

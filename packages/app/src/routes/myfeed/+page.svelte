@@ -3,10 +3,11 @@ import type { PageData } from './$types'
 import SearchBar from '$lib/components/SearchBar.svelte'
 import PostList from '$lib/components/PostList.svelte'
 import { searchPosts } from '$lib/search'
+import { untrack } from 'svelte'
 
 let { data }: { data: PageData } = $props()
 
-let posts = $state(data.posts)
+let posts = $state(untrack(() => data.posts))
 let searchQuery = $state('')
 
 const filteredPosts = $derived(searchQuery ? searchPosts(posts, searchQuery) : posts)
