@@ -10,6 +10,20 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Feeds" />
     <link rel="icon" href="%sveltekit.assets%/icon-white-transparent.png" />
+    <script>
+      // Early masonry detection - runs before first paint
+      (function() {
+        var needsJS = !CSS.supports('grid-template-rows', 'masonry');
+        if (needsJS) {
+          // Add class to hide masonry content until Colcade is ready
+          document.documentElement.classList.add('js-masonry-loading');
+          // Inject hiding CSS immediately
+          var style = document.createElement('style');
+          style.textContent = '.js-masonry-loading .post-list.three-column { opacity: 0; }';
+          document.head.appendChild(style);
+        }
+      })();
+    </script>
     %sveltekit.head%
   </head>
   <body data-sveltekit-preload-data="hover">

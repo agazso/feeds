@@ -17,6 +17,7 @@ let { posts, onfilter, onremove, feedUrlToPageUrl }: Props = $props()
 
 let listElement: HTMLUListElement | undefined = $state()
 let colcadeInstance: Colcade | undefined = $state()
+let colcadeReady = $state(true)
 
 const layoutClass = $derived(preferences.layout)
 const needsJSMasonry = $derived(
@@ -26,6 +27,9 @@ const needsJSMasonry = $derived(
 // Initialize/destroy Colcade when needed
 $effect(() => {
   if (needsJSMasonry && listElement) {
+    // Re-add hiding class for SPA navigation (inline script handles initial load)
+    document.documentElement.classList.add('js-masonry-loading')
+
     const element = listElement
     import('colcade').then((module) => {
       const Colcade = module.default
@@ -33,6 +37,9 @@ $effect(() => {
         columns: '.masonry-col',
         items: '.post-item'
       })
+      colcadeReady = true
+      // Remove the early-hiding class now that Colcade is ready
+      document.documentElement.classList.remove('js-masonry-loading')
     })
   }
 
