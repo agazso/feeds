@@ -48,16 +48,34 @@ async function removeFromMyFeed() {
 }
 
 const menuItems = $derived.by(() => {
-  const items: MenuItem[] = [
-    {
-      label: 'Copy Link',
-      onclick: () => {
-        if (post.link) {
-          navigator.clipboard.writeText(post.link)
+  const items: MenuItem[] = []
+
+  // Share button (when Web Share API is available)
+  if (typeof navigator !== 'undefined' && navigator.share && post.link) {
+    items.push({
+      label: 'Share',
+      onclick: async () => {
+        try {
+          await navigator.share({
+            title: postTitle(post),
+            url: post.link!,
+          })
+        } catch (e) {
+          // User cancelled or share failed - ignore
         }
       },
+    })
+  }
+
+  // Copy Link (serves as fallback when Share unavailable)
+  items.push({
+    label: 'Copy Link',
+    onclick: () => {
+      if (post.link) {
+        navigator.clipboard.writeText(post.link)
+      }
     },
-  ]
+  })
   if (onremove) {
     items.push({
       label: 'Remove',
