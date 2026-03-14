@@ -1,5 +1,6 @@
 import type { Post } from '@feeds/core'
 import { getHumanHostname } from '@feeds/core'
+import { normalizeText } from './text'
 
 interface NormalizedPost extends Post {
   index: Record<string, string>
@@ -9,24 +10,10 @@ interface ScoredPost extends NormalizedPost {
   score: number
 }
 
-function normalizeString(s: string | undefined): string {
-  if (!s) {
-    return ''
-  }
-  return s
-    .normalize('NFD')
-    // Remove diacritical marks (accents) from characters
-    .replace(/\p{Diacritic}/gu, '')
-    // Keep only letters, digits, spaces, and hyphens (for negative search)
-    // Note: hyphen must be at start of character class to be treated literally
-    .replace(/[^-\p{Letter}0-9 ]/gu, '')
-    .toLowerCase()
-}
-
 function normalizePost(post: Post): NormalizedPost {
-  const authorName = post.author?.name ? normalizeString(post.author.name) : ''
+  const authorName = post.author?.name ? normalizeText(post.author.name) : ''
   const authorUrl = post.author?.uri ? getHumanHostname(post.author.uri) : ''
-  const text = normalizeString(post.text)
+  const text = normalizeText(post.text)
   const tags = post.tags || []
   const urlParts = authorUrl.split('/')
   const normalizedText = [
@@ -79,7 +66,7 @@ function getNormalizedPost(post: Post): NormalizedPost {
 }
 
 export function searchPosts(posts: Post[], query: string): Post[] {
-  const expr = normalizeString(query)
+  const expr = normalizeText(query)
   if (expr === '') {
     return posts
   }

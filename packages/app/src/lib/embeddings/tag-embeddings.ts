@@ -1,6 +1,7 @@
 import type { Feed, Post } from '@feeds/core'
 import { embed, embedBatch } from './embedder'
 import { rankBySimilarity, type ScoredItem } from './similarity'
+import { normalizeText } from '../text'
 import fs from 'fs'
 import path from 'path'
 
@@ -17,16 +18,6 @@ export interface TagEmbeddingCache {
 
 const CACHE_VERSION = 1
 const CACHE_FILE = 'tag-embeddings.json'
-
-/**
- * Clean text by removing markdown markup and normalizing whitespace
- */
-function cleanText(text: string): string {
-  return text
-    .replace(/[*_~`#\[\]()·]/g, ' ') // Remove markdown chars
-    .replace(/\s+/g, ' ') // Normalize whitespace
-    .trim()
-}
 
 /**
  * Get static directory path for cache storage
@@ -173,9 +164,9 @@ export async function getEmbeddingBasedTags(
   }
 
   try {
-    // Clean text and get embeddings for it
-    const cleanedText = cleanText(text)
-    const textVector = await embed(cleanedText)
+    // Normalize text and get embeddings for it
+    const normalizedText = normalizeText(text)
+    const textVector = await embed(normalizedText)
 
     // Get embeddings for all available tags
     const tagEmbeddings = await getTagEmbeddings(availableTags, feeds, posts)
