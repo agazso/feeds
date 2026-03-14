@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      blurhash:
+        specifier: ^2.0.5
+        version: 2.0.5
     devDependencies:
       '@biomejs/biome':
         specifier: ^1.9.0
@@ -32,9 +36,15 @@ importers:
       '@huggingface/transformers':
         specifier: ^3.8.1
         version: 3.8.1
+      blurhash:
+        specifier: ^2.0.5
+        version: 2.0.5
       colcade:
         specifier: ^0.2.0
         version: 0.2.0
+      sharp:
+        specifier: ^0.34.5
+        version: 0.34.5
     devDependencies:
       '@sveltejs/adapter-node':
         specifier: ^5.2.0
@@ -76,6 +86,9 @@ importers:
 
   packages/core:
     dependencies:
+      blurhash:
+        specifier: ^2.0.5
+        version: 2.0.5
       fast-xml-parser:
         specifier: ^4.5.0
         version: 4.5.4
@@ -910,6 +923,9 @@ packages:
   axobject-query@4.1.0:
     resolution: {integrity: sha512-qIj0G9wZbMGNLjLmg1PT6v2mE9AH2zlnADJD/2tC6E00hgmhUOfEB6greHPAfLRSufHqROIUTkw6E+M3lH0PTQ==}
     engines: {node: '>= 0.4'}
+
+  blurhash@2.0.5:
+    resolution: {integrity: sha512-cRygWd7kGBQO3VEhPiTgq4Wc43ctsM+o46urrmPOiuAe+07fzlSB9OJVdpgDL0jPqXUVQ9ht7aq7kxOeJHRK+w==}
 
   boolean@3.2.0:
     resolution: {integrity: sha512-d0II/GO9uf9lfUHH2BQsjxzRJZBdsjgsBiW4BvhWk/3qoKwQFjIDVN19PfX8F2D/r9PCMTtLWjYVCFrpeYUzsw==}
@@ -2087,6 +2103,8 @@ snapshots:
   assertion-error@2.0.1: {}
 
   axobject-query@4.1.0: {}
+
+  blurhash@2.0.5: {}
 
   boolean@3.2.0: {}
 

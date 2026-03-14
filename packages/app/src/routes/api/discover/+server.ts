@@ -88,33 +88,36 @@ export const POST: RequestHandler = async ({ request }) => {
             }),
           )
 
+          let post: Post
           if (enrichedResult) {
-            return enrichedResult.post
+            post = enrichedResult.post
+          } else {
+            // Fallback: create post from RSS item only (no enrichment)
+            post = createPost({
+              url: item.link,
+              metadata: {
+                title: htmlToMarkdown(item.title || ''),
+                description: htmlToMarkdown(item.description || ''),
+                icon: discoveredFeed.favicon,
+                image: '',
+                name: '',
+                siteName: '',
+                url: item.link,
+                feedUrl: discoveredFeed.feedUrl,
+                feedTitle: discoveredFeed.name,
+                createdAt: item.created || Date.now(),
+                updatedAt: item.created || Date.now(),
+                author: '',
+              },
+              originUrl: discoveredFeed.url,
+              rssItem: item,
+              createdAt: item.created,
+              feedName: discoveredFeed.name,
+              feedIcon: discoveredFeed.favicon,
+            }).post
           }
 
-          // Fallback: create post from RSS item only (no enrichment)
-          return createPost({
-            url: item.link,
-            metadata: {
-              title: htmlToMarkdown(item.title || ''),
-              description: htmlToMarkdown(item.description || ''),
-              icon: discoveredFeed.favicon,
-              image: '',
-              name: '',
-              siteName: '',
-              url: item.link,
-              feedUrl: discoveredFeed.feedUrl,
-              feedTitle: discoveredFeed.name,
-              createdAt: item.created || Date.now(),
-              updatedAt: item.created || Date.now(),
-              author: '',
-            },
-            originUrl: discoveredFeed.url,
-            rssItem: item,
-            createdAt: item.created,
-            feedName: discoveredFeed.name,
-            feedIcon: discoveredFeed.favicon,
-          }).post
+          return post
         }),
       )
     ).filter((post): post is Post => post !== null)

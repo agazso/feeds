@@ -2,6 +2,7 @@ import type { RequestHandler } from './$types'
 import type { Post } from '@feeds/core'
 import { fetchFeedsFromUrl, createEnrichedPost } from '@feeds/core'
 import { getFaviconForUrl } from '$lib/imageEmbed'
+import { generateBlurhash } from '$lib/server/blurhash'
 import { readFile, writeFile } from 'fs/promises'
 import { join } from 'path'
 import { json } from '@sveltejs/kit'
@@ -66,6 +67,18 @@ export const POST: RequestHandler = async ({ request }) => {
         post.tags = tags
       }
 
+      // Generate blurhash for the primary image
+      if (post.images?.[0]?.uri && !post.images[0].blurhash) {
+        const result = await generateBlurhash(post.images[0].uri)
+        if (result) {
+          post.images = [{
+            ...post.images[0],
+            blurhash: result.blurhash,
+            aspectRatio: result.aspectRatio,
+          }]
+        }
+      }
+
       await savePost(post)
 
       return json({
@@ -97,6 +110,18 @@ export const POST: RequestHandler = async ({ request }) => {
       // Generate new ID to avoid duplicates
       post._id = `${post.link || 'post'}-${Math.random().toString(36).slice(2, 8)}`
       post.createdAt = Date.now()
+
+      // Generate blurhash for the primary image
+      if (post.images?.[0]?.uri && !post.images[0].blurhash) {
+        const result = await generateBlurhash(post.images[0].uri)
+        if (result) {
+          post.images = [{
+            ...post.images[0],
+            blurhash: result.blurhash,
+            aspectRatio: result.aspectRatio,
+          }]
+        }
+      }
 
       await savePost(post)
 

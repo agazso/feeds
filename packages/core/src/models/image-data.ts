@@ -6,6 +6,8 @@ export interface ImageData {
   uri?: string
   width?: number
   height?: number
+  blurhash?: string
+  aspectRatio?: number // width / height
   data?: string
   localPath?: string | BundledImage
 }

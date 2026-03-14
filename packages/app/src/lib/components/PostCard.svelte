@@ -3,6 +3,8 @@ import type { Post } from '@feeds/core'
 import { getHumanHostname } from '@feeds/core'
 import { postTitle, postText, commentLink, formatTimestamp, thumbnailSrc } from '$lib/text'
 import PostCardMenu, { type MenuItem } from './PostCardMenu.svelte'
+import BlurhashImage from './BlurhashImage.svelte'
+import { preloadOnScroll } from '$lib/actions/preloadOnScroll'
 
 interface Props {
   post: Post
@@ -20,6 +22,8 @@ const timestamp = $derived(post.updatedAt || post.createdAt)
 const printableTime = $derived(timestamp ? formatTimestamp(timestamp) : '')
 const hostname = $derived(post.link ? getHumanHostname(post.link) : '')
 const thumbnail = $derived(thumbnailSrc(post))
+const thumbnailBlurhash = $derived(post.images?.[0]?.blurhash)
+const thumbnailAspectRatio = $derived(post.images?.[0]?.aspectRatio)
 const postLink = $derived(post.link || '')
 let avatarError = $state(false)
 
@@ -144,12 +148,18 @@ function handleImageLoad(e: Event) {
   </div>
 
   {#if thumbnail}
-    <a href={postLink} target="_blank" rel="noopener noreferrer" class="thumbnail-link">
-      <img
-        class="thumbnail"
+    <a
+      href={postLink}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="thumbnail-link"
+      use:preloadOnScroll={thumbnail}
+    >
+      <BlurhashImage
         src={thumbnail}
-        alt=""
-        loading="lazy"
+        blurhash={thumbnailBlurhash}
+        aspectRatio={thumbnailAspectRatio}
+        class="thumbnail"
         onload={handleImageLoad}
       />
     </a>
@@ -264,10 +274,8 @@ function handleImageLoad(e: Event) {
     display: block;
   }
 
-  .thumbnail {
+  .thumbnail-link :global(.thumbnail) {
     width: 100%;
-    height: auto;
-    display: block;
   }
 
   .text {
