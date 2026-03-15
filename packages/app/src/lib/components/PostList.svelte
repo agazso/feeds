@@ -3,6 +3,7 @@ import type { Post } from '@feeds/core'
 import type Colcade from 'colcade'
 import { browser } from '$app/environment'
 import PostCard from './PostCard.svelte'
+import BackToTop from './BackToTop.svelte'
 import { preferences } from '$lib/stores/preferences.svelte'
 import { supportsCSSMasonry } from '$lib/utils/masonry'
 
@@ -96,6 +97,8 @@ $effect(() => {
   {/each}
 </ul>
 
+<BackToTop />
+
 <style>
   .post-list {
     display: grid;
@@ -177,10 +180,6 @@ $effect(() => {
 
     .one-column {
       max-width: none;
-    }
-
-    .post-list {
-      padding-bottom: calc(var(--padding) * 8);
     }
 
     .js-masonry .masonry-col {

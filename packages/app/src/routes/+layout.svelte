@@ -5,7 +5,6 @@ import { preferences } from '$lib/stores/preferences.svelte'
 import { onMount, untrack } from 'svelte'
 import { navigating } from '$app/stores'
 import Topbar from '$lib/components/Topbar.svelte'
-import BackToTop from '$lib/components/BackToTop.svelte'
 import Loader from '$lib/components/Loader.svelte'
 
 let { data, children }: { data: LayoutData; children: any } = $props()
@@ -31,13 +30,18 @@ onMount(() => {
 <main>
   {@render children()}
 </main>
-<BackToTop />
 
 <style>
   main {
     margin-top: var(--header-height);
     height: calc(100vh - var(--header-height));
     overflow-y: auto;
+  }
+
+  @media (max-width: 500px) {
+    main {
+      padding-bottom: calc(var(--padding) * 8);
+    }
   }
 
   .loading-overlay {

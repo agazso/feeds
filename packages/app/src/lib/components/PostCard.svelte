@@ -79,6 +79,12 @@ const menuItems = $derived.by(() => {
     },
   })
   if (onremove) {
+    if (post._id) {
+      items.push({
+        label: 'Edit Tags',
+        href: `/edit-tags/${encodeURIComponent(post._id)}`,
+      })
+    }
     items.push({
       label: 'Remove',
       onclick: removeFromMyFeed,

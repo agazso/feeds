@@ -29,6 +29,33 @@ async function savePost(post: Post): Promise<void> {
   await writeFile(filePath, JSON.stringify(newPosts, null, 4))
 }
 
+export const PATCH: RequestHandler = async ({ request }) => {
+  const body = await request.json()
+  const { id, tags } = body
+
+  if (!id) {
+    return json({ error: 'Post ID required' }, { status: 400 })
+  }
+
+  if (!Array.isArray(tags)) {
+    return json({ error: 'Tags must be an array' }, { status: 400 })
+  }
+
+  const filePath = join(process.cwd(), 'static', 'myposts.json')
+  const content = await readFile(filePath, 'utf-8')
+  const posts: Post[] = JSON.parse(content)
+
+  const postIndex = posts.findIndex((p) => p._id === id)
+  if (postIndex === -1) {
+    return json({ error: 'Post not found' }, { status: 404 })
+  }
+
+  posts[postIndex].tags = tags.length > 0 ? tags : undefined
+  await writeFile(filePath, JSON.stringify(posts, null, 4))
+
+  return json({ success: true, post: posts[postIndex] })
+}
+
 export const DELETE: RequestHandler = async ({ request }) => {
   const body = await request.json()
   const postId = body.id
