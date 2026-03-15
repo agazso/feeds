@@ -179,6 +179,10 @@ $effect(() => {
       max-width: none;
     }
 
+    .post-list {
+      padding-bottom: calc(var(--padding) * 8);
+    }
+
     .js-masonry .masonry-col {
       width: 100%;
       margin-right: 0;
