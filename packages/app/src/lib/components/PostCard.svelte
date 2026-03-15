@@ -26,6 +26,7 @@ const cachedThumbnail = $derived(post.images?.[0] ? resolvedImageSrc(post.images
 const thumbnailBlurhash = $derived(post.images?.[0]?.blurhash)
 const thumbnailAspectRatio = $derived(post.images?.[0]?.aspectRatio)
 const postLink = $derived(post.link || '')
+const authorImage = $derived(post.author?.image ? resolvedImageSrc(post.author.image) : undefined)
 let avatarError = $state(false)
 
 async function removeFromMyFeed() {
@@ -143,8 +144,8 @@ function handleImageLoad(e: Event) {
       onclick={(e) => handleFilterClick(e, post.author?.name || '')}
       aria-label="Filter by author"
     >
-      {#if post.author?.image?.uri && !avatarError}
-        <img src={post.author.image.uri} alt="" loading="lazy" onerror={() => avatarError = true} />
+      {#if authorImage && !avatarError}
+        <img src={authorImage} alt="" loading="lazy" onerror={() => avatarError = true} />
       {:else}
         <div class="avatar-placeholder"></div>
       {/if}

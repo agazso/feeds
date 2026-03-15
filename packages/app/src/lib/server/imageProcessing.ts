@@ -127,5 +127,52 @@ export async function deleteCachedImage(cacheHash: string): Promise<void> {
   }
 }
 
+export interface FaviconProcessingResult {
+  cacheHash: string
+}
+
+/**
+ * Process a favicon: resize to 64x64 and cache as WebP.
+ * Returns undefined if processing fails.
+ */
+export async function processFavicon(faviconUrl: string): Promise<FaviconProcessingResult | undefined> {
+  try {
+    const response = await fetch(faviconUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; DiscordBot/2.0)',
+      },
+    })
+
+    if (!response.ok) {
+      return undefined
+    }
+
+    const buffer = await response.arrayBuffer()
+    const imageBuffer = Buffer.from(buffer)
+
+    // Resize to 64x64 and convert to WebP
+    const webpBuffer = await sharp(imageBuffer)
+      .resize(64, 64, { fit: 'cover' })
+      .webp({ quality: 80 })
+      .toBuffer()
+
+    // Calculate SHA256 hash
+    const hash = createHash('sha256').update(webpBuffer).digest('hex')
+
+    // Create cache folder structure: /cache/[hex[0]]/[hex[1]]/
+    const cacheDir = join(CACHE_DIR, hash[0], hash[1])
+    await mkdir(cacheDir, { recursive: true })
+
+    // Save the WebP file
+    const cachePath = join(cacheDir, `${hash}.webp`)
+    await writeFile(cachePath, webpBuffer)
+
+    return { cacheHash: hash }
+  } catch (e) {
+    console.warn('Favicon processing failed:', e)
+    return undefined
+  }
+}
+
 // Re-export generateBlurhash for backward compatibility
 export { processImage as generateBlurhash }
