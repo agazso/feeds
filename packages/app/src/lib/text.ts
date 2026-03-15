@@ -1,4 +1,4 @@
-import type { Post } from '@feeds/core'
+import type { Post, ImageData } from '@feeds/core'
 
 /**
  * Normalize text for comparison/search: removes accents, special characters,
@@ -76,4 +76,14 @@ export function thumbnailSrc(post: Post): string | undefined {
   }
   const absImageSrc = makeAbsoluteUrl(imageSrc, post.link)
   return absImageSrc ? fixYoutubeThumbnail(absImageSrc) : undefined
+}
+
+export function resolvedImageSrc(image: ImageData): string | undefined {
+  // Try cache first if cacheHash exists
+  if (image.cacheHash) {
+    const h = image.cacheHash
+    return `/cache/${h[0]}/${h[1]}/${h}.webp`
+  }
+  // Fall back to original URI
+  return image.uri
 }

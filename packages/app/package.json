@@ -6,7 +6,8 @@
     "dev": "vite dev --host",
     "build": "vite build",
     "preview": "vite preview",
-    "typecheck": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json"
+    "typecheck": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "regenerate-cache": "pnpx tsx scripts/regenerate-cache.ts"
   },
   "dependencies": {
     "@feeds/core": "workspace:*",

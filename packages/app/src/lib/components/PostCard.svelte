@@ -1,7 +1,7 @@
 <script lang="ts">
 import type { Post } from '@feeds/core'
 import { getHumanHostname } from '@feeds/core'
-import { postTitle, postText, commentLink, formatTimestamp, thumbnailSrc } from '$lib/text'
+import { postTitle, postText, commentLink, formatTimestamp, thumbnailSrc, resolvedImageSrc } from '$lib/text'
 import PostCardMenu, { type MenuItem } from './PostCardMenu.svelte'
 import BlurhashImage from './BlurhashImage.svelte'
 import { preloadOnScroll } from '$lib/actions/preloadOnScroll'
@@ -22,6 +22,7 @@ const timestamp = $derived(post.updatedAt || post.createdAt)
 const printableTime = $derived(timestamp ? formatTimestamp(timestamp) : '')
 const hostname = $derived(post.link ? getHumanHostname(post.link) : '')
 const thumbnail = $derived(thumbnailSrc(post))
+const cachedThumbnail = $derived(post.images?.[0] ? resolvedImageSrc(post.images[0]) : undefined)
 const thumbnailBlurhash = $derived(post.images?.[0]?.blurhash)
 const thumbnailAspectRatio = $derived(post.images?.[0]?.aspectRatio)
 const postLink = $derived(post.link || '')
@@ -171,10 +172,11 @@ function handleImageLoad(e: Event) {
       target="_blank"
       rel="noopener noreferrer"
       class="thumbnail-link"
-      use:preloadOnScroll={thumbnail}
+      use:preloadOnScroll={cachedThumbnail?.startsWith('/cache/') ? cachedThumbnail : thumbnail}
     >
       <BlurhashImage
-        src={thumbnail}
+        src={cachedThumbnail?.startsWith('/cache/') ? cachedThumbnail : thumbnail}
+        fallbackSrc={cachedThumbnail?.startsWith('/cache/') ? thumbnail : undefined}
         blurhash={thumbnailBlurhash}
         aspectRatio={thumbnailAspectRatio}
         class="thumbnail"

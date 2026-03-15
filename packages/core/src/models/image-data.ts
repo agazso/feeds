@@ -8,6 +8,7 @@ export interface ImageData {
   height?: number
   blurhash?: string
   aspectRatio?: number // width / height
+  cacheHash?: string // SHA256 hash of cached image (WebP)
   data?: string
   localPath?: string | BundledImage
 }

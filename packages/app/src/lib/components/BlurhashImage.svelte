@@ -3,6 +3,7 @@
 
   interface Props {
     src: string
+    fallbackSrc?: string
     blurhash?: string
     aspectRatio?: number
     alt?: string
@@ -10,9 +11,15 @@
     onload?: (e: Event) => void
   }
 
-  let { src, blurhash, aspectRatio, alt = '', class: className, onload }: Props = $props()
+  let { src, fallbackSrc, blurhash, aspectRatio, alt = '', class: className, onload }: Props = $props()
   let loaded = $state(false)
+  let currentSrc = $state(src)
   let canvas: HTMLCanvasElement | undefined = $state()
+
+  // Reset currentSrc when src prop changes
+  $effect(() => {
+    currentSrc = src
+  })
 
   // Decode blurhash to canvas on mount
   $effect(() => {
@@ -35,13 +42,20 @@
     loaded = true
     onload?.(e)
   }
+
+  function handleError() {
+    // If cached image fails, try fallback (original URL)
+    if (fallbackSrc && currentSrc !== fallbackSrc) {
+      currentSrc = fallbackSrc
+    }
+  }
 </script>
 
 <div class="blurhash-container {className || ''}" style:aspect-ratio={aspectRatio}>
   {#if blurhash && !loaded}
     <canvas bind:this={canvas} width="32" height="32" class="blurhash-placeholder"></canvas>
   {/if}
-  <img {src} {alt} class:loaded onload={handleLoad} />
+  <img src={currentSrc} {alt} class:loaded onload={handleLoad} onerror={handleError} />
 </div>
 
 <style>
