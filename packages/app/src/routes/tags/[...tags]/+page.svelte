@@ -1,7 +1,9 @@
 <script lang="ts">
 import type { PageData } from './$types'
+import type { Post } from '@feeds/core'
 import SearchBar from '$lib/components/SearchBar.svelte'
 import PostList from '$lib/components/PostList.svelte'
+import Loader from '$lib/components/Loader.svelte'
 import { searchPosts } from '$lib/search'
 import { formatTagsForPath } from '$lib/tags'
 import { goto } from '$app/navigation'
@@ -10,19 +12,37 @@ import { untrack } from 'svelte'
 let { data }: { data: PageData } = $props()
 
 let searchQuery = $state('')
+let isLoading = $state(true)
 
 // Local state for selected tags - allows client-side filtering when adding tags
 let selectedTags = $state<string[]>(untrack(() => data.selectedTags))
 
 // Track the base tags from server load (the "broadest" cached state)
 let baseTags = $state<string[]>(untrack(() => data.selectedTags))
-let cachedPosts = $state(untrack(() => data.posts))
+let cachedPosts = $state<Post[]>([])
+let allTags = $state<string[]>([])
+let feedUrlToPageUrl = $state<Record<string, string>>({})
 
-// Sync cache when data changes from server navigation
+async function loadTagData(tags: string[]) {
+  isLoading = true
+  try {
+    const tagsParam = tags.map(encodeURIComponent).join('+')
+    const response = await fetch(`/api/tags?tags=${tagsParam}`)
+    const result = await response.json()
+    cachedPosts = result.posts
+    allTags = result.allTags
+    feedUrlToPageUrl = result.feedUrlToPageUrl
+    baseTags = [...tags]
+  } finally {
+    isLoading = false
+  }
+}
+
+// Load data when selectedTags change from navigation
 $effect(() => {
-  baseTags = [...data.selectedTags]
-  cachedPosts = data.posts
-  selectedTags = [...data.selectedTags]
+  const newTags = data.selectedTags
+  selectedTags = [...newTags]
+  loadTagData(newTags)
 })
 
 // Filter from cached posts
@@ -58,7 +78,7 @@ function handleTagClick(tag: string) {
       selectedTags = newTags
       goto(`/tags/${formatTagsForPath(newTags)}`, { replaceState: true })
     } else {
-      // Need broader data from server
+      // Need broader data - navigate and load via API
       goto(`/tags/${formatTagsForPath(newTags)}`)
     }
   } else {
@@ -80,15 +100,20 @@ function handleTagClick(tag: string) {
     {/each}
   </div>
   <div class="available-tags">
-    {#each data.allTags.filter((t) => !selectedTags.includes(t)) as tag}
+    {#each allTags.filter((t) => !selectedTags.includes(t)) as tag}
       <button class="tag" onclick={() => handleTagClick(tag)}>+{tag}</button>
     {/each}
   </div>
 </div>
 
 <SearchBar value={searchQuery} onchange={handleSearch} />
-{#if filteredPosts.length > 0}
-  <PostList posts={filteredPosts} onfilter={handleFilter} feedUrlToPageUrl={data.feedUrlToPageUrl} />
+
+{#if isLoading}
+  <div class="loading-container">
+    <Loader dimension="large" />
+  </div>
+{:else if filteredPosts.length > 0}
+  <PostList posts={filteredPosts} onfilter={handleFilter} {feedUrlToPageUrl} />
 {:else if searchQuery}
   <p class="no-results">No posts found matching "{searchQuery}"</p>
 {:else}
@@ -133,6 +158,13 @@ function handleTagClick(tag: string) {
 
   .tag.selected {
     background-color: #88888866;
+  }
+
+  .loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: calc(var(--padding) * 4);
   }
 
   .no-results {
