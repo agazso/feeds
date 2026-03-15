@@ -8,6 +8,8 @@ interface Props {
 
 let { value = $bindable(''), onchange }: Props = $props()
 
+let inputRef: HTMLInputElement
+
 const debouncedChange = debounce((val: string) => {
   onchange?.(val)
 }, 300)
@@ -25,11 +27,13 @@ function handleReset() {
 
 function handleSubmit(e: Event) {
   e.preventDefault()
+  inputRef?.blur()
 }
 </script>
 
 <form class="search-form" onsubmit={handleSubmit}>
   <input
+    bind:this={inputRef}
     type="search"
     class="searchbar"
     placeholder="Search or filter..."
