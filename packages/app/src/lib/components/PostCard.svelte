@@ -78,23 +78,24 @@ const menuItems = $derived.by(() => {
       }
     },
   })
-  if (onremove) {
-    if (post._id) {
-      items.push({
-        label: 'Edit Tags',
-        href: `/edit-tags/${encodeURIComponent(post._id)}`,
-      })
-    }
+
+  // Edit Tags (only when in "my feed" context)
+  if (onremove && post._id) {
     items.push({
-      label: 'Remove',
-      onclick: removeFromMyFeed,
+      label: 'Edit Tags',
+      href: `/edit-tags/${encodeURIComponent(post._id)}`,
     })
-  } else if (post.link) {
+  }
+
+  // Add to my feed (when not in "my feed" context)
+  if (!onremove && post.link) {
     items.push({
       label: 'Add to my feed',
       href: `/share/${encodeURIComponent(post.link)}`,
     })
   }
+
+  // Feed-related items
   if (post.feedUrl) {
     const feedPageUrl = feedUrlToPageUrl?.[post.feedUrl]
     if (feedPageUrl) {
@@ -111,6 +112,15 @@ const menuItems = $derived.by(() => {
       })
     }
   }
+
+  // Remove (always last, only in "my feed" context)
+  if (onremove) {
+    items.push({
+      label: 'Remove',
+      onclick: removeFromMyFeed,
+    })
+  }
+
   return items
 })
 
