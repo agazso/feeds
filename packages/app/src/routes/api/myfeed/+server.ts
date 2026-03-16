@@ -126,6 +126,27 @@ export const POST: RequestHandler = async ({ request }) => {
     try {
       const { post, title } = await createEnrichedPost(url)
 
+      // Use feed favicon as fallback if page favicon is missing
+      if (!post.author?.image?.uri) {
+        try {
+          const originUrl = new URL(url).origin
+          const result = await fetchFeedsFromUrl(originUrl)
+          if (result) {
+            const feed = Array.isArray(result) ? result[0] : result
+            if (feed?.favicon && typeof feed.favicon === 'string') {
+              post.author = {
+                ...post.author,
+                name: post.author?.name || '',
+                uri: post.author?.uri || '',
+                image: { uri: feed.favicon }
+              }
+            }
+          }
+        } catch {
+          // Feed discovery failed, continue without fallback
+        }
+      }
+
       if (tags && tags.length > 0) {
         post.tags = tags
       }

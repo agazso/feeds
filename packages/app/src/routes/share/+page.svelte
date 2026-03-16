@@ -45,6 +45,19 @@ async function fetchPreview(urlValue: string) {
     previewPost = result.preview || null
     discoveredFeed = result.feed || null
     faviconError = false
+
+    // Use feed favicon as fallback if page favicon is missing
+    if (previewPost && !previewPost.author?.image?.uri && discoveredFeed?.favicon) {
+      previewPost = {
+        ...previewPost,
+        author: {
+          ...previewPost.author,
+          name: previewPost.author?.name || '',
+          uri: previewPost.author?.uri || '',
+          image: { uri: discoveredFeed.favicon }
+        }
+      }
+    }
   } catch {
     previewPost = null
     discoveredFeed = null
