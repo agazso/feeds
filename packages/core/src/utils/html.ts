@@ -1,3 +1,6 @@
+import { parseDocument } from 'htmlparser2'
+import type { Document, Element, Text, ChildNode } from 'domhandler'
+
 export interface HtmlAttrNameValue {
   name: string
   value: string
@@ -11,74 +14,67 @@ export interface ParsedNode {
 }
 
 /**
- * Minimal HTML parser for extracting metadata.
- * Uses regex-based parsing for head elements only.
+ * HTML parser for extracting metadata.
+ * Uses htmlparser2 for robust parsing of malformed HTML.
  */
 export function parseHtml(html: string): ParsedNode {
-  // Try standard <head>...</head> first
-  let headMatch = html.match(/<head[^>]*>([\s\S]*?)<\/head>/i)
-  let headContent = headMatch?.[1] ?? ''
+  const dom = parseDocument(html)
+  return convertDocument(dom)
+}
 
-  // Fallback: Handle malformed HTML where <head> is missing but </head> exists
-  // Extract content between <html> and </head> or <body>
-  if (!headContent) {
-    const fallbackMatch = html.match(/<html[^>]*>([\s\S]*?)(?:<\/head>|<body)/i)
-    headContent = fallbackMatch?.[1] ?? ''
+function convertDocument(doc: Document): ParsedNode {
+  // Find the html element
+  const htmlElement = doc.children.find(
+    (child): child is Element => child.type === 'tag' && child.name === 'html',
+  )
+
+  if (htmlElement) {
+    // Find head element within html
+    const headElement = htmlElement.children.find(
+      (child): child is Element => child.type === 'tag' && child.name === 'head',
+    )
+
+    if (headElement) {
+      // Standard case: <html><head>...</head></html>
+      return {
+        nodeName: '#document',
+        childNodes: [
+          {
+            nodeName: 'html',
+            childNodes: [
+              {
+                nodeName: 'head',
+                childNodes: headElement.children.map(convertNode),
+              },
+            ],
+          },
+        ],
+      }
+    }
+
+    // No <head> element: collect metadata elements directly from <html> children
+    // This handles pages like isaacfreund.com that have <meta>, <title>, <link>
+    // as direct children of <html> without a <head> wrapper
+    const headNodes = collectHeadNodes(htmlElement.children)
+    return {
+      nodeName: '#document',
+      childNodes: [
+        {
+          nodeName: 'html',
+          childNodes: [
+            {
+              nodeName: 'head',
+              childNodes: headNodes,
+            },
+          ],
+        },
+      ],
+    }
   }
 
-  const links: ParsedNode[] = []
-  const metas: ParsedNode[] = []
-
-  // Parse link elements
-  const linkRegex = /<link\s+([^>]*)>/gi
-  let linkMatch: RegExpExecArray | null
-  while ((linkMatch = linkRegex.exec(headContent)) !== null) {
-    const attrs = parseAttributes(linkMatch[1] ?? '')
-    links.push({
-      nodeName: 'link',
-      childNodes: [],
-      attrs,
-    })
-  }
-
-  // Parse meta elements
-  const metaRegex = /<meta\s+([^>]*)>/gi
-  let metaMatch: RegExpExecArray | null
-  while ((metaMatch = metaRegex.exec(headContent)) !== null) {
-    const attrs = parseAttributes(metaMatch[1] ?? '')
-    metas.push({
-      nodeName: 'meta',
-      childNodes: [],
-      attrs,
-    })
-  }
-
-  // Parse title element
-  const titles: ParsedNode[] = []
-  const titleRegex = /<title[^>]*>([\s\S]*?)<\/title>/gi
-  let titleMatch: RegExpExecArray | null
-  while ((titleMatch = titleRegex.exec(headContent)) !== null) {
-    const textContent = decodeHtmlEntities(titleMatch[1]?.trim() ?? '')
-    titles.push({
-      nodeName: 'title',
-      childNodes: [{ nodeName: '#text', childNodes: [], value: textContent }],
-    })
-  }
-
-  // Parse script elements (for JSON-LD)
-  const scripts: ParsedNode[] = []
-  const scriptRegex = /<script\s+([^>]*)>([\s\S]*?)<\/script>/gi
-  let scriptMatch: RegExpExecArray | null
-  while ((scriptMatch = scriptRegex.exec(headContent)) !== null) {
-    const attrs = parseAttributes(scriptMatch[1] ?? '')
-    const content = scriptMatch[2] ?? ''
-    scripts.push({
-      nodeName: 'script',
-      childNodes: [{ nodeName: '#text', childNodes: [], value: content }],
-      attrs,
-    })
-  }
-
+  // No <html> element: collect metadata elements directly from document root
+  // This handles fragments or very malformed HTML
+  const headNodes = collectHeadNodes(doc.children)
   return {
     nodeName: '#document',
     childNodes: [
@@ -87,11 +83,57 @@ export function parseHtml(html: string): ParsedNode {
         childNodes: [
           {
             nodeName: 'head',
-            childNodes: [...links, ...metas, ...titles, ...scripts],
+            childNodes: headNodes,
           },
         ],
       },
     ],
+  }
+}
+
+/**
+ * Collect head-type elements (meta, title, link, script) from a list of nodes.
+ * This handles HTML where these elements appear without a <head> wrapper.
+ */
+function collectHeadNodes(children: ChildNode[]): ParsedNode[] {
+  const headElementNames = ['meta', 'title', 'link', 'script', 'base', 'style']
+  const result: ParsedNode[] = []
+
+  for (const child of children) {
+    if (child.type === 'tag' && headElementNames.includes(child.name)) {
+      result.push(convertNode(child))
+    }
+  }
+
+  return result
+}
+
+function convertNode(node: ChildNode): ParsedNode {
+  if (node.type === 'text') {
+    const textNode = node as Text
+    return {
+      nodeName: '#text',
+      childNodes: [],
+      value: decodeHtmlEntities(textNode.data),
+    }
+  }
+
+  if (node.type === 'tag') {
+    const element = node as Element
+    return {
+      nodeName: element.name,
+      childNodes: element.children?.map(convertNode) ?? [],
+      attrs: Object.entries(element.attribs).map(([name, value]) => ({
+        name,
+        value: decodeHtmlEntities(String(value)),
+      })),
+    }
+  }
+
+  // For other node types (comments, directives, etc.), return empty node
+  return {
+    nodeName: '#unknown',
+    childNodes: [],
   }
 }
 
@@ -117,18 +159,6 @@ function decodeHtmlEntities(text: string): string {
     .replace(/&reg;/g, '®')
     .replace(/&trade;/g, '™')
     .replace(/&amp;/g, '&') // Must be last
-}
-
-function parseAttributes(attrString: string): Array<{ name: string; value: string }> {
-  const attrs: Array<{ name: string; value: string }> = []
-  const attrRegex = /(\w+(?:-\w+)*)\s*=\s*(?:"([^"]*)"|'([^']*)'|(\S+))/g
-  let match: RegExpExecArray | null
-  while ((match = attrRegex.exec(attrString)) !== null) {
-    const name = match[1] ?? ''
-    const value = decodeHtmlEntities(match[2] ?? match[3] ?? match[4] ?? '')
-    attrs.push({ name, value })
-  }
-  return attrs
 }
 
 export class HtmlUtils {

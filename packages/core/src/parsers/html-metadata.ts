@@ -15,10 +15,17 @@ const RSSMimeTypes = [
 
 const JsonFeedMimeTypes = ['application/feed+json', 'application/json']
 
+export interface FeedLink {
+  url: string
+  title: string
+  type: 'rss' | 'atom' | 'json'
+}
+
 export interface HtmlMetaData extends OpenGraphData {
   icon: string
   feedUrl: string
   feedTitle: string
+  feedLinks: FeedLink[]
   createdAt: number
   updatedAt: number
   author: string
@@ -56,6 +63,33 @@ export function parseFeedUrlFromHtml(html: string, baseUrl: string): string {
   return ''
 }
 
+export function parseAllFeedLinksFromHtml(html: string, baseUrl: string): FeedLink[] {
+  const document = HtmlUtils.parse(html)
+  const links = HtmlUtils.findPath(document, ['html', 'head', 'link'])
+  const allFeedMimeTypes = [...RSSMimeTypes, ...JsonFeedMimeTypes]
+  const feedLinks: FeedLink[] = []
+
+  for (const link of links) {
+    if (!HtmlUtils.matchAttributes(link, [{ name: 'rel', value: 'alternate' }])) {
+      continue
+    }
+    for (const mimeType of allFeedMimeTypes) {
+      if (HtmlUtils.matchAttributes(link, [{ name: 'type', value: mimeType }])) {
+        const href = HtmlUtils.getAttribute(link, 'href') || ''
+        if (href) {
+          feedLinks.push({
+            url: createUrlFromUrn(href, baseUrl),
+            title: HtmlUtils.getAttribute(link, 'title') || '',
+            type: mimeType.includes('atom') ? 'atom' : mimeType.includes('json') ? 'json' : 'rss',
+          })
+        }
+        break
+      }
+    }
+  }
+  return feedLinks
+}
+
 export function parseHtmlMetaData(url: string, html: string, feed?: Feed | null): HtmlMetaData {
   const document = HtmlUtils.parse(html)
   const baseUrl = new URL(url).origin
@@ -75,7 +109,8 @@ export function parseHtmlMetaData(url: string, html: string, feed?: Feed | null)
   const createdAt = getPublishedTime(document)
   const updatedAt = getModifiedTime(document, createdAt)
   // Detect feed URL from HTML if not provided via Feed object
-  const detectedFeedUrl = feed?.feedUrl || parseFeedUrlFromHtml(html, baseUrl)
+  const feedLinks = parseAllFeedLinksFromHtml(html, baseUrl)
+  const detectedFeedUrl = feed?.feedUrl || feedLinks[0]?.url || ''
 
   return {
     ...openGraphData,
@@ -85,6 +120,7 @@ export function parseHtmlMetaData(url: string, html: string, feed?: Feed | null)
     icon,
     feedUrl: detectedFeedUrl,
     feedTitle: feedName,
+    feedLinks,
     createdAt,
     updatedAt,
     author: getArticleAuthor(document),
@@ -172,7 +208,25 @@ function getArticleAuthor(document: ParsedNode): string {
     }
   }
   // Fallback to JSON-LD
-  return getArticleAuthorFromJsonLd(document)
+  const jsonLdAuthor = getArticleAuthorFromJsonLd(document)
+  if (jsonLdAuthor) return jsonLdAuthor
+
+  // Fallback to <link rel="me"> (Mastodon username)
+  return getAuthorFromMeLinks(document)
+}
+
+function getAuthorFromMeLinks(document: ParsedNode): string {
+  const links = HtmlUtils.findPath(document, ['html', 'head', 'link'])
+
+  for (const link of links) {
+    if (!HtmlUtils.matchAttributes(link, [{ name: 'rel', value: 'me' }])) continue
+
+    const href = HtmlUtils.getAttribute(link, 'href') || ''
+    // Match Mastodon/Fediverse URL pattern: https://instance/@username
+    const match = href.match(/https?:\/\/[^/]+\/@([^/?#]+)/)
+    if (match?.[1]) return match[1]
+  }
+  return ''
 }
 
 function getArticleAuthorFromJsonLd(document: ParsedNode): string {
