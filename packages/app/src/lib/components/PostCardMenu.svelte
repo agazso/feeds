@@ -87,4 +87,22 @@
   .menu-item:hover {
     background-color: #88888844;
   }
+
+  /* Touch-friendly styles when in drawer mode */
+  :global(.drawer-content) .menu-dropdown {
+    display: flex;
+    flex-direction: column;
+    gap: var(--half-padding);
+    border: none;
+    box-shadow: none;
+    padding: 0;
+  }
+
+  :global(.drawer-content) .menu-item {
+    height: auto;
+    padding: var(--padding);
+    font-size: 18px;
+    line-height: 1.4;
+    border-radius: 8px;
+  }
 </style>

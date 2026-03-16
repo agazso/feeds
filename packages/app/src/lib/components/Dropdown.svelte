@@ -12,6 +12,18 @@
   const menuId = Math.random().toString(36).substring(2)
   let open = $state(false)
   let containerElement: HTMLDivElement | undefined = $state()
+  let isMobile = $state(false)
+
+  // Detect mobile viewport
+  $effect(() => {
+    const mq = window.matchMedia('(max-width: 500px)')
+    isMobile = mq.matches
+    function handleChange(e: MediaQueryListEvent) {
+      isMobile = e.matches
+    }
+    mq.addEventListener('change', handleChange)
+    return () => mq.removeEventListener('change', handleChange)
+  })
 
   function toggle(e: MouseEvent) {
     e.stopPropagation()
@@ -19,6 +31,10 @@
       window.dispatchEvent(new CustomEvent('close-dropdowns', { detail: { except: menuId } }))
     }
     open = !open
+  }
+
+  function closeDrawer() {
+    open = false
   }
 
   function handleClickOutside(e: MouseEvent) {
@@ -38,11 +54,24 @@
     return () => window.removeEventListener('close-dropdowns', handleCloseDropdowns as EventListener)
   })
 
-  // Handle click outside
+  // Handle click outside (desktop only)
   $effect(() => {
-    if (open) {
+    if (open && !isMobile) {
       document.addEventListener('click', handleClickOutside)
       return () => document.removeEventListener('click', handleClickOutside)
+    }
+  })
+
+  // Handle escape key
+  $effect(() => {
+    if (open) {
+      function handleEscape(e: KeyboardEvent) {
+        if (e.key === 'Escape') {
+          open = false
+        }
+      }
+      document.addEventListener('keydown', handleEscape)
+      return () => document.removeEventListener('keydown', handleEscape)
     }
   })
 </script>
@@ -52,9 +81,17 @@
     {@render trigger()}
   </button>
   {#if open}
-    <div class="dropdown-content" class:align-left={align === 'left'} onclick={() => (open = false)} onkeydown={(e) => e.key === 'Escape' && (open = false)} role="menu" tabindex="-1">
-      {@render children()}
-    </div>
+    {#if isMobile}
+      <!-- svelte-ignore a11y_no_static_element_interactions -->
+      <div class="drawer-overlay" onclick={(e) => { e.stopPropagation(); closeDrawer(); }} onkeydown={(e) => e.key === 'Escape' && closeDrawer()}></div>
+      <div class="drawer-content" onclick={closeDrawer} onkeydown={(e) => e.key === 'Escape' && closeDrawer()} role="menu" tabindex="-1">
+        {@render children()}
+      </div>
+    {:else}
+      <div class="dropdown-content" class:align-left={align === 'left'} onclick={() => (open = false)} onkeydown={(e) => e.key === 'Escape' && (open = false)} role="menu" tabindex="-1">
+        {@render children()}
+      </div>
+    {/if}
   {/if}
 </div>
 
@@ -87,5 +124,32 @@
   .dropdown-content.align-left {
     left: 0;
     right: auto;
+  }
+
+  /* Mobile drawer styles */
+  .drawer-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+  }
+
+  .drawer-content {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--background-color);
+    border-top: 1px solid #88888888;
+    border-radius: 12px 12px 0 0;
+    padding: var(--padding);
+    padding-bottom: calc(var(--padding) + env(safe-area-inset-bottom));
+    z-index: 1000;
+    animation: slide-up 0.2s ease-out;
+  }
+
+  @keyframes slide-up {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
   }
 </style>
