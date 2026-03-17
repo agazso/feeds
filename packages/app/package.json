@@ -13,6 +13,7 @@
     "@feeds/core": "workspace:*",
     "@huggingface/transformers": "^3.8.1",
     "blurhash": "^2.0.5",
+    "carbon-icons-svelte": "^13.9.0",
     "colcade": "^0.2.0",
     "sharp": "^0.34.5"
   },

@@ -39,6 +39,9 @@ importers:
       blurhash:
         specifier: ^2.0.5
         version: 2.0.5
+      carbon-icons-svelte:
+        specifier: ^13.9.0
+        version: 13.9.0
       colcade:
         specifier: ^0.2.0
         version: 0.2.0
@@ -946,6 +949,9 @@ packages:
   cac@6.7.14:
     resolution: {integrity: sha512-b6Ilus+c3RrdDk+JhLKUAQfzzgLEPy6wcXqS7f/xe1EETvsDP6GORG7SFuOs6cID5YkqchW/LXZbX5bc8j7ZcQ==}
     engines: {node: '>=8'}
+
+  carbon-icons-svelte@13.9.0:
+    resolution: {integrity: sha512-+5bd/94B1mRt0sdCTADLfy5ArJRxtz5gZdIZBF3EYJPHnWbJUD5/y/S7Q/QoOSzco+B7MSsgezqIQYpmvBYK5w==}
 
   chai@5.3.3:
     resolution: {integrity: sha512-4zNhdJD/iOjSH0A05ea+Ke6MU5mmpQcbQsSOkgdaUMJ9zTlDTD/GYlwohmIE2u0gaxHYiVHEn1Fw9mZ/ktJWgw==}
@@ -2144,6 +2150,8 @@ snapshots:
       load-tsconfig: 0.2.5
 
   cac@6.7.14: {}
+
+  carbon-icons-svelte@13.9.0: {}
 
   chai@5.3.3:
     dependencies:
