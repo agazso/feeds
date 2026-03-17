@@ -32,7 +32,7 @@ import Dropdown from './Dropdown.svelte'
       {/snippet}
 
       <div class="menu-dropdown">
-        <button class="menu-item" onclick={() => preferences.toggleLayout()}>
+        <button class="menu-item layout-toggle" onclick={() => preferences.toggleLayout()}>
           {#if preferences.layout === 'three-column'}
             <Grid size={16} />
           {:else}
@@ -156,5 +156,10 @@ import Dropdown from './Dropdown.svelte'
     font-size: 18px;
     line-height: 1.4;
     border-radius: 8px;
+  }
+
+  /* Hide layout toggle on mobile since layout is forced to single-column via CSS */
+  :global(.drawer-content) .layout-toggle {
+    display: none;
   }
 </style>
