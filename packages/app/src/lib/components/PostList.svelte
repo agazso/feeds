@@ -19,8 +19,19 @@ let { posts, onfilter, onremove, feedUrlToPageUrl }: Props = $props()
 let listElement: HTMLUListElement | undefined = $state()
 let colcadeInstance: Colcade | undefined = $state()
 let colcadeReady = $state(true)
+let isMobile = $state(false)
 
-const layoutClass = $derived(preferences.layout)
+$effect(() => {
+  const mq = window.matchMedia('(max-width: 500px)')
+  isMobile = mq.matches
+  const handler = (e: MediaQueryListEvent) => {
+    isMobile = e.matches
+  }
+  mq.addEventListener('change', handler)
+  return () => mq.removeEventListener('change', handler)
+})
+
+const layoutClass = $derived(isMobile ? 'one-column' : preferences.layout)
 const needsJSMasonry = $derived(
   browser && layoutClass === 'three-column' && !supportsCSSMasonry()
 )
