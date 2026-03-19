@@ -328,6 +328,14 @@ function handleImageLoad(e: Event) {
     font-weight: bold;
   }
 
+  .title-text a {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
   .rss-icon {
     flex-shrink: 0;
     /* color: #888; */
