@@ -30,6 +30,7 @@ const JsonFeedMimeTypes = ['application/feed+json', 'application/json']
 export const altFeedLocations = [
   '/rss',
   '/rss/',
+  '/rss.xml',
   '/rss/index.rss',
   '/feed',
   '/social-media/feed/',
