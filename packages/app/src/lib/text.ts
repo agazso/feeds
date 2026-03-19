@@ -82,7 +82,8 @@ export function resolvedImageSrc(image: ImageData): string | undefined {
   // Try cache first if cacheHash exists
   if (image.cacheHash) {
     const h = image.cacheHash
-    return `/cache/${h[0]}/${h[1]}/${h}.webp`
+    const ext = image.cacheExt || 'webp'
+    return `/cache/${h[0]}/${h[1]}/${h}.${ext}`
   }
   // Fall back to original URI
   return image.uri

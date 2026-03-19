@@ -71,6 +71,7 @@ export const DELETE: RequestHandler = async ({ request }) => {
   // Find the post being deleted and extract cache hashes
   const deletedPost = posts.find((p) => p._id === postId)
   const imageCacheHash = deletedPost?.images?.[0]?.cacheHash
+  const imageCacheExt = deletedPost?.images?.[0]?.cacheExt || 'webp'
   const faviconCacheHash = deletedPost?.author?.image?.cacheHash
 
   // Count image references - if only 1 reference exists, it's the post being deleted
@@ -100,10 +101,10 @@ export const DELETE: RequestHandler = async ({ request }) => {
 
   // Delete caches only if this was the sole reference
   if (imageCacheHash && imageRefCount === 1) {
-    await deleteCachedImage(imageCacheHash)
+    await deleteCachedImage(imageCacheHash, imageCacheExt)
   }
   if (faviconCacheHash && faviconRefCount === 1) {
-    await deleteCachedImage(faviconCacheHash)
+    await deleteCachedImage(faviconCacheHash, 'webp')
   }
 
   return json({ success: true })
@@ -151,7 +152,7 @@ export const POST: RequestHandler = async ({ request }) => {
         post.tags = tags
       }
 
-      // Process primary image: generate blurhash and cache as WebP
+      // Process primary image: generate blurhash and cache
       if (post.images?.[0]?.uri && !post.images[0].blurhash) {
         const result = await processImage(post.images[0].uri)
         if (result) {
@@ -160,6 +161,7 @@ export const POST: RequestHandler = async ({ request }) => {
             blurhash: result.blurhash,
             aspectRatio: result.aspectRatio,
             cacheHash: result.cacheHash,
+            cacheExt: result.cacheExt,
           }]
         }
       }
@@ -204,7 +206,7 @@ export const POST: RequestHandler = async ({ request }) => {
       post._id = `${post.link || 'post'}-${Math.random().toString(36).slice(2, 8)}`
       post.createdAt = Date.now()
 
-      // Process primary image: generate blurhash and cache as WebP
+      // Process primary image: generate blurhash and cache
       if (post.images?.[0]?.uri && !post.images[0].blurhash) {
         const result = await processImage(post.images[0].uri)
         if (result) {
@@ -213,6 +215,7 @@ export const POST: RequestHandler = async ({ request }) => {
             blurhash: result.blurhash,
             aspectRatio: result.aspectRatio,
             cacheHash: result.cacheHash,
+            cacheExt: result.cacheExt,
           }]
         }
       }

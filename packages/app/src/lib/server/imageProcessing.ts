@@ -19,6 +19,7 @@ export interface ImageProcessingResult {
   blurhash: string
   aspectRatio: number
   cacheHash?: string // undefined if caching failed
+  cacheExt?: string // "gif", "png", or "webp"
 }
 
 /**
@@ -70,10 +71,19 @@ export async function processImage(imageUrl: string): Promise<ImageProcessingRes
       return undefined
     }
 
-    // Cache the image as WebP
+    // Cache the image - preserve animated images, convert others to WebP
     let cacheHash: string | undefined
+    let cacheExt: string | undefined
     try {
-      cacheHash = await cacheImageAsWebP(imageBuffer)
+      const isAnimated = (metadata.pages ?? 1) > 1 && (metadata.format === 'gif' || metadata.format === 'png')
+      if (isAnimated) {
+        const result = await cacheAnimatedImage(imageBuffer, metadata.format!)
+        cacheHash = result?.hash
+        cacheExt = result?.ext
+      } else {
+        cacheHash = await cacheImageAsWebP(imageBuffer)
+        cacheExt = cacheHash ? 'webp' : undefined
+      }
     } catch (e) {
       console.warn('Image caching failed:', e)
       // Continue without cache - blurhash is still useful
@@ -83,6 +93,7 @@ export async function processImage(imageUrl: string): Promise<ImageProcessingRes
       blurhash,
       aspectRatio,
       cacheHash,
+      cacheExt,
     }
   } catch {
     return undefined
@@ -115,11 +126,41 @@ async function cacheImageAsWebP(imageBuffer: Buffer): Promise<string | undefined
 }
 
 /**
- * Delete a cached image by its hash.
+ * Resize an animated image (GIF or APNG) while preserving animation, and save to cache.
+ * Returns the hash and extension on success, undefined on failure.
+ */
+async function cacheAnimatedImage(
+  imageBuffer: Buffer,
+  format: string,
+): Promise<{ hash: string; ext: string } | undefined> {
+  // Determine extension from format
+  const ext = format === 'gif' ? 'gif' : 'png'
+
+  // Resize while preserving animation
+  const resizedBuffer = await sharp(imageBuffer, { animated: true })
+    .resize({ width: 560, withoutEnlargement: true })
+    .toBuffer()
+
+  // Calculate SHA256 hash
+  const hash = createHash('sha256').update(resizedBuffer).digest('hex')
+
+  // Create cache folder structure: /cache/[hex[0]]/[hex[1]]/
+  const cacheDir = join(CACHE_DIR, hash[0], hash[1])
+  await mkdir(cacheDir, { recursive: true })
+
+  // Save with original extension
+  const cachePath = join(cacheDir, `${hash}.${ext}`)
+  await writeFile(cachePath, resizedBuffer)
+
+  return { hash, ext }
+}
+
+/**
+ * Delete a cached image by its hash and extension.
  * Logs a warning if deletion fails (file may not exist).
  */
-export async function deleteCachedImage(cacheHash: string): Promise<void> {
-  const cachePath = join(CACHE_DIR, cacheHash[0], cacheHash[1], `${cacheHash}.webp`)
+export async function deleteCachedImage(cacheHash: string, cacheExt: string = 'webp'): Promise<void> {
+  const cachePath = join(CACHE_DIR, cacheHash[0], cacheHash[1], `${cacheHash}.${cacheExt}`)
   try {
     await unlink(cachePath)
   } catch (e) {

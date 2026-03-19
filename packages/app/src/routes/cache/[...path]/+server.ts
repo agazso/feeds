@@ -8,15 +8,27 @@ import type { RequestHandler } from './$types'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const CACHE_DIR = join(__dirname, '..', '..', '..', '..', 'cache')
 
+const ALLOWED_EXTENSIONS: Record<string, string> = {
+  '.webp': 'image/webp',
+  '.gif': 'image/gif',
+  '.png': 'image/png',
+}
+
 export const GET: RequestHandler = async ({ params }) => {
   const path = params.path
 
-  if (!path || !path.endsWith('.webp')) {
+  if (!path) {
     return new Response('Not found', { status: 404 })
   }
 
   // Validate: no directory traversal
   if (path.includes('..')) {
+    return new Response('Not found', { status: 404 })
+  }
+
+  // Check for allowed extension
+  const ext = Object.keys(ALLOWED_EXTENSIONS).find((e) => path.endsWith(e))
+  if (!ext) {
     return new Response('Not found', { status: 404 })
   }
 
@@ -27,7 +39,7 @@ export const GET: RequestHandler = async ({ params }) => {
 
     return new Response(file, {
       headers: {
-        'Content-Type': 'image/webp',
+        'Content-Type': ALLOWED_EXTENSIONS[ext],
         'Cache-Control': 'public, max-age=31536000, immutable',
       },
     })
