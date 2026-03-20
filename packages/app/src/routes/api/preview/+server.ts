@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
-import { fetchFeedsFromUrl, createEnrichedPost } from '@feeds/core'
+import { fetchFeedsFromUrl, createEnrichedPost, normalizeUrl } from '@feeds/core'
 import { transformPostImages } from '$lib/imageEmbed'
 
 interface DiscoveredFeed {
@@ -31,15 +31,9 @@ async function discoverFeedFromUrl(url: string): Promise<DiscoveredFeed | null> 
 
 export const POST: RequestHandler = async ({ request }) => {
   const body = await request.json()
-  const url = body.url?.trim()
+  const url = normalizeUrl(body.url)
 
   if (!url) {
-    return json({ preview: null, feed: null })
-  }
-
-  try {
-    new URL(url)
-  } catch {
     return json({ preview: null, feed: null })
   }
 

@@ -7,6 +7,7 @@ import {
   htmlToMarkdown,
   createEnrichedPost,
   createPost,
+  normalizeUrl,
 } from '@feeds/core'
 
 interface DiscoveredFeed {
@@ -36,7 +37,7 @@ async function enrichWithTimeout<T>(
 
 export const POST: RequestHandler = async ({ request }) => {
   const body = await request.json()
-  const url = body.url?.toString()?.trim()
+  const url = normalizeUrl(body.url)
 
   if (!url) {
     return json({ error: 'URL is required' }, { status: 400 })

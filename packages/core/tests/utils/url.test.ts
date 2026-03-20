@@ -6,6 +6,7 @@ import {
   getCanonicalUrl,
   getHumanHostname,
   getLinkFromText,
+  normalizeUrl,
 } from '../../src/utils/url'
 
 test('Test invalid human hostname', () => {
@@ -170,5 +171,30 @@ describe('comparing URLs', () => {
       const result = compareUrls(input, link)
       expect(result).toBeTruthy()
     }
+  })
+})
+
+describe('normalizeUrl', () => {
+  test('adds https:// to bare domains', () => {
+    expect(normalizeUrl('reddit.com/r/linux')).toBe('https://reddit.com/r/linux')
+    expect(normalizeUrl('example.com')).toBe('https://example.com/')
+  })
+
+  test('preserves existing protocols', () => {
+    expect(normalizeUrl('https://reddit.com/r/linux')).toBe('https://reddit.com/r/linux')
+    expect(normalizeUrl('http://example.com')).toBe('http://example.com/')
+  })
+
+  test('handles protocol-relative URLs', () => {
+    expect(normalizeUrl('//reddit.com/r/linux')).toBe('https://reddit.com/r/linux')
+  })
+
+  test('returns null for invalid input', () => {
+    expect(normalizeUrl('')).toBeNull()
+    expect(normalizeUrl('   ')).toBeNull()
+  })
+
+  test('trims whitespace', () => {
+    expect(normalizeUrl('  reddit.com/r/linux  ')).toBe('https://reddit.com/r/linux')
   })
 })

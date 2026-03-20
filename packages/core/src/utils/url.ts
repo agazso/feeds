@@ -160,3 +160,26 @@ export function compareUrls(url1: string, url2: string): boolean {
     return false
   }
 }
+
+/**
+ * Normalize a user-entered URL to a valid URL.
+ * Handles missing protocols, spaces, etc.
+ * Returns null if the input cannot be normalized to a valid URL.
+ */
+export function normalizeUrl(input: string): string | null {
+  if (!input || typeof input !== 'string') return null
+
+  const trimmed = input.trim()
+  if (!trimmed) return null
+
+  // Use existing canonicalization
+  const canonical = getCanonicalUrl(trimmed)
+
+  // Validate the result
+  try {
+    new URL(canonical)
+    return canonical
+  } catch {
+    return null
+  }
+}

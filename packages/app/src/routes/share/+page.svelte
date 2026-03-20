@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { Post } from '@feeds/core'
+import { normalizeUrl, type Post } from '@feeds/core'
 import { goto } from '$app/navigation'
 import { debounce } from '$lib/search'
 import PostCard from '$lib/components/PostCard.svelte'
@@ -18,16 +18,8 @@ let discoveredFeed = $state<DiscoveredFeed | null>(null)
 let faviconError = $state(false)
 
 async function fetchPreview(urlValue: string) {
-  if (!urlValue.trim()) {
-    previewPost = null
-    discoveredFeed = null
-    faviconError = false
-    return
-  }
-
-  try {
-    new URL(urlValue)
-  } catch {
+  const normalizedUrl = normalizeUrl(urlValue)
+  if (!normalizedUrl) {
     previewPost = null
     discoveredFeed = null
     faviconError = false
