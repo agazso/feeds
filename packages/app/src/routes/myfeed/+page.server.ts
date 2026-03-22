@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types'
 import { loadMyfeedPosts } from '$lib/myfeed'
-import { transformPostImages } from '$lib/imageEmbed'
+import { transformPostImages } from '@feeds/core'
 
 export const load: PageServerLoad = async () => {
   const posts = await loadMyfeedPosts()

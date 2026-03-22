@@ -1,33 +1,6 @@
 import { json } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
-import { fetchFeedsFromUrl, createEnrichedPost, normalizeUrl } from '@feeds/core'
-import { transformPostImages } from '$lib/imageEmbed'
-
-interface DiscoveredFeed {
-  name: string
-  url: string
-  feedUrl: string
-  favicon: string
-}
-
-async function discoverFeedFromUrl(url: string): Promise<DiscoveredFeed | null> {
-  const originUrl = new URL(url).origin
-  const feedResult = await fetchFeedsFromUrl(originUrl)
-
-  if (!feedResult) return null
-
-  const feeds = Array.isArray(feedResult) ? feedResult : [feedResult]
-  const firstFeed = feeds[0]
-
-  if (!firstFeed?.feedUrl) return null
-
-  return {
-    name: firstFeed.name || new URL(originUrl).hostname,
-    url: firstFeed.url || originUrl,
-    feedUrl: firstFeed.feedUrl,
-    favicon: typeof firstFeed.favicon === 'string' ? firstFeed.favicon : '',
-  }
-}
+import { createEnrichedPost, normalizeUrl, discoverFeedFromUrl, transformPostImages } from '@feeds/core'
 
 export const POST: RequestHandler = async ({ request }) => {
   const body = await request.json()

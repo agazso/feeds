@@ -1,5 +1,5 @@
-import type { Post } from '@feeds/core'
-import { isXUrl, isRedditUrl } from '@feeds/core'
+import type { Post } from './models/post'
+import { isXUrl, isRedditUrl } from './utils/url'
 
 // Pre-cached X/Twitter favicon as base64 data URI
 const X_FAVICON_BASE64 =

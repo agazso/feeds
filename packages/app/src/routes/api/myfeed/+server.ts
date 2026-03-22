@@ -1,25 +1,10 @@
 import type { RequestHandler } from './$types'
 import type { Post } from '@feeds/core'
-import { fetchFeedsFromUrl, createEnrichedPost } from '@feeds/core'
-import { getFaviconForUrl } from '$lib/imageEmbed'
+import { createEnrichedPost, discoverFeedFromUrl, getFaviconForUrl } from '@feeds/core'
 import { processImage, processFavicon, deleteCachedImage } from '$lib/server/imageProcessing'
 import { readFile, writeFile } from 'fs/promises'
 import { join } from 'path'
 import { json } from '@sveltejs/kit'
-
-async function discoverFeedUrl(url: string): Promise<string | undefined> {
-  try {
-    const originUrl = new URL(url).origin
-    const result = await fetchFeedsFromUrl(originUrl)
-    if (result) {
-      const feed = Array.isArray(result) ? result[0] : result
-      return feed?.feedUrl
-    }
-  } catch {
-    // Feed discovery failed, continue without feedUrl
-  }
-  return undefined
-}
 
 async function savePost(post: Post): Promise<void> {
   const filePath = join(process.cwd(), 'static', 'myposts.json')
@@ -137,22 +122,14 @@ export const POST: RequestHandler = async ({ request }) => {
           image: { uri: hardcodedFavicon }
         }
       } else if (!post.author?.image?.uri) {
-        try {
-          const originUrl = new URL(url).origin
-          const result = await fetchFeedsFromUrl(originUrl)
-          if (result) {
-            const feed = Array.isArray(result) ? result[0] : result
-            if (feed?.favicon && typeof feed.favicon === 'string') {
-              post.author = {
-                ...post.author,
-                name: post.author?.name || '',
-                uri: post.author?.uri || '',
-                image: { uri: feed.favicon }
-              }
-            }
+        const feedInfo = await discoverFeedFromUrl(url)
+        if (feedInfo?.favicon) {
+          post.author = {
+            ...post.author,
+            name: post.author?.name || '',
+            uri: post.author?.uri || '',
+            image: { uri: feedInfo.favicon }
           }
-        } catch {
-          // Feed discovery failed, continue without fallback
         }
       }
 
@@ -204,9 +181,9 @@ export const POST: RequestHandler = async ({ request }) => {
 
       // If no feedUrl, try to discover one
       if (!post.feedUrl && post.link) {
-        const feedUrl = await discoverFeedUrl(post.link)
-        if (feedUrl) {
-          post.feedUrl = feedUrl
+        const feedInfo = await discoverFeedFromUrl(post.link)
+        if (feedInfo?.feedUrl) {
+          post.feedUrl = feedInfo.feedUrl
         }
       }
 

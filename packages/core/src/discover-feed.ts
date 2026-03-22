@@ -158,3 +158,27 @@ export async function discoverAndEnrichFeed(
 
   return { feed: discoveredFeed, posts }
 }
+
+/**
+ * Simple feed discovery that returns basic feed info without fetching items.
+ * Useful for getting feed metadata quickly (name, url, favicon).
+ */
+export async function discoverFeedFromUrl(url: string): Promise<DiscoveredFeedInfo | null> {
+  const originUrl = new URL(url).origin
+  const feedResult = await fetchFeedsFromUrl(originUrl)
+
+  if (!feedResult) return null
+
+  const feeds = Array.isArray(feedResult) ? feedResult : [feedResult]
+  const firstFeed = feeds[0]
+
+  if (!firstFeed?.feedUrl) return null
+
+  return {
+    name: firstFeed.name || new URL(originUrl).hostname,
+    url: firstFeed.url || originUrl,
+    feedUrl: firstFeed.feedUrl,
+    favicon: typeof firstFeed.favicon === 'string' ? firstFeed.favicon : '',
+    itemCount: 0, // Not fetched in simple discovery
+  }
+}
