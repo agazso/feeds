@@ -16,3 +16,4 @@ export * from './providers/index'
 // Helpers
 export * from './feed-helpers'
 export * from './post-helpers'
+export * from './discover-feed'
