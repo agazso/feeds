@@ -28,6 +28,18 @@ interface RedditPostData {
     enabled: boolean
   }
   url_overridden_by_dest?: string
+  selftext?: string // Post text content
+  author?: string // Post author username
+  subreddit?: string // Subreddit name
+}
+
+interface RedditCommentData {
+  body: string // Comment text
+  author: string // Comment author username
+  created_utc: number
+  permalink: string
+  link_title?: string // Title of the parent post
+  subreddit?: string
 }
 
 interface RedditPost {
@@ -236,6 +248,105 @@ export async function fetchRedditFeed(url: string): Promise<Feed | undefined> {
       url: canonicalUrl,
       feedUrl,
       favicon,
+    }
+  } catch {
+    return undefined
+  }
+}
+
+/**
+ * Metadata extracted from a Reddit post or comment.
+ */
+export interface RedditPostMetadata {
+  title: string
+  description: string
+  author: string
+  subreddit: string
+  createdAt: number
+  image?: string
+}
+
+/**
+ * Check if a URL is a Reddit post or comment URL (not a subreddit URL).
+ * Post URLs contain /comments/ in the path.
+ */
+export function isRedditPostUrl(url: string): boolean {
+  if (!isRedditLink(url)) {
+    return false
+  }
+  const canonicalUrl = urlUtils.getCanonicalUrl(url)
+  return canonicalUrl.includes('/comments/')
+}
+
+/**
+ * Fetch rich metadata from a Reddit post or comment URL.
+ * Uses Reddit's JSON API by appending .json to the URL.
+ */
+export async function fetchRedditPostMetadata(url: string): Promise<RedditPostMetadata | undefined> {
+  if (!isRedditPostUrl(url)) {
+    return undefined
+  }
+
+  try {
+    // Clean up URL and append .json
+    const cleanUrl = url.split('?')[0] ?? url // Remove query params
+    const jsonUrl = cleanUrl.endsWith('/') ? cleanUrl.slice(0, -1) + '.json' : cleanUrl + '.json'
+
+    const response = await safeFetch(jsonUrl, { headers: HEADERS_WITH_FELFELE })
+    const data = await response.json()
+
+    // Reddit returns an array: [post_listing, comments_listing]
+    // For comment URLs, the second element contains the target comment
+    if (!Array.isArray(data) || data.length < 1) {
+      return undefined
+    }
+
+    const postListing = data[0]
+    const commentListing = data[1]
+
+    // Extract post data
+    const postData = postListing?.data?.children?.[0]?.data as RedditPostData | undefined
+    if (!postData) {
+      return undefined
+    }
+
+    // Check if this is a comment URL (has second listing with comments)
+    const isCommentUrl = url.includes('/comment/')
+    const commentData = commentListing?.data?.children?.[0]?.data as RedditCommentData | undefined
+
+    let title = postData.title
+    let description = ''
+    let author = postData.author || ''
+    const subreddit = postData.subreddit || ''
+    let createdAt = Math.floor(postData.created_utc * 1000)
+
+    if (isCommentUrl && commentData) {
+      // For comment URLs, use comment body as description and prepend post title
+      description = commentData.body || ''
+      author = commentData.author || author
+      createdAt = Math.floor(commentData.created_utc * 1000)
+    } else {
+      // For post URLs, use selftext as description
+      description = postData.selftext || ''
+    }
+
+    // Extract preview image
+    let image: string | undefined
+    if (postData.preview?.images?.[0]) {
+      const bestImage = findBestResolutionRedditImage(postData.preview.images[0])
+      if (bestImage) {
+        // Fix Reddit image URL encoding
+        image = bestImage.url.replace(/&amp;/g, '&')
+      }
+    }
+
+    return {
+      title,
+      description,
+      author,
+      subreddit,
+      createdAt,
+      image,
     }
   } catch {
     return undefined

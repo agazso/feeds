@@ -22,7 +22,7 @@ export function postTitle(post: Post): string | undefined {
   if (!post.text.startsWith('**')) {
     return undefined
   }
-  return post.text.replaceAll('\n', '').replace(/^\*\*(.*)\*\*(.*)$/, '$1')
+  return post.text.replaceAll('\n', '').replace(/^\*\*(.*?)\*\*(.*)$/, '$1')
 }
 
 export function postText(post: Post): string | undefined {
@@ -33,7 +33,7 @@ export function postText(post: Post): string | undefined {
   return (
     post.text
       // remove bold title
-      .replace(/^\*\*.*\*\*/m, '')
+      .replace(/^\*\*.*?\*\*/m, '')
       // remove comment links
       .replace(/\[Comments\]\((.*?)\)/gm, '')
       // replace markdown links with just the text

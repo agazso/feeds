@@ -3,6 +3,7 @@ import type { Post } from './models/post'
 import type { RSSItem } from './models/rss'
 import { fetchFeedsFromUrl } from './feed-helpers'
 import { type HtmlMetaData, fetchHtmlMetaDataOnly } from './parsers/html-metadata'
+import { isRedditPostUrl, fetchRedditPostMetadata } from './providers/reddit'
 import { isYoutubeLink } from './providers/youtube'
 import { createUrlFromUrn, isImageUrl } from './utils/url'
 import { htmlToMarkdown } from './parsers/rss-post'
@@ -204,10 +205,35 @@ export async function fetchEnrichedMetadata(
   url: string,
   init?: RequestInit,
 ): Promise<{ metadata: HtmlMetaData; originUrl: string }> {
-  const urlMetadata = await fetchHtmlMetaDataOnly(url, init)
-
   const parsedUrl = new URL(url)
   const originUrl = parsedUrl.origin
+
+  // Handle Reddit post/comment URLs specially - use Reddit JSON API for rich metadata
+  if (isRedditPostUrl(url)) {
+    const redditMeta = await fetchRedditPostMetadata(url)
+    if (redditMeta) {
+      const metadata: HtmlMetaData = {
+        title: redditMeta.title,
+        description: redditMeta.description,
+        image: redditMeta.image || '',
+        url,
+        name: `r/${redditMeta.subreddit}`,
+        siteName: 'Reddit',
+        author: redditMeta.author,
+        icon: '', // Favicon will be handled by transformPostImages()
+        feedUrl: '',
+        feedTitle: '',
+        feedLinks: [],
+        createdAt: redditMeta.createdAt,
+        updatedAt: redditMeta.createdAt,
+      }
+      return { metadata, originUrl }
+    }
+    // Fall through to generic fetching if Reddit API fails
+  }
+
+  const urlMetadata = await fetchHtmlMetaDataOnly(url, init)
+
   const isSubpage = parsedUrl.pathname !== '/'
   const missingIdentity = !urlMetadata.name && !urlMetadata.siteName && !urlMetadata.author
   // Also check for missing content (captcha pages have no title/description)

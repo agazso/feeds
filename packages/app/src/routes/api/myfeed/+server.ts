@@ -127,8 +127,16 @@ export const POST: RequestHandler = async ({ request }) => {
     try {
       const { post, title } = await createEnrichedPost(url)
 
-      // Use feed favicon as fallback if page favicon is missing
-      if (!post.author?.image?.uri) {
+      // Apply hardcoded favicons for sites like Reddit and X
+      const hardcodedFavicon = getFaviconForUrl(url)
+      if (hardcodedFavicon) {
+        post.author = {
+          ...post.author,
+          name: post.author?.name || '',
+          uri: post.author?.uri || '',
+          image: { uri: hardcodedFavicon }
+        }
+      } else if (!post.author?.image?.uri) {
         try {
           const originUrl = new URL(url).origin
           const result = await fetchFeedsFromUrl(originUrl)
