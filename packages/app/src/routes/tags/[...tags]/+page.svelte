@@ -130,7 +130,7 @@ function handleReplaceTag(tag: string) {
   <div class="tag-panel" transition:slide={{ duration: 150 }}>
     <div class="panel-header">{openPanel === 'add' ? 'Add tag' : 'Switch tag'}</div>
     <div class="tags-list">
-      {#each openPanel === 'add' ? allTags.filter((t) => !selectedTags.includes(t)) : allTags as tag}
+      {#each allTags.filter((t) => !selectedTags.includes(t)) as tag}
         <button class="tag-option" onclick={() => openPanel === 'add' ? handleAddTag(tag) : handleReplaceTag(tag)}>
           #{tag}
         </button>
