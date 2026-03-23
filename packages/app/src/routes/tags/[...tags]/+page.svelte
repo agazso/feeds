@@ -1,18 +1,22 @@
 <script lang="ts">
 import type { PageData } from './$types'
 import type { Post } from '@feeds/core'
+import { Add, ArrowsHorizontal } from 'carbon-icons-svelte'
 import SearchBar from '$lib/components/SearchBar.svelte'
 import PostList from '$lib/components/PostList.svelte'
 import Loader from '$lib/components/Loader.svelte'
+import TagChip from '$lib/components/TagChip.svelte'
 import { searchPosts } from '$lib/search'
 import { formatTagsForPath } from '$lib/tags'
 import { goto } from '$app/navigation'
 import { untrack } from 'svelte'
+import { slide } from 'svelte/transition'
 
 let { data }: { data: PageData } = $props()
 
 let searchQuery = $state('')
 let isLoading = $state(true)
+let openPanel: 'add' | 'replace' | null = $state(null)
 
 // Local state for selected tags - allows client-side filtering when adding tags
 let selectedTags = $state<string[]>(untrack(() => data.selectedTags))
@@ -62,30 +66,37 @@ function handleFilter(term: string) {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-function handleTagClick(tag: string) {
-  const isRemoving = selectedTags.includes(tag)
+function handleRemoveTag(tag: string) {
+  const newTags = selectedTags.filter((t) => t !== tag)
 
-  if (isRemoving) {
-    const newTags = selectedTags.filter((t) => t !== tag)
+  // Check if new tags still contain all base tags (can filter from cache)
+  const canUseCache = baseTags.every((t) => newTags.includes(t))
 
-    // Check if new tags still contain all base tags (can filter from cache)
-    const canUseCache = baseTags.every((t) => newTags.includes(t))
-
-    if (newTags.length === 0) {
-      goto('/tags')
-    } else if (canUseCache) {
-      // Filter client-side from cached posts
-      selectedTags = newTags
-      goto(`/tags/${formatTagsForPath(newTags)}`, { replaceState: true })
-    } else {
-      // Need broader data - navigate and load via API
-      goto(`/tags/${formatTagsForPath(newTags)}`)
-    }
+  if (newTags.length === 0) {
+    goto('/tags')
+  } else if (canUseCache) {
+    // Filter client-side from cached posts
+    selectedTags = newTags
+    goto(`/tags/${formatTagsForPath(newTags)}`, { replaceState: true })
   } else {
-    // Adding a tag - always filter client-side
-    selectedTags = [...selectedTags, tag]
-    goto(`/tags/${formatTagsForPath(selectedTags)}`, { replaceState: true })
+    // Need broader data - navigate and load via API
+    goto(`/tags/${formatTagsForPath(newTags)}`)
   }
+}
+
+function togglePanel(panel: 'add' | 'replace') {
+  openPanel = openPanel === panel ? null : panel
+}
+
+function handleAddTag(tag: string) {
+  selectedTags = [...selectedTags, tag]
+  openPanel = null
+  goto(`/tags/${formatTagsForPath(selectedTags)}`, { replaceState: true })
+}
+
+function handleReplaceTag(tag: string) {
+  openPanel = null
+  goto(`/tags/${encodeURIComponent(tag)}`)
 }
 </script>
 
@@ -96,15 +107,37 @@ function handleTagClick(tag: string) {
 <div class="tags-header">
   <div class="selected-tags">
     {#each selectedTags as tag}
-      <button class="tag selected" onclick={() => handleTagClick(tag)}>#{tag} &times;</button>
+      <TagChip {tag} onremove={() => handleRemoveTag(tag)} />
     {/each}
   </div>
-  <div class="available-tags">
-    {#each allTags.filter((t) => !selectedTags.includes(t)) as tag}
-      <button class="tag" onclick={() => handleTagClick(tag)}>+{tag}</button>
-    {/each}
+
+  <div class="tag-actions">
+    {#if allTags.filter((t) => !selectedTags.includes(t)).length > 0}
+      <button class="icon-btn" class:active={openPanel === 'add'} onclick={() => togglePanel('add')}>
+        <Add size={20} />
+      </button>
+    {/if}
+
+    {#if allTags.length > 1}
+      <button class="icon-btn" class:active={openPanel === 'replace'} onclick={() => togglePanel('replace')}>
+        <ArrowsHorizontal size={20} />
+      </button>
+    {/if}
   </div>
 </div>
+
+{#if openPanel}
+  <div class="tag-panel" transition:slide={{ duration: 150 }}>
+    <div class="panel-header">{openPanel === 'add' ? 'Add tag' : 'Switch tag'}</div>
+    <div class="tags-list">
+      {#each openPanel === 'add' ? allTags.filter((t) => !selectedTags.includes(t)) : allTags as tag}
+        <button class="tag-option" onclick={() => openPanel === 'add' ? handleAddTag(tag) : handleReplaceTag(tag)}>
+          #{tag}
+        </button>
+      {/each}
+    </div>
+  </div>
+{/if}
 
 <SearchBar value={searchQuery} onchange={handleSearch} />
 
@@ -122,6 +155,9 @@ function handleTagClick(tag: string) {
 
 <style>
   .tags-header {
+    display: flex;
+    align-items: center;
+    gap: var(--padding);
     padding: var(--padding);
     background-color: var(--color-step-10);
     border-bottom: 1px solid #88888822;
@@ -131,20 +167,57 @@ function handleTagClick(tag: string) {
     display: flex;
     flex-wrap: wrap;
     gap: var(--half-padding);
+  }
+
+  .tag-actions {
+    display: flex;
+    gap: var(--half-padding);
+  }
+
+  .icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background-color: #88888822;
+    border: none;
+    border-radius: 4px;
+    color: var(--color);
+    cursor: pointer;
+  }
+
+  .icon-btn:hover {
+    background-color: #88888844;
+  }
+
+  .icon-btn.active {
+    background-color: var(--accent-color);
+    color: white;
+  }
+
+  .tag-panel {
+    background-color: var(--color-step-10);
+    border-bottom: 1px solid #88888822;
+    padding: var(--padding);
+  }
+
+  .panel-header {
+    font-size: 12px;
+    color: var(--color-step-30);
+    padding-bottom: var(--half-padding);
     margin-bottom: var(--half-padding);
   }
 
-  .available-tags {
+  .tags-list {
     display: flex;
     flex-wrap: wrap;
     gap: var(--half-padding);
-    margin-bottom: var(--half-padding);
   }
 
-  .tag {
-    display: inline-block;
+  .tag-option {
     padding: var(--half-padding) var(--padding);
-    background-color: #88888822;
+    background: #88888822;
     border: none;
     border-radius: 4px;
     cursor: pointer;
@@ -152,12 +225,8 @@ function handleTagClick(tag: string) {
     color: var(--color);
   }
 
-  .tag:hover {
+  .tag-option:hover {
     background-color: #88888844;
-  }
-
-  .tag.selected {
-    background-color: #88888866;
   }
 
   .loading-container {
