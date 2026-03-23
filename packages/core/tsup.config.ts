@@ -1,11 +1,11 @@
 import { defineConfig } from 'tsup'
 
-export default defineConfig({
+export default defineConfig((options) => ({
   entry: ['src/index.ts'],
   format: ['esm', 'cjs'],
   dts: true,
-  clean: true,
+  clean: !options.watch, // Only clean on full builds, not in watch mode
   sourcemap: true,
   splitting: false,
   treeshake: true,
-})
+}))
