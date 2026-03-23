@@ -30,7 +30,7 @@ let feedUrlToPageUrl = $state<Record<string, string>>({})
 async function loadTagData(tags: string[]) {
   isLoading = true
   try {
-    const tagsParam = tags.map(encodeURIComponent).join('+')
+    const tagsParam = tags.map(encodeURIComponent).join('%2B')
     const response = await fetch(`/api/tags?tags=${tagsParam}`)
     const result = await response.json()
     cachedPosts = result.posts
