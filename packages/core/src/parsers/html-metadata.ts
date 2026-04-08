@@ -1,5 +1,5 @@
 import type { Feed } from '../models/feed'
-import { parseFaviconFromHtml } from '../utils/favicon'
+import { parseFaviconFromHtml, DEFAULT_FAVICON } from '../utils/favicon'
 import { HtmlUtils, type ParsedNode } from '../utils/html'
 import { type OpenGraphData, getHtmlOpenGraphData } from '../utils/opengraph'
 import { createUrlFromUrn } from '../utils/url'
@@ -105,7 +105,7 @@ export function parseHtmlMetaData(url: string, html: string, feed?: Feed | null)
   ])
   const title = getHtmlTitle(document, openGraphData.title)
   const favicon = parseFaviconFromHtml(html)
-  const icon = favicon ? createUrlFromUrn(favicon, baseUrl) : ''
+  const icon = createUrlFromUrn(favicon || DEFAULT_FAVICON, baseUrl)
   const createdAt = getPublishedTime(document)
   const updatedAt = getModifiedTime(document, createdAt)
   // Detect feed URL from HTML if not provided via Feed object
