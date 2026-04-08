@@ -164,21 +164,32 @@ export function compareUrls(url1: string, url2: string): boolean {
 /**
  * Normalize a user-entered URL to a valid URL.
  * Handles missing protocols, spaces, etc.
+ * Preserves query parameters (unlike getCanonicalUrl which strips them).
  * Returns null if the input cannot be normalized to a valid URL.
  */
 export function normalizeUrl(input: string): string | null {
   if (!input || typeof input !== 'string') return null
 
-  const trimmed = input.trim()
-  if (!trimmed) return null
+  let url = input.trim()
+  if (!url) return null
 
-  // Use existing canonicalization
-  const canonical = getCanonicalUrl(trimmed)
+  // Add protocol if missing
+  if (url.startsWith('//')) {
+    url = 'https:' + url
+  } else if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    url = 'https://' + url
+  }
 
-  // Validate the result
+  // Add trailing slash to bare domains (no path)
   try {
-    new URL(canonical)
-    return canonical
+    const parsed = new URL(url)
+    if (parsed.pathname === '' || (parsed.pathname === '/' && !url.endsWith('/'))) {
+      // Only add slash if there's no query string and URL doesn't have one
+      if (!parsed.search && !url.includes('?')) {
+        url = parsed.origin + '/'
+      }
+    }
+    return url
   } catch {
     return null
   }
