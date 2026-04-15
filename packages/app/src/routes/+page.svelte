@@ -2,15 +2,15 @@
 import type { PageData } from './$types'
 import SearchBar from '$lib/components/SearchBar.svelte'
 import PostList from '$lib/components/PostList.svelte'
-import Spinner from '$lib/components/Spinner.svelte'
 import { searchPosts } from '$lib/search'
+import { untrack } from 'svelte'
 
 let { data }: { data: PageData } = $props()
 
+let posts = $state(untrack(() => data.posts))
 let searchQuery = $state('')
-let isLoading = $state(false)
 
-const filteredPosts = $derived(searchQuery ? searchPosts(data.posts, searchQuery) : data.posts)
+const filteredPosts = $derived(searchQuery ? searchPosts(posts, searchQuery) : posts)
 
 function handleSearch(query: string) {
   searchQuery = query
@@ -18,37 +18,28 @@ function handleSearch(query: string) {
 
 function handleFilter(term: string) {
   searchQuery = term
-  // Scroll to top when filtering
   window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+function handleRemove(postId: string) {
+  posts = posts.filter((p) => String(p._id) !== postId)
 }
 </script>
 
 <svelte:head>
-  <title>Feeds</title>
+  <title>My Feed</title>
 </svelte:head>
 
-{#if isLoading}
-  <div class="loader-container">
-    <Spinner />
-  </div>
+<SearchBar value={searchQuery} onchange={handleSearch} />
+{#if filteredPosts.length > 0}
+  <PostList posts={filteredPosts} onfilter={handleFilter} onremove={handleRemove} />
+{:else if searchQuery}
+  <p class="no-results">No posts found matching "{searchQuery}"</p>
 {:else}
-  <SearchBar value={searchQuery} onchange={handleSearch} />
-  {#if filteredPosts.length > 0}
-    <PostList posts={filteredPosts} onfilter={handleFilter} />
-  {:else if searchQuery}
-    <p class="no-results">No posts found matching "{searchQuery}"</p>
-  {:else}
-    <p class="no-results">No posts available. Add feeds to feeds.json to get started.</p>
-  {/if}
+  <p class="no-results">No posts available.</p>
 {/if}
 
 <style>
-  .loader-container {
-    display: flex;
-    justify-content: center;
-    padding: calc(var(--padding) * 4);
-  }
-
   .no-results {
     text-align: center;
     color: var(--color-step-30);

@@ -1,13 +1,14 @@
 import type { PageServerLoad } from './$types'
-import { loadPosts } from '@feeds/core'
-import { loadConfig } from '$lib/config'
+import { loadMyfeedPosts } from '$lib/myfeed'
+import { transformPostImages } from '@feeds/core'
 
 export const load: PageServerLoad = async () => {
-  const config = await loadConfig()
-  const posts = await loadPosts(config.feeds)
-  const sorted = posts.sort((a, b) => b.createdAt - a.createdAt)
+  const posts = await loadMyfeedPosts()
 
-  return {
-    posts: sorted.slice(0, config.maxPosts),
-  }
+  const transformedPosts = await Promise.all(
+    posts.map((post) => transformPostImages(post, post.link || '')),
+  )
+
+  const sorted = transformedPosts.sort((a, b) => b.createdAt - a.createdAt)
+  return { posts: sorted }
 }
