@@ -10,8 +10,8 @@ interface Props {
     availableTags: string[]
     feeds: Feed[]
     myfeedPosts: Post[]
-    feedTags: string[]  // Tags from feeds matching this URL's hostname
-    feedUrl?: string    // Original feed context (if shared from a specific feed)
+    feedTags: string[]  // Tags from the specific feed matching this URL (empty if none)
+    feedUrl?: string    // Feed context for the saved post (query param or discovered match)
   }
 }
 
