@@ -2,7 +2,7 @@
 import type { Post, Feed } from '@feeds/core'
 import PostCard from '$lib/components/PostCard.svelte'
 import TagSelector from '$lib/components/TagSelector.svelte'
-import { buildTagCooccurrence, getSuggestedTags, getContentBasedTags, getTagsFromMatchingFeeds } from '$lib/tags'
+import { buildTagCooccurrence, getSuggestedTags, getContentBasedTags } from '$lib/tags'
 
 interface Props {
   data: {
@@ -10,6 +10,8 @@ interface Props {
     availableTags: string[]
     feeds: Feed[]
     myfeedPosts: Post[]
+    feedTags: string[]  // Tags from feeds matching this URL's hostname
+    feedUrl?: string    // Original feed context (if shared from a specific feed)
   }
 }
 
@@ -25,6 +27,13 @@ let embeddingTags = $state<string[]>([])
 
 const cooccurrence = $derived(buildTagCooccurrence(data.feeds, data.myfeedPosts))
 
+// Auto-select feed tags when available
+$effect(() => {
+  if (data.feedTags.length > 0 && selectedTags.length === 0) {
+    selectedTags = [...data.feedTags]
+  }
+})
+
 // Combine all text fields for tag matching
 function getPostText(post: Post | null): string {
   if (!post) return ''
@@ -36,8 +45,7 @@ function getPostText(post: Post | null): string {
   ].filter(Boolean).join(' ')
 }
 
-// Get tags from feeds matching this URL's hostname
-const feedTags = $derived(getTagsFromMatchingFeeds(data.url, data.feeds))
+// feedTags are now provided by the server (exact feed URL matching)
 
 // Fetch embedding-based tags when preview loads
 $effect(() => {
@@ -59,7 +67,7 @@ $effect(() => {
 // Combine feed tags (priority) + embedding + content-based tags, deduplicated
 const suggestedTags = $derived.by(() => {
   const contentTags = getContentBasedTags(getPostText(previewPost), data.availableTags)
-  const all = [...feedTags, ...embeddingTags, ...contentTags]
+  const all = [...data.feedTags, ...embeddingTags, ...contentTags]
   return [...new Set(all)].slice(0, 5)
 })
 
@@ -109,7 +117,12 @@ async function save() {
   error = null
 
   try {
-    const response = await fetch('/api/myfeed', {
+    // Build API URL with feedUrl query parameter if available
+    const apiUrl = data.feedUrl
+      ? `/api/myfeed?feedUrl=${encodeURIComponent(data.feedUrl)}`
+      : '/api/myfeed'
+
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

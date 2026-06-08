@@ -95,13 +95,17 @@ export const DELETE: RequestHandler = async ({ request }) => {
   return json({ success: true })
 }
 
-export const POST: RequestHandler = async ({ request }) => {
+export const POST: RequestHandler = async ({ request, url }) => {
   const body = await request.json()
 
   // URL mode: fetch metadata and build post
   if (body.url && typeof body.url === 'string') {
-    const url = body.url.trim()
+    const postUrl = body.url.trim()
     const tags = Array.isArray(body.tags) ? body.tags : undefined
+    
+    // Get feedUrl from query parameters if provided (preserves feed context)
+    const searchParams = new URL(url).searchParams
+    const providedFeedUrl = searchParams.get('feedUrl')
 
     try {
       new URL(url)
@@ -110,10 +114,21 @@ export const POST: RequestHandler = async ({ request }) => {
     }
 
     try {
-      const { post, title } = await createEnrichedPost(url)
+      const { post, title } = await createEnrichedPost(postUrl)
+
+      // Use provided feedUrl if available (preserves feed context from share page)
+      if (providedFeedUrl) {
+        post.feedUrl = providedFeedUrl
+      } else if (!post.feedUrl && post.link) {
+        // Fallback: try to discover feedUrl if not provided
+        const feedInfo = await discoverFeedFromUrl(post.link)
+        if (feedInfo?.feedUrl) {
+          post.feedUrl = feedInfo.feedUrl
+        }
+      }
 
       // Apply hardcoded favicons for sites like Reddit and X
-      const hardcodedFavicon = getFaviconForUrl(url)
+      const hardcodedFavicon = getFaviconForUrl(postUrl)
       if (hardcodedFavicon) {
         post.author = {
           ...post.author,
@@ -122,7 +137,7 @@ export const POST: RequestHandler = async ({ request }) => {
           image: { uri: hardcodedFavicon }
         }
       } else if (!post.author?.image?.uri) {
-        const feedInfo = await discoverFeedFromUrl(url)
+        const feedInfo = await discoverFeedFromUrl(postUrl)
         if (feedInfo?.favicon) {
           post.author = {
             ...post.author,
@@ -165,7 +180,7 @@ export const POST: RequestHandler = async ({ request }) => {
         success: true,
         post: {
           title: title || post.author?.name || 'Shared link',
-          icon: getFaviconForUrl(url, post.author?.image?.uri),
+          icon: getFaviconForUrl(postUrl, post.author?.image?.uri),
         },
       })
     } catch (e) {
@@ -178,9 +193,15 @@ export const POST: RequestHandler = async ({ request }) => {
   if (body.post && typeof body.post === 'object') {
     try {
       const post = body.post as Post
+      
+      // Get feedUrl from query parameters if provided (preserves feed context)
+      const searchParams = new URL(url).searchParams
+      const providedFeedUrl = searchParams.get('feedUrl')
 
-      // If no feedUrl, try to discover one
-      if (!post.feedUrl && post.link) {
+      // Use provided feedUrl if available, otherwise try to discover one
+      if (providedFeedUrl) {
+        post.feedUrl = providedFeedUrl
+      } else if (!post.feedUrl && post.link) {
         const feedInfo = await discoverFeedFromUrl(post.link)
         if (feedInfo?.feedUrl) {
           post.feedUrl = feedInfo.feedUrl

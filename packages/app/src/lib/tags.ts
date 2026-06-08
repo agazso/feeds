@@ -195,3 +195,47 @@ export function getTagsFromMatchingFeeds(
 
   return Array.from(tagSet)
 }
+
+/**
+ * Get tags from the feed whose URL exactly matches the given URL
+ * Falls back to hostname matching if no exact match is found
+ */
+export function getTagsFromExactFeedMatch(
+  url: string,
+  feeds: Feed[]
+): string[] {
+  if (!url || feeds.length === 0) return []
+
+  // Try exact URL match first
+  try {
+    // Normalize the target URL for comparison
+    const targetUrl = new URL(url)
+    targetUrl.hash = '' // Remove fragment
+    targetUrl.search = '' // Remove query parameters
+    const normalizedTarget = targetUrl.toString()
+
+    for (const feed of feeds) {
+      try {
+        // Normalize the feed URL for comparison
+        const feedUrl = new URL(feed.url)
+        feedUrl.hash = '' // Remove fragment
+        feedUrl.search = '' // Remove query parameters
+        const normalizedFeed = feedUrl.toString()
+
+        // Exact match found
+        if (normalizedFeed === normalizedTarget && feed.tags) {
+          return [...feed.tags] // Return exact match tags
+        }
+      } catch {
+        // Skip feeds with invalid URLs
+        continue
+      }
+    }
+  } catch {
+    // Invalid target URL, fall back to hostname matching
+    return getTagsFromMatchingFeeds(url, feeds)
+  }
+
+  // No exact match found, fall back to hostname matching
+  return getTagsFromMatchingFeeds(url, feeds)
+}

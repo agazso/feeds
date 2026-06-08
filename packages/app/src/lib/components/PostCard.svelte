@@ -89,9 +89,12 @@ const menuItems = $derived.by(() => {
 
   // Add to my feed (when not in "my feed" context)
   if (!onremove && post.link) {
+    const shareUrl = post.feedUrl
+      ? `/share/${encodeURIComponent(post.link)}?feedUrl=${encodeURIComponent(post.feedUrl)}`
+      : `/share/${encodeURIComponent(post.link)}`
     items.push({
       label: 'Add to my feed',
-      href: `/share/${encodeURIComponent(post.link)}`,
+      href: shareUrl,
     })
   }
 
