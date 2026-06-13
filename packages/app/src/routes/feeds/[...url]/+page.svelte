@@ -6,6 +6,7 @@ import FeedHeader from '$lib/components/FeedHeader.svelte'
 import TagSelector from '$lib/components/TagSelector.svelte'
 import { searchPosts } from '$lib/search'
 import { buildTagCooccurrence, getSuggestedTags } from '$lib/tags'
+import { auth } from '$lib/stores/auth.svelte'
 
 let { data }: { data: PageData } = $props()
 
@@ -91,9 +92,11 @@ async function saveTags() {
             <a href="/tags/{tag}" class="tag-chip">#{tag}</a>
           {/each}
         {/if}
-        <button type="button" class="edit-tags-button" onclick={startEditingTags}>
-          Edit tags
-        </button>
+        {#if auth.canWrite}
+          <button type="button" class="edit-tags-button" onclick={startEditingTags}>
+            Edit tags
+          </button>
+        {/if}
       </div>
     {/if}
   </div>

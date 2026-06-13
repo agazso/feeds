@@ -1,7 +1,12 @@
 <script lang="ts">
 import { preferences } from '$lib/stores/preferences.svelte'
-import { Grid, List, Asleep, Light } from 'carbon-icons-svelte'
+import { auth } from '$lib/stores/auth.svelte'
+import { Grid, List, Asleep, Light, User, Locked, Unlocked } from 'carbon-icons-svelte'
 import Dropdown from './Dropdown.svelte'
+
+const authLabel = $derived(
+  !auth.enabled ? 'Auth disabled' : auth.authenticated ? 'Authenticated' : 'Not authenticated',
+)
 </script>
 
 <header class="topbar">
@@ -16,8 +21,10 @@ import Dropdown from './Dropdown.svelte'
         <a href="/all-posts" class="menu-item">All Posts</a>
         <a href="/feeds" class="menu-item">Feeds</a>
         <a href="/tags" class="menu-item">Tags</a>
-        <a href="/discover" class="menu-item">Discover</a>
-        <a href="/share" class="menu-item">Share</a>
+        {#if auth.canWrite}
+          <a href="/discover" class="menu-item">Discover</a>
+          <a href="/share" class="menu-item">Share</a>
+        {/if}
       </div>
     </Dropdown>
   </div>
@@ -48,6 +55,16 @@ import Dropdown from './Dropdown.svelte'
           {/if}
           <span>Theme: {preferences.theme === 'dark' ? 'Dark' : 'Light'}</span>
         </button>
+        <a href="/auth" class="menu-item auth-item">
+          {#if !auth.enabled}
+            <Unlocked size={16} />
+          {:else if auth.authenticated}
+            <User size={16} />
+          {:else}
+            <Locked size={16} />
+          {/if}
+          <span>{authLabel}</span>
+        </a>
       </div>
     </Dropdown>
   </div>
@@ -115,6 +132,12 @@ import Dropdown from './Dropdown.svelte'
 
   .menu-item:hover {
     background-color: #88888844;
+  }
+
+  /* Anchors don't get the global button { justify-content: center }, so center
+     this one explicitly to match the Layout/Theme buttons in the settings dropdown. */
+  .auth-item {
+    justify-content: center;
   }
 
   .spacer {

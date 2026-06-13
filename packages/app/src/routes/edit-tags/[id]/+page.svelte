@@ -3,6 +3,7 @@ import type { Post } from '@feeds/core'
 import { goto } from '$app/navigation'
 import Loader from '$lib/components/Loader.svelte'
 import TagSelector from '$lib/components/TagSelector.svelte'
+import { auth } from '$lib/stores/auth.svelte'
 
 interface Props {
   data: { postId: string }
@@ -102,9 +103,11 @@ $effect(() => {
         <button class="cancel-button" onclick={cancel} disabled={saving}>
           Cancel
         </button>
-        <button class="save-button" onclick={save} disabled={saving}>
-          {saving ? 'Saving...' : 'Save'}
-        </button>
+        {#if auth.canWrite}
+          <button class="save-button" onclick={save} disabled={saving}>
+            {saving ? 'Saving...' : 'Save'}
+          </button>
+        {/if}
       </div>
     </div>
   {/if}

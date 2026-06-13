@@ -5,6 +5,7 @@ import { postTitle, postText, commentLink, formatTimestamp, thumbnailSrc, resolv
 import PostCardMenu, { type MenuItem } from './PostCardMenu.svelte'
 import BlurhashImage from './BlurhashImage.svelte'
 import { preloadOnScroll } from '$lib/actions/preloadOnScroll'
+import { auth } from '$lib/stores/auth.svelte'
 
 interface Props {
   post: Post
@@ -80,7 +81,7 @@ const menuItems = $derived.by(() => {
   })
 
   // Edit Tags (only when in "my feed" context)
-  if (onremove && post._id) {
+  if (auth.canWrite && onremove && post._id) {
     items.push({
       label: 'Edit Tags',
       href: `/edit-tags/${encodeURIComponent(post._id)}`,
@@ -88,7 +89,7 @@ const menuItems = $derived.by(() => {
   }
 
   // Add to my feed (when not in "my feed" context)
-  if (!onremove && post.link) {
+  if (auth.canWrite && !onremove && post.link) {
     const shareUrl = post.feedUrl
       ? `/share/${encodeURIComponent(post.link)}?feedUrl=${encodeURIComponent(post.feedUrl)}`
       : `/share/${encodeURIComponent(post.link)}`
@@ -107,8 +108,8 @@ const menuItems = $derived.by(() => {
         label: 'View feed',
         href: `/feeds/${encodeURIComponent(feedPageUrl)}`,
       })
-    } else {
-      // Feed is not followed - show "Discover Feed" only
+    } else if (auth.canWrite) {
+      // Feed is not followed - show "Discover Feed" only (entry to the add-feed flow)
       items.push({
         label: 'Discover Feed',
         href: `/discover/${encodeURIComponent(post.feedUrl)}`,
@@ -117,7 +118,7 @@ const menuItems = $derived.by(() => {
   }
 
   // Remove (always last, only in "my feed" context)
-  if (onremove) {
+  if (auth.canWrite && onremove) {
     items.push({
       label: 'Remove',
       onclick: removeFromMyFeed,

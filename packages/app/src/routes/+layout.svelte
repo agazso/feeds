@@ -2,6 +2,7 @@
 import '../app.css'
 import type { LayoutData } from './$types'
 import { preferences } from '$lib/stores/preferences.svelte'
+import { auth } from '$lib/stores/auth.svelte'
 import { onMount, untrack } from 'svelte'
 import { navigating } from '$app/stores'
 import Topbar from '$lib/components/Topbar.svelte'
@@ -11,6 +12,8 @@ let { data, children }: { data: LayoutData; children: any } = $props()
 
 // Initialize preferences from server-side cookies (one-time, not reactive)
 untrack(() => preferences.init(data.theme, data.layout))
+// Initialize auth state from server (hydrated during SSR, no flash)
+untrack(() => auth.init(data.authEnabled, data.authenticated))
 
 onMount(() => {
   // Apply theme and layout to document on mount

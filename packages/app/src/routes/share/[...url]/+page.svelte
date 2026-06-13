@@ -3,6 +3,7 @@ import type { Post, Feed } from '@feeds/core'
 import PostCard from '$lib/components/PostCard.svelte'
 import TagSelector from '$lib/components/TagSelector.svelte'
 import { buildTagCooccurrence, getSuggestedTags, getContentBasedTags } from '$lib/tags'
+import { auth } from '$lib/stores/auth.svelte'
 
 interface Props {
   data: {
@@ -199,18 +200,22 @@ $effect(() => {
       </div>
     </div>
 
-    <div class="tags-section">
-      <p class="section-label">Tags (optional)</p>
-      <TagSelector availableTags={data.availableTags} bind:selectedTags {suggestedTags} />
-    </div>
+    {#if auth.canWrite}
+      <div class="tags-section">
+        <p class="section-label">Tags (optional)</p>
+        <TagSelector availableTags={data.availableTags} bind:selectedTags {suggestedTags} />
+      </div>
 
-    {#if error}
-      <p class="error">{error}</p>
+      {#if error}
+        <p class="error">{error}</p>
+      {/if}
+
+      <button class="save-button" onclick={save} disabled={saving}>
+        {saving ? 'Saving...' : 'Save to My Feed'}
+      </button>
+    {:else}
+      <p class="error"><a href="/auth">Authenticate</a> to save to your feed.</p>
     {/if}
-
-    <button class="save-button" onclick={save} disabled={saving}>
-      {saving ? 'Saving...' : 'Save to My Feed'}
-    </button>
   {/if}
 </div>
 

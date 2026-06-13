@@ -215,6 +215,29 @@ Reddit URLs are automatically detected and handled using Reddit's JSON API for b
 
 YouTube channel and user URLs are converted to their corresponding RSS feed URLs.
 
+## Authentication
+
+The web app (`packages/app`) supports optional, cookie-based authentication that gates
+all write actions (adding, editing, and removing feeds and posts). It is **disabled by
+default**.
+
+- **Enabling it:** set the `FEEDS_AUTH_KEYS` environment variable to a comma-separated
+  list of accepted keys (one or more). If the variable is unset or empty, authentication
+  is disabled and anyone can both read and write.
+- **What it protects:** when enabled, reading stays public, but writing requires
+  authentication. Enforcement is server-side in `src/hooks.server.ts` — write requests
+  (`POST`/`PATCH`/`DELETE`) return `401` when the caller isn't authenticated, and the
+  write controls are also hidden in the UI.
+- **Signing in:** visit `/auth` and enter a key, or open `/auth?key=YOUR_KEY`. A valid
+  key is stored in an httpOnly cookie (`feeds-auth-key`). The `/auth` page shows the
+  current status and a **Log out** button, and a settings-menu item mirrors the status
+  and links to `/auth`.
+
+```bash
+# Run the web app with authentication enabled (one or more comma-separated keys)
+FEEDS_AUTH_KEYS="my-secret-key,teammate-key" pnpm --filter @feeds/app dev
+```
+
 ## License
 
 MIT

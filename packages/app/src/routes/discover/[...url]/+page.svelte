@@ -5,6 +5,7 @@ import TagSelector from '$lib/components/TagSelector.svelte'
 import FeedHeader from '$lib/components/FeedHeader.svelte'
 import { goto } from '$app/navigation'
 import { buildTagCooccurrence, getSuggestedTags } from '$lib/tags'
+import { auth } from '$lib/stores/auth.svelte'
 import { untrack } from 'svelte'
 
 interface Props {
@@ -198,7 +199,7 @@ $effect(() => {
       <FeedHeader name={discoveredFeed.name} url={discoveredFeed.url} favicon={discoveredFeed.favicon}>
         {#if feedExists}
           <a href="/feeds/{encodeURIComponent(discoveredFeed.url)}" class="visit-button">Visit feed</a>
-        {:else}
+        {:else if auth.canWrite}
           <button type="button" class="add-button" onclick={enterAddMode}>Add feed</button>
         {/if}
       </FeedHeader>
