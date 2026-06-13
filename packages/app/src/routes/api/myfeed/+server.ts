@@ -1,6 +1,6 @@
 import type { RequestHandler } from './$types'
 import type { Post } from '@feeds/core'
-import { createEnrichedPost, discoverFeedFromUrl, getFaviconForUrl } from '@feeds/core'
+import { createEnrichedPost, discoverFeedFromUrl, getFaviconForUrl, timeout } from '@feeds/core'
 import { processImage, processFavicon, deleteCachedImage } from '$lib/server/imageProcessing'
 import { readFile, writeFile } from 'fs/promises'
 import { join } from 'path'
@@ -212,31 +212,47 @@ export const POST: RequestHandler = async ({ request, url }) => {
       post._id = `${post.link || 'post'}-${Math.random().toString(36).slice(2, 8)}`
       post.createdAt = Date.now()
 
-      // Process primary image: generate blurhash and cache
+      // Process primary image: generate blurhash and cache.
+      // Wrapped in a timeout so a slow image host can't stall Save; on timeout we
+      // persist the post with its existing image.uri (no blurhash/cache).
       if (post.images?.[0]?.uri && !post.images[0].blurhash) {
-        const result = await processImage(post.images[0].uri)
-        if (result) {
-          post.images = [{
-            ...post.images[0],
-            blurhash: result.blurhash,
-            aspectRatio: result.aspectRatio,
-            cacheHash: result.cacheHash,
-            cacheExt: result.cacheExt,
-          }]
+        try {
+          const result = await timeout(8000, processImage(post.images[0].uri))
+          if (result) {
+            post.images = [{
+              ...post.images[0],
+              blurhash: result.blurhash,
+              aspectRatio: result.aspectRatio,
+              cacheHash: result.cacheHash,
+              cacheExt: result.cacheExt,
+            }]
+          }
+        } catch {
+          // Image processing timed out or failed - keep the original image.uri
         }
       }
 
       // Process favicon: cache as WebP (skip data URIs)
       if (post.author?.image?.uri && !post.author.image.uri.startsWith('data:')) {
-        const result = await processFavicon(post.author.image.uri)
-        if (result) {
-          post.author.image.cacheHash = result.cacheHash
+        try {
+          const result = await timeout(8000, processFavicon(post.author.image.uri))
+          if (result) {
+            post.author.image.cacheHash = result.cacheHash
+          }
+        } catch {
+          // Favicon processing timed out or failed - keep the original favicon uri
         }
       }
 
       await savePost(post)
 
-      return json({ success: true })
+      return json({
+        success: true,
+        post: {
+          title: post.author?.name || 'Shared link',
+          icon: getFaviconForUrl(post.link || '', post.author?.image?.uri),
+        },
+      })
     } catch (e) {
       console.error('Add to myfeed error:', e)
       return json({ error: 'Failed to add post' }, { status: 500 })

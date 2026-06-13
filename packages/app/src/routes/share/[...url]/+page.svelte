@@ -122,13 +122,17 @@ async function save() {
       ? `/api/myfeed?feedUrl=${encodeURIComponent(data.feedUrl)}`
       : '/api/myfeed'
 
+    // Reuse the already-enriched preview post so the server doesn't re-enrich
+    // (re-running metadata + feed discovery is what made Save slow). Fall back to
+    // url-mode only if the preview failed to load.
+    const payload = previewPost
+      ? { post: previewPost, tags: selectedTags.length > 0 ? selectedTags : undefined }
+      : { url: data.url, tags: selectedTags.length > 0 ? selectedTags : undefined }
+
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        url: data.url,
-        tags: selectedTags.length > 0 ? selectedTags : undefined
-      }),
+      body: JSON.stringify(payload),
     })
     const result = await response.json()
 
