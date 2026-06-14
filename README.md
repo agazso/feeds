@@ -15,7 +15,7 @@ This project provides tools for working with RSS and Atom feeds:
 ## Project Structure
 
 ```
-feeds2/
+feeds/
 ├── packages/
 │   ├── core/           # Core library for feed parsing and utilities
 │   │   ├── src/
@@ -42,7 +42,7 @@ feeds2/
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd feeds2
+cd feeds
 
 # Install dependencies
 pnpm install

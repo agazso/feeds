@@ -8,6 +8,7 @@ build/
 
 # IDE
 .idea/
+.playwright-mcp/
 .vscode/
 *.swp
 *.swo
