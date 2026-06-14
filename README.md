@@ -1,10 +1,18 @@
 # Feeds
 
-A TypeScript monorepo for RSS/Atom feed parsing, discovery, and management.
+A TypeScript monorepo for RSS/Atom feeds: a self-hostable web reader built on a shared
+core library and a command-line interface.
 
 ## Overview
 
-This project provides tools for working with RSS and Atom feeds:
+The project is organized as three packages:
+
+- **Web App** (`@feeds/app`): a SvelteKit feed reader — a chronological timeline of posts
+  from your feeds, with tag suggestions, image caching, and optional authentication.
+- **Core Library** (`@feeds/core`): the engine shared by the app and CLI.
+- **CLI** (`@feeds/cli`): feed discovery and management from the terminal.
+
+Core capabilities:
 
 - **Feed Discovery**: Automatically discover RSS/Atom feeds from any website URL
 - **Feed Parsing**: Parse RSS 2.0, RSS 1.0 (RDF), and Atom feeds
@@ -24,9 +32,13 @@ feeds/
 │   │   │   ├── providers/  # Platform-specific handlers (Reddit, YouTube)
 │   │   │   └── utils/      # Utility functions (URL, date, fetch, etc.)
 │   │   └── tests/
-│   └── cli/            # Command-line interface
+│   ├── cli/            # Command-line interface
+│   │   └── src/
+│   └── app/            # SvelteKit web app — the feed reader
 │       └── src/
-├── apps/               # Applications (placeholder)
+│           ├── lib/        # Components, stores, server utilities
+│           └── routes/     # Pages and API endpoints
+├── pnpm-workspace.yaml # pnpm workspace definition
 ├── biome.json          # Biome linter/formatter configuration
 ├── tsconfig.base.json  # Shared TypeScript configuration
 └── vitest.workspace.ts # Vitest test configuration
@@ -63,6 +75,7 @@ Build a specific package:
 ```bash
 pnpm --filter @feeds/core build
 pnpm --filter @feeds/cli build
+pnpm --filter @feeds/app build
 ```
 
 ### Development Mode
@@ -157,6 +170,30 @@ feeds opml <url>
 # Merge multiple feed files
 feeds merge-feeds <files...> [-o, --output <file>]
 ```
+
+### @feeds/app
+
+A SvelteKit web app — the feed reader UI and its API. It renders a chronological timeline
+of posts from your feeds, suggests tags, caches and processes images, and supports
+optional authentication for write actions (see [Authentication](#authentication)).
+
+**Run it:**
+
+```bash
+pnpm --filter @feeds/app dev      # dev server on http://localhost:1337
+pnpm --filter @feeds/app build    # production build (Node adapter → build/)
+pnpm --filter @feeds/app preview  # preview the production build
+```
+
+Built with `@sveltejs/adapter-node`; the production build runs as `node build/index.js`
+and listens on `PORT` (default 3000).
+
+**Configuration (environment variables):**
+
+- `FEEDS_AUTH_KEYS` — comma-separated keys that enable write authentication (unset = open)
+- `FEEDS_CONFIG` — inline JSON feed configuration
+- `FEEDS_CHANNEL` — path to a feed configuration file
+- `PORT` — port for the production server (default 3000)
 
 ## Usage Examples
 
