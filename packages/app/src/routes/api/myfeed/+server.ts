@@ -193,7 +193,8 @@ export const POST: RequestHandler = async ({ request, url }) => {
   if (body.post && typeof body.post === 'object') {
     try {
       const post = body.post as Post
-      
+      const tags = Array.isArray(body.tags) ? body.tags : undefined
+
       // Get feedUrl from query parameters if provided (preserves feed context)
       const searchParams = new URL(url).searchParams
       const providedFeedUrl = searchParams.get('feedUrl')
@@ -211,6 +212,10 @@ export const POST: RequestHandler = async ({ request, url }) => {
       // Generate new ID to avoid duplicates
       post._id = `${post.link || 'post'}-${Math.random().toString(36).slice(2, 8)}`
       post.createdAt = Date.now()
+
+      if (tags && tags.length > 0) {
+        post.tags = tags
+      }
 
       // Process primary image: generate blurhash and cache.
       // Wrapped in a timeout so a slow image host can't stall Save; on timeout we
