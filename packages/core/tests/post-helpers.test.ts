@@ -43,6 +43,16 @@ describe('createPost author name', () => {
     expect(result.post.author.name).toBe('The Cobwebs Channel')
   })
 
+  test('YouTube share: channel resolved into metadata.name attributes to channel', () => {
+    // fetchEnrichedMetadata sets name=author=channel (via oEmbed) for YouTube shares
+    const result = createPost({
+      url: 'https://www.youtube.com/watch?v=abc123',
+      metadata: { name: 'The Cobwebs Channel', siteName: 'YouTube', author: 'The Cobwebs Channel' },
+      originUrl: 'https://www.youtube.com',
+    })
+    expect(result.post.author.name).toBe('The Cobwebs Channel')
+  })
+
   test('Hacker News: uses siteIdentity from external article (different host)', () => {
     const result = createPost({
       url: 'https://techcrunch.com/article',

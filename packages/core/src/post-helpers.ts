@@ -275,7 +275,34 @@ export async function fetchEnrichedMetadata(
     metadata = await enrichFromManifest(metadata, originUrl, init)
   }
 
+  // YouTube pages report "YouTube" as the site and carry no author — use the
+  // channel name (via oEmbed) so the post is attributed to the channel.
+  if (isYoutubeLink(url)) {
+    const channel = await fetchYoutubeChannelName(url, init)
+    if (channel) {
+      metadata.name = channel
+      if (!metadata.author) metadata.author = channel
+    }
+  }
+
   return { metadata, originUrl }
+}
+
+async function fetchYoutubeChannelName(
+  url: string,
+  init?: RequestInit,
+): Promise<string | undefined> {
+  try {
+    const res = await fetch(
+      `https://www.youtube.com/oembed?format=json&url=${encodeURIComponent(url)}`,
+      init,
+    )
+    if (!res.ok) return undefined
+    const data = (await res.json()) as { author_name?: string }
+    return data.author_name?.trim() || undefined
+  } catch {
+    return undefined // ponytail: oEmbed unavailable (private/age-gated) → keep generic metadata
+  }
 }
 
 async function enrichFromManifest(
