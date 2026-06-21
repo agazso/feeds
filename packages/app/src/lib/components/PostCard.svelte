@@ -101,12 +101,13 @@ const menuItems = $derived.by(() => {
 
   // Feed-related items
   if (post.feedUrl) {
-    const feedPageUrl = feedUrlToPageUrl?.[post.feedUrl]
-    if (feedPageUrl) {
-      // Feed is already followed - show "View feed" only
+    const isFollowed = !!feedUrlToPageUrl && post.feedUrl in feedUrlToPageUrl
+    if (isFollowed) {
+      // Feed is already followed - show "View feed" only.
+      // Route by feedUrl (unique) — url collides across YouTube channels.
       items.push({
         label: 'View feed',
-        href: `/feeds/${encodeURIComponent(feedPageUrl)}`,
+        href: `/feeds/${encodeURIComponent(post.feedUrl)}`,
       })
     } else if (auth.canWrite) {
       // Feed is not followed - show "Discover Feed" only (entry to the add-feed flow)

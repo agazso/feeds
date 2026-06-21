@@ -19,8 +19,10 @@ export const PATCH: RequestHandler = async ({ params, request }) => {
   try {
     const config = await loadConfig()
 
-    // Find the feed by url
-    const feedIndex = config.feeds.findIndex(f => f.url === decodeURIComponent(feedUrl))
+    // Match by feedUrl (unique key) first; fall back to url for older links
+    const decoded = decodeURIComponent(feedUrl)
+    const byFeedUrl = config.feeds.findIndex(f => f.feedUrl === decoded)
+    const feedIndex = byFeedUrl !== -1 ? byFeedUrl : config.feeds.findIndex(f => f.url === decoded)
 
     if (feedIndex === -1) {
       return json({ error: 'Feed not found' }, { status: 404 })

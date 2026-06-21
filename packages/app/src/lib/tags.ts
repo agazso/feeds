@@ -4,6 +4,16 @@ import type { Feed, Post } from '@feeds/core'
 export { getEmbeddingBasedTags } from './embeddings'
 
 /**
+ * Map each feed's feedUrl to its page url. Used to tell whether a post's feed is
+ * followed (membership) and where its "View feed" link points.
+ */
+export function buildFeedUrlToPageUrl(feeds: Feed[]): Record<string, string> {
+  const map: Record<string, string> = {}
+  for (const feed of feeds) map[feed.feedUrl] = feed.url
+  return map
+}
+
+/**
  * Filter feeds to only those that have ALL specified tags
  */
 export function filterFeedsByTags(feeds: Feed[], tags: string[]): Feed[] {

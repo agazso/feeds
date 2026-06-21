@@ -42,7 +42,7 @@ function cancelEditingTags() {
 async function saveTags() {
   isSaving = true
   try {
-    const response = await fetch(`/api/feeds/${encodeURIComponent(data.feed.url)}`, {
+    const response = await fetch(`/api/feeds/${encodeURIComponent(data.feed.feedUrl)}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ tags: editedTags }),

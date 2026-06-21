@@ -32,7 +32,7 @@ function handleRemove(postId: string) {
 
 <SearchBar value={searchQuery} onchange={handleSearch} />
 {#if filteredPosts.length > 0}
-  <PostList posts={filteredPosts} onfilter={handleFilter} onremove={handleRemove} />
+  <PostList posts={filteredPosts} onfilter={handleFilter} onremove={handleRemove} feedUrlToPageUrl={data.feedUrlToPageUrl} />
 {:else if searchQuery}
   <p class="no-results">No posts found matching "{searchQuery}"</p>
 {:else}

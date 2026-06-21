@@ -7,6 +7,7 @@ import {
   getAllTags,
   getTagsFromPosts,
   filterPostsByTags,
+  buildFeedUrlToPageUrl,
 } from '$lib/tags'
 import { loadMyfeedPosts } from '$lib/myfeed'
 
@@ -28,10 +29,7 @@ export const GET: RequestHandler = async ({ url }) => {
   const myfeedTags = getTagsFromPosts(myfeedPosts)
   const allTags = [...new Set([...feedTags, ...myfeedTags])].sort()
 
-  const feedUrlToPageUrl: Record<string, string> = {}
-  for (const feed of config.feeds) {
-    feedUrlToPageUrl[feed.feedUrl] = feed.url
-  }
+  const feedUrlToPageUrl = buildFeedUrlToPageUrl(config.feeds)
 
   return json({
     posts: allPosts,

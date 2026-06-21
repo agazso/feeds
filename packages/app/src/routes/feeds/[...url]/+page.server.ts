@@ -14,8 +14,11 @@ export const load: PageServerLoad = async ({ params }) => {
 
   const config = await loadConfig()
 
-  // Find the feed by url
-  const feed = config.feeds.find(f => f.url === decodeURIComponent(feedUrl))
+  // Match by feedUrl (the unique key) first; fall back to url for older links.
+  // url is not unique — e.g. many YouTube channels share https://www.youtube.com/
+  const decoded = decodeURIComponent(feedUrl)
+  const feed =
+    config.feeds.find(f => f.feedUrl === decoded) ?? config.feeds.find(f => f.url === decoded)
 
   if (!feed) {
     throw error(404, 'Feed not found')

@@ -198,7 +198,7 @@ $effect(() => {
     <div class="feed-container">
       <FeedHeader name={discoveredFeed.name} url={discoveredFeed.url} favicon={discoveredFeed.favicon}>
         {#if feedExists}
-          <a href="/feeds/{encodeURIComponent(discoveredFeed.url)}" class="visit-button">Visit feed</a>
+          <a href="/feeds/{encodeURIComponent(discoveredFeed.feedUrl)}" class="visit-button">Visit feed</a>
         {:else if auth.canWrite}
           <button type="button" class="add-button" onclick={enterAddMode}>Add feed</button>
         {/if}

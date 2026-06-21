@@ -14,7 +14,7 @@ $effect(() => {
 })
 </script>
 
-<a href="/feeds/{encodeURIComponent(feed.url)}" class="feed-card">
+<a href="/feeds/{encodeURIComponent(feed.feedUrl)}" class="feed-card">
   <div class="feed-icon-container">
     {#if typeof feed.favicon === 'string' && feed.favicon && !faviconError}
       <img

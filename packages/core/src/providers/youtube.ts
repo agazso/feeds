@@ -1,6 +1,37 @@
 import type { Feed } from '../models/feed'
 import { type ContentResult, fetchContentResult, fetchFeedFromUrl } from '../parsers/rss-post'
 import * as urlUtils from '../utils/url'
+import { timeout } from '../utils/timeout'
+
+/**
+ * Resolve a YouTube channel feed (…/videos.xml?channel_id=UC…) to its channel page URL.
+ * Prefers the @handle (read from the channel page HTML), falls back to /channel/<id>.
+ */
+export async function resolveYoutubeChannelUrl(
+  feedUrl: string,
+  init?: RequestInit,
+): Promise<string | undefined> {
+  let channelId: string | null = null
+  try {
+    channelId = new URL(feedUrl).searchParams.get('channel_id')
+  } catch {
+    return undefined
+  }
+  if (!channelId) return undefined
+
+  const channelUrl = `https://www.youtube.com/channel/${channelId}`
+  try {
+    const res = await timeout(5000, fetch(channelUrl, init))
+    if (res.ok) {
+      const html = await res.text()
+      const m = html.match(/"canonicalBaseUrl":"\/(@[^"]+)"/)
+      if (m) return `https://www.youtube.com/${m[1]}`
+    }
+  } catch {
+    // network/timeout failed → fall back to /channel/<id> (redirects to the channel)
+  }
+  return channelUrl // ponytail: /channel/<id> is a valid permanent channel link
+}
 
 export function isYoutubeLink(url: string): boolean {
   const canonicalUrl = urlUtils.getCanonicalUrl(url)

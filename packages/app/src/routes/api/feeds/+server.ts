@@ -1,6 +1,7 @@
 import { json } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
 import type { Feed } from '@feeds/core'
+import { resolveYoutubeChannelUrl } from '@feeds/core'
 import { loadConfig, saveConfig } from '$lib/config'
 
 export const POST: RequestHandler = async ({ request }) => {
@@ -20,10 +21,19 @@ export const POST: RequestHandler = async ({ request }) => {
       return json({ error: 'Feed already exists' }, { status: 409 })
     }
 
+    // Normalize a YouTube channel feed whose url isn't already a channel page
+    let url = feed.url
+    if (
+      /youtube\.com\/feeds\/videos\.xml/.test(feed.feedUrl) &&
+      !/youtube\.com\/(@|channel\/|c\/|user\/)/.test(url || '')
+    ) {
+      url = (await resolveYoutubeChannelUrl(feed.feedUrl)) ?? url
+    }
+
     // Add the new feed
     config.feeds.push({
       name: feed.name,
-      url: feed.url,
+      url,
       feedUrl: feed.feedUrl,
       favicon: feed.favicon,
       tags: feed.tags || [],
