@@ -1,5 +1,6 @@
 import type { Feed } from '../models/feed'
 import type { RSSFeed, RSSFeedWithMetrics, RSSItem, RSSThumbnail } from '../models/rss'
+import { getFaviconForUrl } from '../favicon-helpers'
 import { fetchFaviconUrl } from '../utils/favicon'
 import { safeFetch } from '../utils/fetch'
 import { HEADERS_WITH_FELFELE } from '../utils/headers'
@@ -67,7 +68,8 @@ export function redditJsonFeedUrl(url: string): string {
   if (url.endsWith('.json')) {
     return url
   }
-  return url + '.json'
+  const canonicalUrl = urlUtils.getCanonicalUrl(url)
+  return canonicalUrl.endsWith('/') ? canonicalUrl.concat('.json') : canonicalUrl.concat('/.json')
 }
 
 function findBestResolutionRedditImage(redditImage: RedditImage): RedditImageData | undefined {
@@ -213,6 +215,15 @@ export function makeCanonicalRedditLink(url: string): RedditLink | undefined {
   }
 }
 
+/**
+ * Rewrite a reddit.com URL to old.reddit.com (any subdomain → old). old.reddit serves
+ * real OpenGraph tags to bots without the "please verify" interstitial that
+ * www.reddit.com returns to non-browser user-agents. Non-reddit URLs are unchanged.
+ */
+export function toOldRedditUrl(url: string): string {
+  return url.replace(/:\/\/(?:www\.|np\.|m\.|old\.)?reddit\.com/, '://old.reddit.com')
+}
+
 function getAboutIcon(about: RedditAbout): string | undefined {
   if (about.data.icon_img != null && about.data.icon_img !== '') {
     return about.data.icon_img.replace(/&amp;/g, '&')
@@ -234,6 +245,8 @@ export async function fetchRedditFeed(url: string): Promise<Feed | undefined> {
   const aboutJsonUrl = canonicalUrl + '/about.json'
 
   try {
+    // about.json needs authentication now (Reddit shut down the unauthenticated
+    // JSON API → 403). Kept for a future OAuth mode; falls back to .rss below.
     const response = await safeFetch(aboutJsonUrl, { headers: HEADERS_WITH_FELFELE })
     const about = (await response.json()) as RedditAbout
     if (about.data.title == null) {
@@ -250,7 +263,14 @@ export async function fetchRedditFeed(url: string): Promise<Feed | undefined> {
       favicon,
     }
   } catch {
-    return undefined
+    // about.json blocked (403) → use the public .rss feed: subreddit slug as the
+    // name and the hardcoded Reddit favicon.
+    return {
+      name: `r/${redditLink.subreddit}`,
+      url: canonicalUrl,
+      feedUrl,
+      favicon: getFaviconForUrl(canonicalUrl) ?? '',
+    }
   }
 }
 

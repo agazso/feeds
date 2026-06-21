@@ -154,8 +154,12 @@ enrich path**: it computes the author identity (`shouldUseFeedName`,
     feed URL into the `@handle` channel page.
   - The metadata UA (Discordbot) gets og data, but YouTube **302-redirects under load**
     → fetch as few pages per share as possible.
-- **Reddit** (`providers/reddit.ts`): uses the `.json` API; FELFELE user-agent;
-  hardcoded favicon via `getFaviconForUrl`.
+- **Reddit** (`providers/reddit.ts`): Reddit **shut down its unauthenticated JSON
+  API** (`.json`/`about.json` now 403), so the app reads the public **`.rss` (Atom)**
+  feed via the FELFELE UA; `fetchRedditFeed` falls back to a slug name + hardcoded
+  favicon when `about.json` is blocked. The JSON helpers (`redditJsonFeedUrl`,
+  `parseRedditJson`, `loadRedditFeed`, `about.json`) are **retained** — they work with
+  OAuth and are kept for a future authenticated mode.
 - **Twitter/X** (`providers/twitter.ts`): routed through nitter; hardcoded X favicon.
 
 ---

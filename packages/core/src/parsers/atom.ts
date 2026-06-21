@@ -1,4 +1,28 @@
+import he from 'he'
 import type { RSSFeed, RSSItem, RSSMedia } from '../models/rss'
+
+/** Read the text of an Atom node, handling array/object (`_text`/`_`)/string forms. */
+function atomText(node: unknown): string {
+  const first = Array.isArray(node) ? node[0] : node
+  if (first == null) return ''
+  if (typeof first === 'string') return first
+  const o = first as { _text?: string; _?: string }
+  return o._text ?? o._ ?? ''
+}
+
+/**
+ * Reddit's Atom feed embeds the post image in the entry `<content>` HTML rather than
+ * a `media:thumbnail`. Extract the first `<img>` as a thumbnail, scoped to Reddit's
+ * image CDNs so no other Atom feed's behavior changes.
+ */
+function getImageFromAtomContent(content: unknown): RSSMedia | undefined {
+  const html = atomText(content)
+  const m = html.match(/<img[^>]+src="([^"]+)"/i)
+  if (!m?.[1]) return undefined
+  const url = he.decode(m[1])
+  if (!/(^|\.)redd\.it\//.test(url)) return undefined
+  return { thumbnail: [{ url: [url], width: [0], height: [0] }] }
+}
 
 function getEntryDate(entry: Record<string, unknown>): string | null {
   const published = entry.published as string[] | undefined
@@ -138,7 +162,7 @@ export function parseAtomFeed(json: AtomJson): RSSFeed {
       created: entryDate ? Date.parse(entryDate) : Date.now(),
       link,
       url: link,
-      media: getAtomEntryMedia(entry),
+      media: getAtomEntryMedia(entry) ?? getImageFromAtomContent(entry.content),
     }
     return item
   })

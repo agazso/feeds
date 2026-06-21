@@ -9,17 +9,6 @@ import { isJsonFeed, parseJsonFeed } from './json-feed'
 
 const FEED_FETCH_TIMEOUT = 15000
 
-function redditJsonFeedUrl(url: string): string {
-  if (url.endsWith('.rss')) {
-    return url.slice(0, -4) + '.json'
-  }
-  if (url.endsWith('.json')) {
-    return url
-  }
-  const canonicalUrl = urlUtils.getCanonicalUrl(url)
-  return canonicalUrl.endsWith('/') ? canonicalUrl + '.json' : canonicalUrl + '/.json'
-}
-
 async function fetchResponse(
   fetchUrl: string,
   headers: RequestInit,
@@ -60,7 +49,9 @@ interface RedditPostData {
 
 const IMAGE_DIMENSION_THRESHOLD = 1200
 
-function parseRedditJson(
+// Reddit's unauthenticated JSON API is now 403 (the app reads the public .rss feed
+// instead). Retained — works with OAuth — for a future authenticated Reddit mode.
+export function parseRedditJson(
   url: string,
   text: string,
   startTime: number,
@@ -136,16 +127,18 @@ export async function fetchFeed(url: string): Promise<RSSFeedWithMetrics> {
   const startTime = Date.now()
   const downloadTime = Date.now()
   const isRedditUrl = urlUtils.getHumanHostname(url) === urlUtils.REDDIT_COM
+  // Reddit shut down its unauthenticated JSON API (now 403). Use the public .rss
+  // (Atom) feed — the stored reddit feedUrl is already `.rss`. The JSON path
+  // (redditJsonFeedUrl + parseRedditJson) still works WITH OAuth and is kept for a
+  // future authenticated mode; re-wire it here when that is added.
   const headers = isRedditUrl ? HEADERS_WITH_FELFELE : HEADERS_WITH_CURL
-  const fetchUrl = isRedditUrl ? redditJsonFeedUrl(url) : url
-  const { response, feedUrl } = await fetchResponse(fetchUrl, { headers })
+  const { response, feedUrl } = await fetchResponse(url, { headers })
   const text = await response.text()
 
-  const feedLoader = isRedditUrl
-    ? Promise.resolve(parseRedditJson(url, text, startTime, downloadTime))
-    : loadRSSFeed(feedUrl, text, startTime, downloadTime)
-
-  const feed = await timeout(FEED_FETCH_TIMEOUT, feedLoader)
+  const feed = await timeout(
+    FEED_FETCH_TIMEOUT,
+    loadRSSFeed(feedUrl, text, startTime, downloadTime),
+  )
   return feed
 }
 

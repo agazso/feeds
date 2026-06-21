@@ -3,9 +3,15 @@ import type { Post } from './models/post'
 import type { RSSItem } from './models/rss'
 import { fetchFeedsFromUrl } from './feed-helpers'
 import { type HtmlMetaData, fetchHtmlMetaDataOnly } from './parsers/html-metadata'
-import { isRedditPostUrl, fetchRedditPostMetadata } from './providers/reddit'
+import {
+  isRedditPostUrl,
+  fetchRedditPostMetadata,
+  makeCanonicalRedditLink,
+  toOldRedditUrl,
+} from './providers/reddit'
 import { isYoutubeLink } from './providers/youtube'
 import { createUrlFromUrn, isImageUrl } from './utils/url'
+import { HEADERS_WITH_BOT } from './utils/headers'
 import { htmlToMarkdown } from './parsers/rss-post'
 
 /**
@@ -220,7 +226,27 @@ export async function fetchEnrichedMetadata(
       }
       return { metadata, originUrl }
     }
-    // Fall through to generic fetching if Reddit API fails
+
+    // JSON API failed (it needs OAuth now → 403). old.reddit.com serves real og: tags
+    // to bots without the www "please verify" interstitial that the default (FELFELE)
+    // UA triggers. Parse it with the existing HTML metadata parser.
+    try {
+      const meta = await fetchHtmlMetaDataOnly(toOldRedditUrl(url), { headers: HEADERS_WITH_BOT })
+      const subreddit = makeCanonicalRedditLink(url)?.subreddit
+      return {
+        metadata: {
+          ...meta,
+          name: subreddit ? `r/${subreddit}` : meta.name,
+          siteName: 'Reddit',
+          // Drop Reddit's generic placeholder image so text posts don't get an icon hero
+          image: /redditstatic\.com/.test(meta.image) ? '' : meta.image,
+          icon: '', // Favicon will be handled by transformPostImages()
+        },
+        originUrl,
+      }
+    } catch {
+      // Fall through to generic fetching if old.reddit also fails
+    }
   }
 
   const urlMetadata = await fetchHtmlMetaDataOnly(url, init)
