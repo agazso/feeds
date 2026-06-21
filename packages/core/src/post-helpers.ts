@@ -184,15 +184,6 @@ export function mergeHtmlMetadata(
   }
 }
 
-/** @deprecated Use createPost or createEnrichedPost instead */
-export function buildPostFromMetadata(
-  url: string,
-  metadata: HtmlMetaData,
-  originUrl: string,
-): { post: Post; title: string } {
-  return createPost({ url, metadata, originUrl })
-}
-
 /**
  * Check if metadata has useful identity info (name, siteName, or author).
  * Used to filter out blocked/captcha pages that only return a title.

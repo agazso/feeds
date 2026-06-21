@@ -10,22 +10,13 @@ import { HEADERS_WITH_CURL, HEADERS_WITH_FELFELE, HEADERS_WITH_WHATSAPP } from '
 import { HtmlUtils, type ParsedNode } from '../utils/html'
 import * as urlUtils from '../utils/url'
 import { parseHtmlMetaData } from './html-metadata'
+import { allFeedMimeTypes, isRssMimeType, isFeedMimeType } from './mime'
 import { fetchFeed, loadRSSFeed } from './rss'
 
 export interface ContentWithMimeType {
   content: string
   mimeType: string
 }
-
-const RSSMimeTypes = [
-  'application/rss+xml',
-  'application/x-rss+xml',
-  'application/atom+xml',
-  'application/xml',
-  'text/xml',
-]
-
-const JsonFeedMimeTypes = ['application/feed+json', 'application/json']
 
 export const altFeedLocations = [
   '/rss',
@@ -41,7 +32,6 @@ export const altFeedLocations = [
 ]
 
 function getFeedUrlFromHtmlLink(link: ParsedNode): string {
-  const allFeedMimeTypes = [...RSSMimeTypes, ...JsonFeedMimeTypes]
   for (const mimeType of allFeedMimeTypes) {
     const matcher = [{ name: 'type', value: mimeType }]
     if (HtmlUtils.matchAttributes(link, matcher)) {
@@ -163,17 +153,6 @@ export function getFeedFromHtml(baseUrl: string, html: string): Feed {
   return feed
 }
 
-export function isRssMimeType(mimeType: string): boolean {
-  return RSSMimeTypes.includes(mimeType)
-}
-
-export function isJsonFeedMimeType(mimeType: string): boolean {
-  return JsonFeedMimeTypes.includes(mimeType)
-}
-
-export function isFeedMimeType(mimeType: string): boolean {
-  return isRssMimeType(mimeType) || isJsonFeedMimeType(mimeType)
-}
 
 export async function fetchRSSFeedUrlFromUrl(url: string): Promise<ContentWithMimeType | null> {
   const contentWithMimeType = await fetchContentWithMimeType(url)

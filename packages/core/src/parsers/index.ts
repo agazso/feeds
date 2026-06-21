@@ -1,4 +1,5 @@
 export * from './atom'
+export * from './mime'
 export * from './rss'
 export * from './opml'
 export * from './html-metadata'

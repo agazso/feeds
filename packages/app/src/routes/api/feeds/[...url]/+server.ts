@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
-import { loadConfig, saveConfig } from '$lib/config'
+import { loadConfig, saveConfig, findFeedIndexByKey } from '$lib/config'
 
 export const PATCH: RequestHandler = async ({ params, request }) => {
   const feedUrl = params.url || ''
@@ -19,10 +19,7 @@ export const PATCH: RequestHandler = async ({ params, request }) => {
   try {
     const config = await loadConfig()
 
-    // Match by feedUrl (unique key) first; fall back to url for older links
-    const decoded = decodeURIComponent(feedUrl)
-    const byFeedUrl = config.feeds.findIndex(f => f.feedUrl === decoded)
-    const feedIndex = byFeedUrl !== -1 ? byFeedUrl : config.feeds.findIndex(f => f.url === decoded)
+    const feedIndex = findFeedIndexByKey(config.feeds, decodeURIComponent(feedUrl))
 
     if (feedIndex === -1) {
       return json({ error: 'Feed not found' }, { status: 404 })

@@ -29,6 +29,10 @@ export function isRedditUrl(url: string): boolean {
   }
 }
 
+export function isYoutubeUrl(url: string): boolean {
+  return getHumanHostname(getCanonicalUrl(url)) === 'youtube.com'
+}
+
 export function isImageUrl(url: string): boolean {
   const lowercaseUrl = url.toLowerCase()
   return IMAGE_EXTENSIONS.some((ext) => lowercaseUrl.includes(ext))

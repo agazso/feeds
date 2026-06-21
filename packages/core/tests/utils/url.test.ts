@@ -6,6 +6,7 @@ import {
   getCanonicalUrl,
   getHumanHostname,
   getLinkFromText,
+  isYoutubeUrl,
   normalizeUrl,
 } from '../../src/utils/url'
 
@@ -196,5 +197,18 @@ describe('normalizeUrl', () => {
 
   test('trims whitespace', () => {
     expect(normalizeUrl('  reddit.com/r/linux  ')).toBe('https://reddit.com/r/linux')
+  })
+})
+
+describe('isYoutubeUrl', () => {
+  test('matches youtube hosts', () => {
+    expect(isYoutubeUrl('https://www.youtube.com/watch?v=x')).toBe(true)
+    expect(isYoutubeUrl('https://m.youtube.com/watch?v=x')).toBe(true)
+    expect(isYoutubeUrl('https://www.youtube.com/feeds/videos.xml?channel_id=UC1')).toBe(true)
+  })
+
+  test('rejects non-youtube hosts (incl. the endsWith trap)', () => {
+    expect(isYoutubeUrl('https://notyoutube.com/watch?v=x')).toBe(false)
+    expect(isYoutubeUrl('https://example.com')).toBe(false)
   })
 })

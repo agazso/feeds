@@ -78,6 +78,11 @@ export function getTagsFromPosts(posts: Post[]): string[] {
   return Array.from(tagSet).sort()
 }
 
+/** Unique, sorted union of all feed tags and myfeed-post tags. */
+export function collectAvailableTags(feeds: Feed[], posts: Post[]): string[] {
+  return [...new Set([...getAllTags(feeds), ...getTagsFromPosts(posts)])].sort()
+}
+
 /**
  * Filter posts to only those that have ALL specified tags
  */

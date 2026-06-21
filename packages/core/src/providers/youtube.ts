@@ -34,9 +34,7 @@ export async function resolveYoutubeChannelUrl(
 }
 
 export function isYoutubeLink(url: string): boolean {
-  const canonicalUrl = urlUtils.getCanonicalUrl(url)
-  const humanHostName = urlUtils.getHumanHostname(canonicalUrl)
-  return humanHostName === 'youtube.com'
+  return urlUtils.isYoutubeUrl(url)
 }
 
 export interface YoutubeFetchConfiguration {

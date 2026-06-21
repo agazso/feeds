@@ -2,18 +2,9 @@ import type { Feed } from '../models/feed'
 import { parseFaviconFromHtml, DEFAULT_FAVICON } from '../utils/favicon'
 import { HtmlUtils, type ParsedNode } from '../utils/html'
 import { type OpenGraphData, getHtmlOpenGraphData } from '../utils/opengraph'
-import { createUrlFromUrn } from '../utils/url'
+import { createUrlFromUrn, isYoutubeUrl } from '../utils/url'
 import { getHeadersForUrl } from '../utils/headers'
-
-const RSSMimeTypes = [
-  'application/rss+xml',
-  'application/x-rss+xml',
-  'application/atom+xml',
-  'application/xml',
-  'text/xml',
-]
-
-const JsonFeedMimeTypes = ['application/feed+json', 'application/json']
+import { allFeedMimeTypes } from './mime'
 
 export interface FeedLink {
   url: string
@@ -45,7 +36,6 @@ export async function fetchHtmlMetaDataOnly(
 export function parseFeedUrlFromHtml(html: string, baseUrl: string): string {
   const document = HtmlUtils.parse(html)
   const links = HtmlUtils.findPath(document, ['html', 'head', 'link'])
-  const allFeedMimeTypes = [...RSSMimeTypes, ...JsonFeedMimeTypes]
 
   for (const link of links) {
     if (!HtmlUtils.matchAttributes(link, [{ name: 'rel', value: 'alternate' }])) {
@@ -66,7 +56,6 @@ export function parseFeedUrlFromHtml(html: string, baseUrl: string): string {
 export function parseAllFeedLinksFromHtml(html: string, baseUrl: string): FeedLink[] {
   const document = HtmlUtils.parse(html)
   const links = HtmlUtils.findPath(document, ['html', 'head', 'link'])
-  const allFeedMimeTypes = [...RSSMimeTypes, ...JsonFeedMimeTypes]
   const feedLinks: FeedLink[] = []
 
   for (const link of links) {
@@ -97,13 +86,7 @@ export function parseAllFeedLinksFromHtml(html: string, baseUrl: string): FeedLi
  * without extra requests to YouTube.
  */
 function getYoutubeWatchInfo(url: string, html: string): { name: string; feedUrl: string } | null {
-  let hostname = ''
-  try {
-    hostname = new URL(url).hostname
-  } catch {
-    return null
-  }
-  if (!hostname.endsWith('youtube.com')) return null
+  if (!isYoutubeUrl(url)) return null
   const id = html.match(/"externalChannelId":"(UC[A-Za-z0-9_-]+)"/)?.[1]
   const rawName = html.match(/"ownerChannelName":"([^"]*)"/)?.[1]
   if (!id && !rawName) return null

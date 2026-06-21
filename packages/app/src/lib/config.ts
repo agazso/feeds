@@ -66,3 +66,15 @@ export async function saveConfig(config: AppConfig): Promise<void> {
   const path = join(process.cwd(), 'static', 'feeds.json')
   await writeFile(path, JSON.stringify(config, null, 2))
 }
+
+// Match a feed by its unique feedUrl first, falling back to url for older links.
+// url is not unique — e.g. many YouTube channels share https://www.youtube.com/.
+export function findFeedIndexByKey(feeds: Feed[], key: string): number {
+  const byFeedUrl = feeds.findIndex((f) => f.feedUrl === key)
+  return byFeedUrl !== -1 ? byFeedUrl : feeds.findIndex((f) => f.url === key)
+}
+
+export function findFeedByKey(feeds: Feed[], key: string): Feed | undefined {
+  const index = findFeedIndexByKey(feeds, key)
+  return index === -1 ? undefined : feeds[index]
+}

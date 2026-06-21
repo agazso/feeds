@@ -2,7 +2,7 @@ import { json } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
 import { loadConfig } from '$lib/config'
 import { loadMyfeedPosts } from '$lib/myfeed'
-import { getEmbeddingBasedTags, getTagsFromPosts } from '$lib/tags'
+import { getEmbeddingBasedTags, collectAvailableTags } from '$lib/tags'
 
 export const POST: RequestHandler = async ({ request }) => {
   const body = await request.json()
@@ -16,20 +16,7 @@ export const POST: RequestHandler = async ({ request }) => {
     const config = await loadConfig()
     const myfeedPosts = await loadMyfeedPosts()
 
-    // Build available tags set
-    const tagSet = new Set<string>()
-    for (const feed of config.feeds) {
-      if (feed.tags) {
-        for (const tag of feed.tags) {
-          tagSet.add(tag)
-        }
-      }
-    }
-    for (const tag of getTagsFromPosts(myfeedPosts)) {
-      tagSet.add(tag)
-    }
-
-    const availableTags = Array.from(tagSet)
+    const availableTags = collectAvailableTags(config.feeds, myfeedPosts)
 
     // Get embedding-based suggestions
     const tags = await getEmbeddingBasedTags(text, availableTags, config.feeds, myfeedPosts)

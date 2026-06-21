@@ -1,29 +1,15 @@
 import type { PageServerLoad } from './$types'
 import { loadConfig } from '$lib/config'
 import { loadMyfeedPosts } from '$lib/myfeed'
-import { getTagsFromPosts } from '$lib/tags'
+import { collectAvailableTags } from '$lib/tags'
 import { fetchFeedsFromUrl, timeout } from '@feeds/core'
 
 export const load: PageServerLoad = async ({ params, url }) => {
   const postUrl = params.url || ''
 
-  // Load available tags from config
   const config = await loadConfig()
-  const tagSet = new Set<string>()
-
-  for (const feed of config.feeds) {
-    if (feed.tags) {
-      for (const tag of feed.tags) {
-        tagSet.add(tag)
-      }
-    }
-  }
-
-  // Add myfeed tags
   const myfeedPosts = await loadMyfeedPosts()
-  for (const tag of getTagsFromPosts(myfeedPosts)) {
-    tagSet.add(tag)
-  }
+  const availableTags = collectAvailableTags(config.feeds, myfeedPosts)
 
   // Get feedUrl from query parameters if available
   const searchParams = new URL(url).searchParams
@@ -64,7 +50,7 @@ export const load: PageServerLoad = async ({ params, url }) => {
 
   return {
     url: decodeURIComponent(postUrl),
-    availableTags: Array.from(tagSet).sort(),
+    availableTags,
     feeds: config.feeds,
     myfeedPosts,
     feedTags,  // Tags from the specific matching feed (empty if no feed matches)
