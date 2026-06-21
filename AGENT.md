@@ -1,5 +1,11 @@
 # Agent Guidelines
 
+## Architecture
+
+Before changing feed discovery, parsing, or post enrichment, read
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — it maps the core pipeline and lists
+the non-obvious invariants (§5) that, when violated, cause regressions.
+
 ## Package Manager
 
 This project uses **pnpm** (not npm or yarn). Always use `pnpm` commands:

@@ -90,12 +90,39 @@ export function parseAllFeedLinksFromHtml(html: string, baseUrl: string): FeedLi
   return feedLinks
 }
 
+/**
+ * YouTube watch pages expose "YouTube" as the site and no RSS link, but the HTML
+ * embeds the owner channel name and id. Extract them so the channel becomes the
+ * author and the channel RSS feed is known — from the single watch-page fetch,
+ * without extra requests to YouTube.
+ */
+function getYoutubeWatchInfo(url: string, html: string): { name: string; feedUrl: string } | null {
+  let hostname = ''
+  try {
+    hostname = new URL(url).hostname
+  } catch {
+    return null
+  }
+  if (!hostname.endsWith('youtube.com')) return null
+  const id = html.match(/"externalChannelId":"(UC[A-Za-z0-9_-]+)"/)?.[1]
+  const rawName = html.match(/"ownerChannelName":"([^"]*)"/)?.[1]
+  if (!id && !rawName) return null
+  let name = ''
+  try {
+    name = rawName ? JSON.parse(`"${rawName}"`) : ''
+  } catch {
+    name = rawName ?? ''
+  }
+  return { name, feedUrl: id ? `https://www.youtube.com/feeds/videos.xml?channel_id=${id}` : '' }
+}
+
 export function parseHtmlMetaData(url: string, html: string, feed?: Feed | null): HtmlMetaData {
   const document = HtmlUtils.parse(html)
   const baseUrl = new URL(url).origin
   const openGraphData = getHtmlOpenGraphData(document, url)
   const feedName = feed ? feed.name : ''
-  const name = getFirstNonEmpty([getMetaName(document), openGraphData.name, feedName])
+  const youtube = getYoutubeWatchInfo(url, html)
+  const name = getFirstNonEmpty([youtube?.name ?? '', getMetaName(document), openGraphData.name, feedName])
   // Fallback chain: og:site_name → JSON-LD publisher → twitter:site → RSS feed title
   const siteName = getFirstNonEmpty([
     openGraphData.siteName,
@@ -110,7 +137,7 @@ export function parseHtmlMetaData(url: string, html: string, feed?: Feed | null)
   const updatedAt = getModifiedTime(document, createdAt)
   // Detect feed URL from HTML if not provided via Feed object
   const feedLinks = parseAllFeedLinksFromHtml(html, baseUrl)
-  const detectedFeedUrl = feed?.feedUrl || feedLinks[0]?.url || ''
+  const detectedFeedUrl = feed?.feedUrl || feedLinks[0]?.url || youtube?.feedUrl || ''
 
   return {
     ...openGraphData,

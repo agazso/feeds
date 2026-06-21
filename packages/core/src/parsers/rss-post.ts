@@ -249,10 +249,22 @@ export async function augmentFeedWithMetadata(
   // Fetch the website to augment the feed data with favicon and title
   if (!html) {
     const contentWithMimeType = await fetchContentWithMimeType(baseUrl)
-    if (contentWithMimeType == null) {
-      return null
+    html = contentWithMimeType?.content
+  }
+  if (!html) {
+    // Website unreachable — keep the successfully parsed feed (favicon best-effort).
+    // Resolve the default favicon against the origin, not a deep feed path
+    // (e.g. a YouTube .../feeds/videos.xml URL → https://www.youtube.com/favicon.ico).
+    if (feed.favicon === '') {
+      let origin = baseUrl
+      try {
+        origin = new URL(baseUrl).origin
+      } catch {
+        // keep baseUrl
+      }
+      feed.favicon = urlUtils.createUrlFromUrn(DEFAULT_FAVICON, origin)
     }
-    html = contentWithMimeType.content
+    return feed
   }
   const feedFromHtml = getFeedFromHtml(baseUrl, html)
   if (feed.name === '') {

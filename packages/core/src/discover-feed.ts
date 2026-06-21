@@ -1,5 +1,5 @@
 import type { Post } from './models/post'
-import type { RSSFeed } from './models/rss'
+import type { RSSFeed, RSSItem } from './models/rss'
 import { fetchFeedsFromUrl } from './feed-helpers'
 import { fetchFeed } from './parsers/rss'
 import { createEnrichedPost, createPost } from './post-helpers'
@@ -24,6 +24,20 @@ export interface DiscoverFeedOptions {
   enrichmentTimeout?: number // default: 5000ms
   maxItems?: number
   skipEnrichment?: boolean
+}
+
+/**
+ * Every post in a discovered feed belongs to that feed, so apply feed-level data
+ * (feedUrl) and the RSS item's own thumbnail to each post — independent of whether
+ * per-item enrichment succeeded (YouTube rate-limits parallel page fetches).
+ */
+export function applyDiscoveredFeedDefaults(post: Post, feedUrl: string, item: RSSItem): Post {
+  post.feedUrl = post.feedUrl || feedUrl
+  if (!post.images?.[0]?.uri) {
+    const thumb = item.media?.thumbnail?.[0]?.url?.[0]
+    if (thumb) post.images = [{ uri: thumb }]
+  }
+  return post
 }
 
 export async function discoverAndEnrichFeed(
@@ -151,7 +165,7 @@ export async function discoverAndEnrichFeed(
           }).post
         }
 
-        return post
+        return applyDiscoveredFeedDefaults(post, discoveredFeed.feedUrl, item)
       }),
     )
   ).filter((post): post is Post => post !== null)

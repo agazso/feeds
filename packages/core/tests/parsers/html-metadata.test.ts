@@ -150,3 +150,28 @@ describe('parseAllFeedLinksFromHtml', () => {
     })
   })
 })
+
+describe('parseHtmlMetaData YouTube watch pages', () => {
+  // The watch page has no RSS <link> and reports "YouTube" as site, but embeds the
+  // owner channel name + id. We derive author + channel feed from it so no extra
+  // requests to YouTube are needed (avoids rate-limiting that breaks shares).
+  const watchHtml = `<!doctype html><html><head>
+    <meta property="og:title" content="3O YEARS OF QUAKE - YouTube">
+    <meta property="og:image" content="https://i.ytimg.com/vi/abc/maxresdefault.jpg">
+    <meta property="og:site_name" content="YouTube">
+    </head><body>
+    <script>var x = {"ownerChannelName":"Ruby Ranger","externalChannelId":"UCVXcgpFiYgnJov5QGqS105A"};</script>
+    </body></html>`
+
+  it('derives the channel feed URL from externalChannelId', () => {
+    const result = parseHtmlMetaData('https://www.youtube.com/watch?v=abc', watchHtml)
+    expect(result.feedUrl).toBe(
+      'https://www.youtube.com/feeds/videos.xml?channel_id=UCVXcgpFiYgnJov5QGqS105A',
+    )
+  })
+
+  it('uses the owner channel name (not "YouTube") as the name', () => {
+    const result = parseHtmlMetaData('https://www.youtube.com/watch?v=abc', watchHtml)
+    expect(result.name).toBe('Ruby Ranger')
+  })
+})

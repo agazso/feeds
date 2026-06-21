@@ -44,6 +44,9 @@ feeds/
 └── vitest.workspace.ts # Vitest test configuration
 ```
 
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the content discovery /
+enrichment pipeline, the app data flow, and regression-prevention invariants.
+
 ## Requirements
 
 - Node.js >= 20.0.0

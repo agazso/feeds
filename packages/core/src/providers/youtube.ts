@@ -60,6 +60,19 @@ export async function fetchYoutubeFeed(
   url: string,
   fetchConfiguration: YoutubeFetchConfiguration = defaultFetchConfiguration,
 ): Promise<Feed | Feed[] | undefined> {
+  // Already a channel RSS feed URL — fetch it directly; canonicalization would
+  // strip the required channel_id query and break the request.
+  if (url.includes('/feeds/videos.xml')) {
+    const feed = await fetchFeedFromUrl(url)
+    if (feed) {
+      // augmentFeedWithMetadata sets feed.url to the atom <link rel="self"> (the
+      // videos.xml URL); replace it with the channel page so the displayed link
+      // points to the channel, not the feed file. feedUrl is left unchanged.
+      feed.url = (await resolveYoutubeChannelUrl(url)) ?? feed.url
+    }
+    return feed ?? undefined
+  }
+
   const parsedUrl = new URL(urlUtils.getCanonicalUrl(url))
 
   if (parsedUrl.pathname?.startsWith('/channel/')) {
