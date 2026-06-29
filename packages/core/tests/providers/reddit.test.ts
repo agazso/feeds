@@ -1,5 +1,28 @@
 import { afterEach, describe, expect, test, vi } from 'vitest'
-import { fetchRedditFeed, redditJsonFeedUrl, toOldRedditUrl } from '../../src/providers/reddit'
+import {
+  fetchRedditFeed,
+  redditJsonFeedUrl,
+  stripRedditPostChrome,
+  toOldRedditUrl,
+} from '../../src/providers/reddit'
+
+describe('stripRedditPostChrome', () => {
+  test('drops the "Posted in r/X by u/Y • N points and M comments" chrome', () => {
+    expect(
+      stripRedditPostChrome('Posted in r/pics by u/habsman9 • 34,684 points and 523 comments'),
+    ).toBe('')
+  })
+
+  test('keeps a real text-post body', () => {
+    const body = 'We’ve been talking for a while now about the work we’re doing to keep Reddit safe'
+    expect(stripRedditPostChrome(body)).toBe(body)
+  })
+
+  test('does not strip a body that merely mentions a subreddit mid-sentence', () => {
+    const body = 'I posted this earlier in r/pics and it got some comments worth reading'
+    expect(stripRedditPostChrome(body)).toBe(body)
+  })
+})
 
 describe('toOldRedditUrl', () => {
   const path = '/r/modnews/comments/1tq9vxo/title/'

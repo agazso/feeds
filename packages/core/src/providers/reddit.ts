@@ -224,6 +224,18 @@ export function toOldRedditUrl(url: string): string {
   return url.replace(/:\/\/(?:www\.|np\.|m\.|old\.)?reddit\.com/, '://old.reddit.com')
 }
 
+/**
+ * Reddit serves link/image posts an og:description of the form
+ * "Posted in r/<sub> by u/<user> • <N> points and <M> comments" — site chrome with
+ * vote/comment counts. Drop it (self/text posts keep their real body, which does not
+ * match this shape). Returns '' for the chrome line, the input otherwise.
+ */
+export function stripRedditPostChrome(description: string): string {
+  const isChrome =
+    /^Posted in r\/\S+ by u\/\S+/i.test(description) && /\b(points?|comments?)\b/i.test(description)
+  return isChrome ? '' : description
+}
+
 function getAboutIcon(about: RedditAbout): string | undefined {
   if (about.data.icon_img != null && about.data.icon_img !== '') {
     return about.data.icon_img.replace(/&amp;/g, '&')

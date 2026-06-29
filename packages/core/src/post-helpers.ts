@@ -8,6 +8,7 @@ import {
   fetchRedditPostMetadata,
   makeCanonicalRedditLink,
   toOldRedditUrl,
+  stripRedditPostChrome,
 } from './providers/reddit'
 import { isYoutubeLink } from './providers/youtube'
 import { createUrlFromUrn, isImageUrl } from './utils/url'
@@ -238,6 +239,8 @@ export async function fetchEnrichedMetadata(
           ...meta,
           name: subreddit ? `r/${subreddit}` : meta.name,
           siteName: 'Reddit',
+          // Strip Reddit's "Posted in r/X by u/Y • N points and M comments" chrome
+          description: stripRedditPostChrome(meta.description),
           // Drop Reddit's generic placeholder image so text posts don't get an icon hero
           image: /redditstatic\.com/.test(meta.image) ? '' : meta.image,
           icon: '', // Favicon will be handled by transformPostImages()
