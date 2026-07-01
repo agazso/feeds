@@ -29,3 +29,8 @@ These metrics are intentionally omitted to create a calmer, less anxiety-inducin
 ## Code Style
 
 - Prefer `const` over `let` whenever the variable is not reassigned
+
+## Modules
+
+- Use ESM `import`, not CommonJS `require` — in source, scripts, and ad-hoc
+  verification snippets (e.g. `node --input-type=module -e "import { x } from './packages/core/dist/index.js'"`).
