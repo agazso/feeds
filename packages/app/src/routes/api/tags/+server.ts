@@ -10,6 +10,7 @@ import {
   buildFeedUrlToPageUrl,
 } from '$lib/tags'
 import { loadMyfeedPosts } from '$lib/myfeed'
+import { tagShorts } from '$lib/shorts'
 
 export const GET: RequestHandler = async ({ url }) => {
   const tagsParam = url.searchParams.get('tags') || ''
@@ -17,7 +18,7 @@ export const GET: RequestHandler = async ({ url }) => {
 
   const config = await loadConfig()
   const filteredFeeds = filterFeedsByTags(config.feeds, selectedTags)
-  const feedPosts = await loadPosts(filteredFeeds)
+  const feedPosts = tagShorts(await loadPosts(filteredFeeds))
   const myfeedPosts = await loadMyfeedPosts()
   const filteredMyfeedPosts = filterPostsByTags(myfeedPosts, selectedTags)
 

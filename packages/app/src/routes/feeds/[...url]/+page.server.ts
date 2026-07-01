@@ -3,6 +3,7 @@ import { loadPosts } from '@feeds/core'
 import { loadConfig, findFeedByKey } from '$lib/config'
 import { loadMyfeedPosts } from '$lib/myfeed'
 import { collectAvailableTags } from '$lib/tags'
+import { tagShorts } from '$lib/shorts'
 import { error } from '@sveltejs/kit'
 
 export const load: PageServerLoad = async ({ params }) => {
@@ -21,7 +22,7 @@ export const load: PageServerLoad = async ({ params }) => {
   }
 
   // Load posts for this specific feed
-  const posts = await loadPosts([feed])
+  const posts = tagShorts(await loadPosts([feed]))
   const sorted = posts.sort((a, b) => b.createdAt - a.createdAt)
 
   const myfeedPosts = await loadMyfeedPosts()
