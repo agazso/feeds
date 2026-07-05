@@ -41,4 +41,5 @@ export interface RSSFeedWithMetrics {
   downloadTime: number
   xmlTime: number
   parseTime: number
+  cacheControl?: string // response Cache-Control header, for TTL-aware caching
 }

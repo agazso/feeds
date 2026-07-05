@@ -324,38 +324,27 @@ function feedFaviconString(favicon: string | number): string {
   return typeof favicon === 'string' ? favicon : ''
 }
 
+// Fetch a single feed and convert it to posts, also surfacing the response
+// Cache-Control header so callers can cache with a server-driven TTL.
+export async function fetchFeedPosts(
+  feed: Feed,
+): Promise<{ posts: Post[]; cacheControl?: string }> {
+  const fwm = await fetchFeed(feed.feedUrl)
+  const faviconString = feedFaviconString(feed.favicon ?? '')
+  const feedName = feed.name || fwm.feed.title
+  const posts = convertRSSFeedtoPosts(fwm.feed, feedName, faviconString, fwm.url, feed.tags)
+  return { posts, cacheControl: fwm.cacheControl }
+}
+
 export async function loadPosts(storedFeeds: Feed[]): Promise<Post[]> {
-  const posts: Post[] = []
-
-  const feedMap: { [index: string]: Feed } = {}
-  for (const feed of storedFeeds) {
-    feedMap[feed.feedUrl] = feed
-  }
-
-  const fetchFeedPromises = storedFeeds.map((feed) => tryFetchFeed(feed.feedUrl))
-  const feeds = await Promise.all(fetchFeedPromises)
-  for (const feedWithMetrics of feeds) {
-    if (feedWithMetrics) {
-      try {
-        const rssFeed = feedWithMetrics.feed
-        const favicon = feedMap[feedWithMetrics.url]?.favicon
-        const faviconString = feedFaviconString(favicon ?? '')
-        const feedName = feedMap[feedWithMetrics.url]?.name || feedWithMetrics.feed.title
-        const tags = feedMap[feedWithMetrics.url]?.tags
-        const convertedPosts = convertRSSFeedtoPosts(
-          rssFeed,
-          feedName,
-          faviconString,
-          feedWithMetrics.url,
-          tags,
-        )
-        posts.push.apply(posts, convertedPosts)
-      } catch {
-        // Error parsing feed
-      }
-    }
-  }
-  return posts
+  const results = await Promise.all(
+    storedFeeds.map((feed) =>
+      fetchFeedPosts(feed)
+        .then((r) => r.posts)
+        .catch(() => [] as Post[]),
+    ),
+  )
+  return results.flat()
 }
 
 function htmlImageReplacer(match: string, p1: string) {
@@ -415,15 +404,6 @@ export function isTitleSameAsText(title: string, text: string): boolean {
   const trimmedTitle = urlUtils.stripNonAscii(title.trim())
   const isSame = stringEquals(trimmedTitle, replacedText)
   return isSame
-}
-
-async function tryFetchFeed(feedUrl: string): Promise<RSSFeedWithMetrics | null> {
-  try {
-    const rss = await fetchFeed(feedUrl)
-    return rss
-  } catch {
-    return null
-  }
 }
 
 function stripTrailing(s: string, trail: string): string {

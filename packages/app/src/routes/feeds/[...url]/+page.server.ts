@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types'
-import { loadPosts } from '@feeds/core'
 import { loadConfig, findFeedByKey } from '$lib/config'
+import { loadPostsCached } from '$lib/feed-cache'
 import { loadMyfeedPosts } from '$lib/myfeed'
 import { collectAvailableTags } from '$lib/tags'
 import { tagShorts } from '$lib/shorts'
@@ -22,7 +22,7 @@ export const load: PageServerLoad = async ({ params }) => {
   }
 
   // Load posts for this specific feed
-  const posts = tagShorts(await loadPosts([feed]))
+  const posts = tagShorts(await loadPostsCached([feed]))
   const sorted = posts.sort((a, b) => b.createdAt - a.createdAt)
 
   const myfeedPosts = await loadMyfeedPosts()

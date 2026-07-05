@@ -139,6 +139,7 @@ export async function fetchFeed(url: string): Promise<RSSFeedWithMetrics> {
     FEED_FETCH_TIMEOUT,
     loadRSSFeed(feedUrl, text, startTime, downloadTime),
   )
+  feed.cacheControl = response.headers.get('cache-control') ?? undefined
   return feed
 }
 

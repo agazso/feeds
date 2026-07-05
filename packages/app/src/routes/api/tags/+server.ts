@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
-import { loadPosts } from '@feeds/core'
 import { loadConfig } from '$lib/config'
+import { loadPostsCached } from '$lib/feed-cache'
 import {
   filterFeedsByTags,
   getAllTags,
@@ -18,7 +18,7 @@ export const GET: RequestHandler = async ({ url }) => {
 
   const config = await loadConfig()
   const filteredFeeds = filterFeedsByTags(config.feeds, selectedTags)
-  const feedPosts = tagShorts(await loadPosts(filteredFeeds))
+  const feedPosts = tagShorts(await loadPostsCached(filteredFeeds))
   const myfeedPosts = await loadMyfeedPosts()
   const filteredMyfeedPosts = filterPostsByTags(myfeedPosts, selectedTags)
 
