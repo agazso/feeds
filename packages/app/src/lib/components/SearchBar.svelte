@@ -1,5 +1,6 @@
 <script lang="ts">
 import { debounce } from '$lib/search'
+import Tooltip from './Tooltip.svelte'
 
 interface Props {
   value?: string
@@ -40,11 +41,23 @@ function handleSubmit(e: Event) {
     {value}
     oninput={handleInput}
   />
-  <button type="button" class="search-reset" onclick={handleReset}>&times;</button>
+  {#if value}
+    <button type="button" class="search-reset" onclick={handleReset} aria-label="Clear search">&times;</button>
+  {:else}
+    <Tooltip label="Search help">
+      Search or filter posts by keyword, author, or #tag.
+      <ul>
+        <li>Space-separate words to narrow results</li>
+        <li><code>#tag</code> — match a tag</li>
+        <li><code>-word</code> — exclude posts containing <em>word</em> (e.g. <code>-query</code>)</li>
+      </ul>
+    </Tooltip>
+  {/if}
 </form>
 
 <style>
   .search-form {
+    position: relative;
     display: flex;
     flex-direction: row;
     justify-content: stretch;
