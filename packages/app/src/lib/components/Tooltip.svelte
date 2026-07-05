@@ -19,7 +19,7 @@ let open = $state(false)
     aria-label={label}
     aria-expanded={open}
     onclick={() => (open = !open)}
-    onmouseenter={() => (open = true)}
+    onmousemove={() => (open = true)}
     onmouseleave={() => (open = false)}
     onblur={() => (open = false)}
   >{icon}</button>
