@@ -1,7 +1,10 @@
 import type { Feed, Post } from '@feeds/core'
 
-// Re-export embedding-based tag functions
-export { getEmbeddingBasedTags } from './embeddings'
+// NOTE: embedding/tag-suggestion helpers live in $lib/embeddings and are
+// server-only (node fs/path + transformers). Do NOT re-export them here —
+// this module is imported by .svelte components, so anything it re-exports
+// gets pulled into the browser bundle. Import them from $lib/embeddings on
+// the server instead.
 
 /**
  * Map each feed's feedUrl to its page url. Used to tell whether a post's feed is

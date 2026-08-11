@@ -2,7 +2,8 @@ import { json } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
 import { loadConfig } from '$lib/config'
 import { loadMyfeedPosts } from '$lib/myfeed'
-import { getEmbeddingBasedTags, collectAvailableTags } from '$lib/tags'
+import { collectAvailableTags } from '$lib/tags'
+import { getEmbeddingBasedTags } from '$lib/embeddings'
 
 export const POST: RequestHandler = async ({ request }) => {
   const body = await request.json()

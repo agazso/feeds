@@ -1,0 +1,17 @@
+# Fresh install in-image, so keep host build junk + the 851M dev model cache out.
+**/node_modules
+**/.svelte-kit
+**/build
+**/dist
+**/coverage
+.git
+.github
+*.md
+.playwright-mcp
+# Runtime state lives in the /data volume, not the image.
+packages/app/static/feeds.json
+packages/app/static/myposts.json
+packages/app/static/tag-embeddings.json
+packages/app/static/feed-cache.json
+packages/app/cache
+packages/app/models

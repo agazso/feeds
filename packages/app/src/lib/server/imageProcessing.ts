@@ -2,13 +2,8 @@ import { encode } from 'blurhash'
 import sharp from 'sharp'
 import { createHash } from 'crypto'
 import { mkdir, writeFile, unlink } from 'fs/promises'
-import { join, dirname } from 'path'
-import { fileURLToPath } from 'url'
-
-// Resolve cache directory relative to this file's location
-// src/lib/server -> packages/app/cache
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const CACHE_DIR = join(__dirname, '..', '..', '..', 'cache')
+import { join } from 'path'
+import { CACHE_DIR } from '../paths'
 
 const BLURHASH_WIDTH = 32
 const BLURHASH_HEIGHT = 32

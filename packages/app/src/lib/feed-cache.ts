@@ -2,6 +2,7 @@ import type { Feed, Post } from '@feeds/core'
 import { loadPosts, fetchFeedPosts, getHumanHostname } from '@feeds/core'
 import { readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import { DATA_DIR } from './paths'
 
 // Hosts whose feeds are cached instead of fetched live, because they rate-limit
 // bulk requests (YouTube started per-IP limiting 2026-07). Add hosts to extend.
@@ -12,7 +13,7 @@ const MIN_TTL = 5 * 60_000 // floor, so max-age=0/no-cache can't force a refetch
 const MAX_REFRESH = 8 // cap live requests per load, so we never burst a rate limiter
 const CONCURRENCY = 3
 
-const CACHE_PATH = join(process.cwd(), 'static', 'feed-cache.json')
+const CACHE_PATH = join(DATA_DIR, 'feed-cache.json')
 
 // ttl is the feed's own Cache-Control max-age (clamped); staleness = now - fetchedAt > ttl.
 type CacheEntry = { fetchedAt: number; ttl: number; posts: Post[] }
