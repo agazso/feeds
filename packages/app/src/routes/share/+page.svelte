@@ -163,8 +163,12 @@ function handleSubmit(e: SubmitEvent) {
 
   .url-input {
     appearance: none;
-    display: flex;
+    /* display:block, not flex — iOS Safari collapses a form control set to
+       display:flex to zero width (it renders fine everywhere else). The input
+       still grows because it's a flex item of .share-form. */
+    display: block;
     flex-grow: 1;
+    min-width: 0;
     font-size: 16px;
     border: 0;
     padding: 0;
