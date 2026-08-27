@@ -31,7 +31,7 @@ function handleClick() {
 }
 </script>
 
-<button class="back-to-top" onclick={handleClick} aria-label={isLoading ? 'Loading' : isAtTop ? 'Reload' : 'Back to top'}>
+<button class="scroll-top" onclick={handleClick} aria-label={isLoading ? 'Loading' : isAtTop ? 'Reload' : 'Scroll to top'}>
   {#if isLoading}
     <Loader dimension="small" />
   {:else if isAtTop}
@@ -46,7 +46,9 @@ function handleClick() {
 </button>
 
 <style>
-  .back-to-top {
+  /* Named scroll-top, not back-to-top — generic ad-blocker cosmetic filters
+     (`##.back-to-top`, `##[aria-label="Back to top"]`) hide those on every site. */
+  .scroll-top {
     position: fixed;
     display: flex;
     align-items: center;
@@ -70,12 +72,12 @@ function handleClick() {
     padding: 0;
   }
 
-  .back-to-top:hover {
+  .scroll-top:hover {
     background-color: #88888866;
   }
 
   @media (max-width: 500px) {
-    .back-to-top {
+    .scroll-top {
       bottom: calc(var(--padding) * 2);
       right: calc(var(--padding) * 2);
     }
