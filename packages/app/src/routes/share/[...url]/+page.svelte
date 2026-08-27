@@ -162,7 +162,7 @@ $effect(() => {
   <title>Share</title>
 </svelte:head>
 
-<div class="share-page">
+<div class="submit-page">
   {#if success}
     <div class="success-container">
       <div class="success-icon">
@@ -220,7 +220,8 @@ $effect(() => {
 </div>
 
 <style>
-  .share-page {
+  /* Named submit-*, not share-* — ad-blocker cosmetic filters hide share-* classes. */
+  .submit-page {
     display: flex;
     flex-direction: column;
     align-items: center;

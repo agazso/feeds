@@ -82,8 +82,8 @@ function handleSubmit(e: SubmitEvent) {
   <title>Share</title>
 </svelte:head>
 
-<div class="share-page">
-  <form class="share-form" onsubmit={handleSubmit}>
+<div class="submit-page">
+  <form class="submit-form" onsubmit={handleSubmit}>
     <input
       type="url"
       name="url"
@@ -93,7 +93,7 @@ function handleSubmit(e: SubmitEvent) {
       oninput={handleUrlInput}
       required
     />
-    <button type="submit" class="share-button" disabled={!url}>
+    <button type="submit" class="submit-button" disabled={!url}>
       Continue
     </button>
   </form>
@@ -133,7 +133,9 @@ function handleSubmit(e: SubmitEvent) {
 </div>
 
 <style>
-  .share-page {
+  /* Named submit-*, not share-* — ad-blocker cosmetic filters (EasyList,
+     iOS content blockers) hide elements with share-* classes. */
+  .submit-page {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -142,7 +144,7 @@ function handleSubmit(e: SubmitEvent) {
     padding-top: calc(var(--padding) * 4);
   }
 
-  .share-form {
+  .submit-form {
     display: flex;
     flex-direction: row;
     justify-content: stretch;
@@ -163,9 +165,6 @@ function handleSubmit(e: SubmitEvent) {
 
   .url-input {
     appearance: none;
-    /* display:block, not flex — iOS Safari collapses a form control set to
-       display:flex to zero width (it renders fine everywhere else). The input
-       still grows because it's a flex item of .share-form. */
     display: block;
     flex-grow: 1;
     min-width: 0;
@@ -180,13 +179,13 @@ function handleSubmit(e: SubmitEvent) {
     opacity: 0.6;
   }
 
-  .share-button {
+  .submit-button {
     padding: var(--half-padding) var(--padding);
     min-width: 80px;
     font-size: 14px;
   }
 
-  .share-button:disabled {
+  .submit-button:disabled {
     opacity: 0.6;
   }
 

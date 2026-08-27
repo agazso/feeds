@@ -282,8 +282,9 @@ $effect(() => {
 
   .url-input {
     appearance: none;
-    display: flex;
+    display: block;
     flex-grow: 1;
+    min-width: 0;
     font-size: 16px;
     border: 0;
     padding: 0;
