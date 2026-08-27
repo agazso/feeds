@@ -12,14 +12,13 @@
   }
 
   let { src, fallbackSrc, blurhash, aspectRatio, alt = '', class: className, onload }: Props = $props()
-  let loaded = $state(false)
-  let currentSrc = $state(src)
+  let loadedSrc = $state<string | undefined>()
+  let failedSrc = $state<string | undefined>()
   let canvas: HTMLCanvasElement | undefined = $state()
 
-  // Reset currentSrc when src prop changes
-  $effect(() => {
-    currentSrc = src
-  })
+  // Keyed by URL, not booleans, so both reset themselves when the src prop changes.
+  const currentSrc = $derived(fallbackSrc && failedSrc === src ? fallbackSrc : src)
+  const loaded = $derived(loadedSrc === currentSrc)
 
   // Decode blurhash to canvas on mount
   $effect(() => {
@@ -39,14 +38,14 @@
   })
 
   function handleLoad(e: Event) {
-    loaded = true
+    loadedSrc = currentSrc
     onload?.(e)
   }
 
   function handleError() {
     // If cached image fails, try fallback (original URL)
     if (fallbackSrc && currentSrc !== fallbackSrc) {
-      currentSrc = fallbackSrc
+      failedSrc = src
     }
   }
 </script>
