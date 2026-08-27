@@ -4,7 +4,9 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#6200EA" />
-    <meta name="referrer" content="no-referrer" />
+    <!-- same-origin (not no-referrer): still leaks nothing to external sites, but
+         sends a real Origin on same-origin form POSTs so SvelteKit CSRF/auth works. -->
+    <meta name="referrer" content="same-origin" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />

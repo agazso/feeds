@@ -5,9 +5,10 @@ import { processImage, processFavicon, deleteCachedImage } from '$lib/server/ima
 import { readFile, writeFile } from 'fs/promises'
 import { join } from 'path'
 import { json } from '@sveltejs/kit'
+import { DATA_DIR } from '$lib/paths'
 
 async function savePost(post: Post): Promise<void> {
-  const filePath = join(process.cwd(), 'static', 'myposts.json')
+  const filePath = join(DATA_DIR, 'myposts.json')
   const content = await readFile(filePath, 'utf-8')
   const posts: Post[] = JSON.parse(content)
   const newPosts = [post, ...posts]
@@ -26,7 +27,7 @@ export const PATCH: RequestHandler = async ({ request }) => {
     return json({ error: 'Tags must be an array' }, { status: 400 })
   }
 
-  const filePath = join(process.cwd(), 'static', 'myposts.json')
+  const filePath = join(DATA_DIR, 'myposts.json')
   const content = await readFile(filePath, 'utf-8')
   const posts: Post[] = JSON.parse(content)
 
@@ -49,7 +50,7 @@ export const DELETE: RequestHandler = async ({ request }) => {
     return json({ error: 'Post ID required' }, { status: 400 })
   }
 
-  const filePath = join(process.cwd(), 'static', 'myposts.json')
+  const filePath = join(DATA_DIR, 'myposts.json')
   const content = await readFile(filePath, 'utf-8')
   const posts: Post[] = JSON.parse(content)
 

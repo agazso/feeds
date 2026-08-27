@@ -4,6 +4,7 @@ import { rankBySimilarity, type ScoredItem } from './similarity'
 import { normalizeText } from '../text'
 import fs from 'fs'
 import path from 'path'
+import { DATA_DIR } from '../paths'
 
 export interface TagEmbedding {
   tag: string
@@ -23,9 +24,7 @@ const CACHE_FILE = 'tag-embeddings.json'
  * Get static directory path for cache storage
  */
 function getCachePath(): string {
-  // In SvelteKit, static files are in the static/ directory at project root
-  // During build/dev, we can write to it
-  return path.join(process.cwd(), 'static', CACHE_FILE)
+  return path.join(DATA_DIR, CACHE_FILE)
 }
 
 /**

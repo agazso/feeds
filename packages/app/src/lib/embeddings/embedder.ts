@@ -1,4 +1,5 @@
-import { pipeline, type FeatureExtractionPipeline, type PipelineType } from '@huggingface/transformers'
+import { pipeline, env, type FeatureExtractionPipeline, type PipelineType } from '@huggingface/transformers'
+import { MODELS_DIR } from '$lib/paths'
 
 const MODEL_NAME = 'Xenova/all-MiniLM-L6-v2'
 
@@ -16,6 +17,10 @@ async function getEmbedder(): Promise<FeatureExtractionPipeline> {
   if (initPromise) {
     return initPromise
   }
+
+  // Set lazily (not at module top level) so this server-only module stays
+  // side-effect-free and tree-shakes out of the browser bundle.
+  env.cacheDir = MODELS_DIR
 
   const task: PipelineType = 'feature-extraction'
   // @ts-expect-error - pipeline types are overly complex, runtime works correctly

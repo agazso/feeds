@@ -1,12 +1,7 @@
 import { readFile } from 'fs/promises'
-import { join, dirname } from 'path'
-import { fileURLToPath } from 'url'
+import { join } from 'path'
 import type { RequestHandler } from './$types'
-
-// Resolve cache directory relative to this file's location
-// src/routes/cache/[...path] -> packages/app/cache
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const CACHE_DIR = join(__dirname, '..', '..', '..', '..', 'cache')
+import { CACHE_DIR } from '$lib/paths'
 
 const ALLOWED_EXTENSIONS: Record<string, string> = {
   '.webp': 'image/webp',
