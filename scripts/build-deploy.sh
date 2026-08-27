@@ -64,6 +64,11 @@ echo "built $OUT ($(du -sh "$OUT" | cut -f1))"
 if [ -n "$REMOTE" ]; then
   # -z compresses in flight, --partial resumes a dropped transfer (slow-link friendly).
   # node_modules rarely changes, so repeat syncs ship mostly just build/.
-  # --exclude=.env so a redeploy never clobbers the server's edited config.
-  rsync -az --partial --info=progress2 --exclude=.env "$OUT"/ "$REMOTE":/srv/feeds/app/
+  # --delete-after prunes superseded content-hashed assets (they pile up otherwise), and
+  # deletes only once the new files are in place so the running server never 404s mid-deploy.
+  # Excluded paths are also protected from deletion: .env is the server's edited config, and
+  # the anchored dirs hold live data when the FEEDS_* env vars are unset (see lib/paths.ts).
+  rsync -az --partial --info=progress2 --delete-after \
+    --exclude=.env --exclude=/static/ --exclude=/cache/ --exclude=/models/ \
+    "$OUT"/ "$REMOTE":/srv/feeds/app/
 fi
