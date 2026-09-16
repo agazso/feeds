@@ -11,6 +11,7 @@ import {
   stripRedditPostChrome,
 } from './providers/reddit'
 import { isYoutubeLink } from './providers/youtube'
+import { fetchShazamSongMetadata } from './providers/shazam'
 import { createUrlFromUrn, isImageUrl } from './utils/url'
 import { HEADERS_WITH_BOT } from './utils/headers'
 import { htmlToMarkdown } from './parsers/rss-post'
@@ -249,6 +250,29 @@ export async function fetchEnrichedMetadata(
       }
     } catch {
       // Fall through to generic fetching if old.reddit also fails
+    }
+  }
+
+  // Shazam blocks server-side fetches (405); its song pages are served from the iTunes API
+  const shazamMeta = await fetchShazamSongMetadata(url)
+  if (shazamMeta) {
+    return {
+      metadata: {
+        title: shazamMeta.title,
+        description: shazamMeta.description,
+        image: shazamMeta.image,
+        url,
+        name: shazamMeta.artist,
+        siteName: 'Shazam',
+        author: '',
+        icon: '', // Favicon will be handled by transformPostImages()
+        feedUrl: '',
+        feedTitle: '',
+        feedLinks: [],
+        createdAt: 0,
+        updatedAt: 0,
+      },
+      originUrl,
     }
   }
 
