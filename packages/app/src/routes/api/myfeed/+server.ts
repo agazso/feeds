@@ -200,14 +200,12 @@ export const POST: RequestHandler = async ({ request, url }) => {
       const searchParams = new URL(url).searchParams
       const providedFeedUrl = searchParams.get('feedUrl')
 
-      // Use provided feedUrl if available, otherwise try to discover one
+      // Use provided feedUrl if available. No discovery fallback: this post comes from
+      // /api/preview, which already discovered (or failed to discover) the feed. Retrying
+      // here refetched the whole page — 1.8s on a link like shazam.com, which serves 1.5 MB
+      // of HTML per request.
       if (providedFeedUrl) {
         post.feedUrl = providedFeedUrl
-      } else if (!post.feedUrl && post.link) {
-        const feedInfo = await discoverFeedFromUrl(post.link)
-        if (feedInfo?.feedUrl) {
-          post.feedUrl = feedInfo.feedUrl
-        }
       }
 
       // Generate new ID to avoid duplicates
@@ -238,8 +236,12 @@ export const POST: RequestHandler = async ({ request, url }) => {
         }
       }
 
-      // Process favicon: cache as WebP (skip data URIs)
-      if (post.author?.image?.uri && !post.author.image.uri.startsWith('data:')) {
+      // Process favicon: cache as WebP (skip data URIs and anything preview already cached)
+      if (
+        post.author?.image?.uri &&
+        !post.author.image.uri.startsWith('data:') &&
+        !post.author.image.cacheHash
+      ) {
         try {
           const result = await timeout(8000, processFavicon(post.author.image.uri))
           if (result) {
