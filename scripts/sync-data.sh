@@ -18,8 +18,9 @@ LOCAL_CACHE="${LOCAL_CACHE:-packages/app/cache}"  # CACHE_DIR default in dev
 ssh "$REMOTE" "mkdir -p '$DATA_ROOT'/feeds '$DATA_ROOT'/cache '$DATA_ROOT'/models"
 
 # config + saved posts + derived caches (whichever exist). --partial resumes on a
-# dropped connection; -z compresses (slow-link friendly).
-rsync -az --partial --info=progress2 \
+# dropped connection; -z compresses (slow-link friendly). --no-g: files the container
+# wrote belong to a group we can't chgrp to, and -a would fail trying.
+rsync -az --no-g --partial --info=progress2 \
   --include='feeds.json' --include='myposts.json' \
   --include='tag-embeddings.json' --include='feed-cache.json' \
   --exclude='*' \
@@ -28,7 +29,7 @@ rsync -az --partial --info=progress2 \
 # Image cache — optional (server would re-fetch on demand), but shipping it avoids
 # a burst of refetches. Skip with SKIP_CACHE=1.
 if [ -z "${SKIP_CACHE:-}" ] && [ -d "$LOCAL_CACHE" ]; then
-  rsync -az --partial --info=progress2 "$LOCAL_CACHE"/ "$REMOTE:$DATA_ROOT/cache/"
+  rsync -az --no-g --partial --info=progress2 "$LOCAL_CACHE"/ "$REMOTE:$DATA_ROOT/cache/"
 fi
 
 echo "synced to $REMOTE:$DATA_ROOT — feeds/posts apply on next request, no restart"
