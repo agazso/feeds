@@ -6,6 +6,12 @@ import { timeout } from '../utils/timeout'
  * and the public iTunes lookup API serves the same metadata as JSON.
  */
 
+/**
+ * shazam.com serves 404 for /favicon.ico (to us, anyway) and the real icons sit on a
+ * separate asset host, which isn't behind the bot rule.
+ */
+export const SHAZAM_FAVICON = 'https://assets.shazam.com/website/images/favicons/apple-touch-icon'
+
 export interface ShazamSongMetadata {
   title: string
   description: string

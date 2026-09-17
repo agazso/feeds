@@ -11,7 +11,7 @@ import {
   stripRedditPostChrome,
 } from './providers/reddit'
 import { isYoutubeLink } from './providers/youtube'
-import { fetchShazamSongMetadata } from './providers/shazam'
+import { SHAZAM_FAVICON, fetchShazamSongMetadata } from './providers/shazam'
 import { createUrlFromUrn, isImageUrl } from './utils/url'
 import { HEADERS_WITH_BOT } from './utils/headers'
 import { htmlToMarkdown } from './parsers/rss-post'
@@ -265,7 +265,7 @@ export async function fetchEnrichedMetadata(
         name: shazamMeta.artist,
         siteName: 'Shazam',
         author: '',
-        icon: '', // Favicon will be handled by transformPostImages()
+        icon: SHAZAM_FAVICON, // the page we never fetch is where the icon link lives
         feedUrl: '',
         feedTitle: '',
         feedLinks: [],
