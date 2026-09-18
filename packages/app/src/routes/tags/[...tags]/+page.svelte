@@ -49,6 +49,8 @@ $effect(() => {
   loadTagData(newTags)
 })
 
+const addableTags = $derived(allTags.filter((t) => !selectedTags.includes(t)))
+
 // Filter from cached posts
 const filteredPosts = $derived.by(() => {
   const tagFiltered = cachedPosts.filter((post) =>
@@ -111,18 +113,28 @@ function handleReplaceTag(tag: string) {
     {/each}
   </div>
 
+  <!-- Always rendered, disabled when unusable: hiding them resized the header on
+       every load, so a reload made it jump twice. -->
   <div class="tag-actions">
-    {#if allTags.filter((t) => !selectedTags.includes(t)).length > 0}
-      <button class="icon-btn" class:active={openPanel === 'add'} onclick={() => togglePanel('add')}>
-        <Add size={20} />
-      </button>
-    {/if}
+    <button
+      class="icon-btn"
+      class:active={openPanel === 'add'}
+      disabled={addableTags.length === 0}
+      onclick={() => togglePanel('add')}
+      aria-label="Add tag"
+    >
+      <Add size={20} />
+    </button>
 
-    {#if allTags.length > 1}
-      <button class="icon-btn" class:active={openPanel === 'replace'} onclick={() => togglePanel('replace')}>
-        <ArrowsHorizontal size={20} />
-      </button>
-    {/if}
+    <button
+      class="icon-btn"
+      class:active={openPanel === 'replace'}
+      disabled={allTags.length < 2}
+      onclick={() => togglePanel('replace')}
+      aria-label="Switch tag"
+    >
+      <ArrowsHorizontal size={20} />
+    </button>
   </div>
 </div>
 
@@ -130,7 +142,7 @@ function handleReplaceTag(tag: string) {
   <div class="tag-panel" transition:slide={{ duration: 150 }}>
     <div class="panel-header">{openPanel === 'add' ? 'Add tag' : 'Switch tag'}</div>
     <div class="tags-list">
-      {#each allTags.filter((t) => !selectedTags.includes(t)) as tag}
+      {#each addableTags as tag}
         <button class="tag-option" onclick={() => openPanel === 'add' ? handleAddTag(tag) : handleReplaceTag(tag)}>
           #{tag}
         </button>
@@ -187,8 +199,13 @@ function handleReplaceTag(tag: string) {
     cursor: pointer;
   }
 
-  .icon-btn:hover {
+  .icon-btn:hover:not(:disabled) {
     background-color: #88888844;
+  }
+
+  .icon-btn:disabled {
+    opacity: 0.4;
+    cursor: default;
   }
 
   .icon-btn.active {
