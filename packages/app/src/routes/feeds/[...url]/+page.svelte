@@ -8,6 +8,7 @@ import { searchPosts } from '$lib/search'
 import { buildTagCooccurrence, getSuggestedTags } from '$lib/tags'
 import { auth } from '$lib/stores/auth.svelte'
 import { prefix } from '$lib/prefix'
+import { invalidateAll } from '$app/navigation'
 
 let { data }: { data: PageData } = $props()
 
@@ -15,6 +16,7 @@ let searchQuery = $state('')
 let isEditingTags = $state(false)
 let editedTags = $state<string[]>([])
 let isSaving = $state(false)
+let isTogglingEnrich = $state(false)
 
 const cooccurrence = $derived(buildTagCooccurrence(data.feeds, data.myfeedPosts))
 const suggestedTags = $derived(getSuggestedTags(editedTags, cooccurrence))
@@ -40,23 +42,38 @@ function cancelEditingTags() {
   editedTags = []
 }
 
+async function patchFeed(body: Record<string, unknown>): Promise<boolean> {
+  const response = await fetch(`${prefix()}/api/feeds/${encodeURIComponent(data.feed.feedUrl)}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  if (response.ok) return true
+  const error = await response.json().catch(() => ({}))
+  alert(`Failed to save: ${error.error ?? response.status}`)
+  return false
+}
+
+// The posts themselves are built server-side, so reload to see the change.
+async function toggleEnrich() {
+  isTogglingEnrich = true
+  try {
+    if (await patchFeed({ enrich: !data.feed.enrich })) {
+      await invalidateAll()
+    }
+  } finally {
+    isTogglingEnrich = false
+  }
+}
+
 async function saveTags() {
   isSaving = true
   try {
-    const response = await fetch(`${prefix()}/api/feeds/${encodeURIComponent(data.feed.feedUrl)}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tags: editedTags }),
-    })
-
-    if (response.ok) {
+    if (await patchFeed({ tags: editedTags })) {
       data.feed.tags = editedTags
       isEditingTags = false
-    } else {
-      const error = await response.json()
-      alert(`Failed to save tags: ${error.error}`)
     }
-  } catch (e) {
+  } catch {
     alert('Failed to save tags')
   } finally {
     isSaving = false
@@ -96,6 +113,15 @@ async function saveTags() {
         {#if auth.canWrite}
           <button type="button" class="edit-tags-button" onclick={startEditingTags}>
             Edit tags
+          </button>
+          <button
+            type="button"
+            class="edit-tags-button"
+            onclick={toggleEnrich}
+            disabled={isTogglingEnrich}
+            title="Fetch each linked page for its own title, author and image"
+          >
+            {isTogglingEnrich ? 'Loading…' : data.feed.enrich ? 'Enriched: on' : 'Enriched: off'}
           </button>
         {/if}
       </div>

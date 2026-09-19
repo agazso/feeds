@@ -27,6 +27,7 @@ interface DiscoveredFeed {
   feedUrl: string
   favicon: string
   itemCount: number
+  enrich: boolean
 }
 
 let url = $state(untrack(() => data.url) || '')
@@ -39,6 +40,8 @@ let posts = $state<Post[]>([])
 // Add feed mode state
 let addMode = $state(false)
 let selectedTags = $state<string[]>([])
+// Pre-ticked when the feed looks like a link aggregator; you can override it here.
+let enrichFeed = $state(false)
 let saving = $state(false)
 let feedAdded = $state(false)
 let embeddingSuggestions = $state<string[]>([])
@@ -103,6 +106,7 @@ function reset() {
 function enterAddMode() {
   addMode = true
   selectedTags = []
+  enrichFeed = discoveredFeed?.enrich ?? false
 }
 
 function cancelAddMode() {
@@ -146,6 +150,7 @@ async function saveFeed() {
           feedUrl: discoveredFeed.feedUrl,
           favicon: discoveredFeed.favicon,
           tags: selectedTags,
+          enrich: enrichFeed,
         },
       }),
     })
@@ -184,6 +189,7 @@ $effect(() => {
     url = ''
     addMode = false
     selectedTags = []
+    enrichFeed = false
     feedAdded = false
     embeddingSuggestions = []
   }
@@ -212,6 +218,17 @@ $effect(() => {
           <p class="feed-url-info">{discoveredFeed.feedUrl}</p>
 
           <TagSelector availableTags={data.availableTags} bind:selectedTags {suggestedTags} />
+
+          <label class="enrich-option">
+            <input type="checkbox" bind:checked={enrichFeed} />
+            <span>
+              Show enriched posts
+              <small>
+                Fetches each linked page for its own title, author and image — for link
+                aggregators, whose items all point elsewhere.
+              </small>
+            </span>
+          </label>
 
           <div class="actions">
             <button type="button" class="save-button" onclick={saveFeed} disabled={saving}>
@@ -317,6 +334,21 @@ $effect(() => {
   @keyframes pulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.4; }
+  }
+
+  .enrich-option {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--half-padding);
+    max-width: var(--max-column-width);
+    margin: var(--padding) 0;
+    cursor: pointer;
+    text-align: left;
+  }
+
+  .enrich-option small {
+    display: block;
+    color: #888;
   }
 
   .error {

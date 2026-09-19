@@ -124,6 +124,13 @@ enrich path**: it computes the author identity (`shouldUseFeedName`,
    Both attach `feedUrl` + `tags`, run `processImage`/`processFavicon`, then prepend
    to `static/myposts.json`.
 
+### Link aggregators (`feed.enrich`)
+A feed whose items mostly link off-site (Hacker News, Two Stop Bits) renders identically
+on the plain path — `convertRSSFeedtoPosts` stamps the feed's own name and icon on every
+post. `looksLikeLinkAggregator` (`discover-feed.ts`) detects that at discover time and
+pre-sets `Feed.enrich`; the feed page then renders via `loadEnrichedFeedPosts`, which
+shares its per-item loop (`enrichRssItems`) with `discoverAndEnrichFeed`.
+
 ### Multi-user scoping
 A path may start with `/@name`. `reroute` (`src/hooks.ts`) strips the prefix so a single
 route tree serves both modes; `handle` (`hooks.server.ts`) reads the name back off the
@@ -201,6 +208,10 @@ are gated (`requireRootScope`): it displays keys.
   `fetch` that means reading or writing the wrong user's data.
 - **Every persistence call must be passed `locals.user`.** Omitting it is not a type error
   (the param is optional, for single-user mode) — it just reads/writes the root scope.
+- **`feed.enrich` costs one page fetch per item, so it runs on the feed page only.**
+  `/feeds/[...url]` calls `loadEnrichedFeedPosts`; `/all-posts` and `/tags` stay on the
+  cached `loadPostsCached` path. Don't wire enrichment into the multi-feed views without
+  caching it first — that's 30 outbound fetches per feed per render.
 - **Saving reuses the enriched `previewPost` (post-mode).** Any field you attach at
   save time (tags, `feedUrl`, favicon) must be handled on **both** the post-mode and
   url-mode branches of `POST /api/myfeed`.

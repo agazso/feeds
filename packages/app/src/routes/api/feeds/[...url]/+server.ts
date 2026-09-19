@@ -10,10 +10,16 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
   }
 
   const body = await request.json()
-  const { tags } = body
+  const { tags, enrich } = body
 
-  if (!Array.isArray(tags)) {
+  if (tags !== undefined && !Array.isArray(tags)) {
     return json({ error: 'Tags must be an array' }, { status: 400 })
+  }
+  if (enrich !== undefined && typeof enrich !== 'boolean') {
+    return json({ error: 'Enrich must be a boolean' }, { status: 400 })
+  }
+  if (tags === undefined && enrich === undefined) {
+    return json({ error: 'Nothing to update' }, { status: 400 })
   }
 
   try {
@@ -25,12 +31,12 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
       return json({ error: 'Feed not found' }, { status: 404 })
     }
 
-    // Update the feed's tags
-    config.feeds[feedIndex].tags = tags
+    if (tags !== undefined) config.feeds[feedIndex].tags = tags
+    if (enrich !== undefined) config.feeds[feedIndex].enrich = enrich
 
     await saveConfig(config, locals.user)
 
-    return json({ success: true, tags })
+    return json({ success: true, tags: config.feeds[feedIndex].tags, enrich })
   } catch (e) {
     console.error('Failed to update feed tags:', e)
     return json({ error: 'Failed to update feed tags' }, { status: 500 })

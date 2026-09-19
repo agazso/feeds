@@ -37,6 +37,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       feedUrl: feed.feedUrl,
       favicon: feed.favicon,
       tags: feed.tags || [],
+      enrich: feed.enrich === true,
     })
 
     await saveConfig(config, locals.user)

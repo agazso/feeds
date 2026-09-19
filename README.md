@@ -256,6 +256,16 @@ Reddit URLs are automatically detected and handled using Reddit's JSON API for b
 
 YouTube channel and user URLs are converted to their corresponding RSS feed URLs.
 
+## Link aggregators
+
+Feeds like Hacker News or Two Stop Bits carry items that point at other sites, so their
+RSS only has the aggregator's own name and icon — every post looks the same. Discovery
+detects this (a clear majority of items linking off-site) and pre-ticks **Show enriched
+posts** when you add the feed; the feed page then fetches each linked page for its own
+title, author and image. You can flip it later with the **Enriched** button on the feed
+page. It applies to the feed's own page only: `/all-posts` and `/tags` keep the cheap
+rendering, since enriching costs one page fetch per item.
+
 ## Authentication
 
 The web app (`packages/app`) supports optional, cookie-based authentication that gates

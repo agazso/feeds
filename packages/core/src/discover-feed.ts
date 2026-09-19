@@ -1,10 +1,11 @@
+import type { Feed } from './models/feed'
 import type { Post } from './models/post'
 import type { RSSFeed, RSSItem } from './models/rss'
 import { fetchFeedsFromUrl } from './feed-helpers'
 import { fetchFeed } from './parsers/rss'
 import { createEnrichedPost, createPost } from './post-helpers'
 import { htmlToMarkdown } from './parsers/rss-post'
-import { normalizeUrl } from './utils/url'
+import { getHumanHostname, normalizeUrl } from './utils/url'
 import { timeout } from './utils/timeout'
 
 export interface DiscoveredFeedInfo {
@@ -13,6 +14,29 @@ export interface DiscoveredFeedInfo {
   feedUrl: string
   favicon: string
   itemCount: number
+  /** Detected link aggregator — its posts only look right when enriched. */
+  enrich: boolean
+}
+
+// A clear majority of off-site links is what makes a feed an aggregator. Needs a few
+// items to judge, so a feed that happens to open with one outbound link isn't flagged.
+const AGGREGATOR_RATIO = 0.6
+const AGGREGATOR_MIN_ITEMS = 3
+
+/**
+ * True for feeds like Hacker News or Two Stop Bits, whose items point at other sites:
+ * the RSS then carries only the aggregator's own name and icon, so every post renders
+ * identically. A normal blog — and YouTube, and Reddit — links to itself and is never
+ * flagged.
+ */
+export function looksLikeLinkAggregator(items: RSSItem[], feedUrl: string): boolean {
+  const feedHost = getHumanHostname(feedUrl)
+  const linked = items.filter((item) => item.link)
+  if (!feedHost || linked.length < AGGREGATOR_MIN_ITEMS) {
+    return false
+  }
+  const offsite = linked.filter((item) => getHumanHostname(item.link) !== feedHost)
+  return offsite.length / linked.length >= AGGREGATOR_RATIO
 }
 
 export interface DiscoveredFeedResult {
@@ -24,6 +48,11 @@ export interface DiscoverFeedOptions {
   enrichmentTimeout?: number // default: 5000ms
   maxItems?: number
   skipEnrichment?: boolean
+}
+
+export interface EnrichItemsOptions extends DiscoverFeedOptions {
+  /** Feed tags to stamp on every post, as convertRSSFeedtoPosts does on the plain path. */
+  tags?: string[]
 }
 
 /**
@@ -40,6 +69,103 @@ export function applyDiscoveredFeedDefaults(post: Post, feedUrl: string, item: R
   return post
 }
 
+/** A post built from the RSS item alone — the fallback when enrichment fails. */
+function postFromRssItem(item: RSSItem, feed: DiscoveredFeedInfo, tags?: string[]): Post {
+  const { post } = createPost({
+    url: item.link,
+    metadata: {
+      title: htmlToMarkdown(item.title || ''),
+      description: htmlToMarkdown(item.description || ''),
+      icon: feed.favicon,
+      image: '',
+      name: '',
+      siteName: '',
+      url: item.link,
+      feedUrl: feed.feedUrl,
+      feedTitle: feed.name,
+      feedLinks: [],
+      createdAt: item.created || Date.now(),
+      updatedAt: item.created || Date.now(),
+      author: '',
+    },
+    originUrl: feed.url,
+    rssItem: item,
+    createdAt: item.created,
+    feedName: feed.name,
+    feedIcon: feed.favicon,
+  })
+  if (tags?.length) post.tags = tags
+  return post
+}
+
+/**
+ * Fetch each item's own page so the post carries the linked site's title, author and
+ * image instead of the feed's. One page fetch per item, in parallel with a per-item
+ * timeout; a failed or slow fetch falls back to the RSS item.
+ */
+export async function enrichRssItems(
+  items: RSSItem[],
+  feed: DiscoveredFeedInfo,
+  options?: EnrichItemsOptions,
+): Promise<Post[]> {
+  const enrichmentTimeout = options?.enrichmentTimeout ?? 5000
+  const tags = options?.tags
+
+  const posts = await Promise.all(
+    items.map(async (item) => {
+      if (!item.link) return null
+
+      if (options?.skipEnrichment) {
+        return postFromRssItem(item, feed, tags)
+      }
+
+      let enriched: { post: Post; title: string } | null = null
+      try {
+        enriched = await timeout(
+          enrichmentTimeout,
+          createEnrichedPost(item.link, {
+            rssItem: item,
+            createdAt: item.created,
+            feedName: feed.name,
+            feedIcon: feed.favicon,
+            feedOrigin: feed.url,
+            skipFeedDiscovery: true,
+          }),
+        )
+      } catch {
+        // timeout or error - stays null, will use fallback
+      }
+
+      const post = enriched?.post ?? postFromRssItem(item, feed, tags)
+      if (enriched && tags?.length) post.tags = tags
+      return applyDiscoveredFeedDefaults(post, feed.feedUrl, item)
+    }),
+  )
+
+  return posts.filter((post): post is Post => post !== null)
+}
+
+/**
+ * Enriched posts for a feed already followed (no discovery step). This is what the feed
+ * page renders when `feed.enrich` is set.
+ */
+export async function loadEnrichedFeedPosts(
+  feed: Feed,
+  options?: EnrichItemsOptions,
+): Promise<Post[]> {
+  const { feed: rssFeed } = await fetchFeed(feed.feedUrl)
+  const info: DiscoveredFeedInfo = {
+    name: feed.name || rssFeed.title || '',
+    url: feed.url || rssFeed.url || '',
+    feedUrl: feed.feedUrl,
+    favicon: typeof feed.favicon === 'string' ? feed.favicon : '',
+    itemCount: rssFeed.items.length,
+    enrich: true,
+  }
+  const items = options?.maxItems ? rssFeed.items.slice(0, options.maxItems) : rssFeed.items
+  return enrichRssItems(items, info, { ...options, tags: feed.tags })
+}
+
 export async function discoverAndEnrichFeed(
   url: string,
   options?: DiscoverFeedOptions,
@@ -49,8 +175,6 @@ export async function discoverAndEnrichFeed(
   if (!normalizedUrl) {
     throw new Error('URL is required')
   }
-
-  const enrichmentTimeout = options?.enrichmentTimeout ?? 5000
 
   // Discover feed from URL
   const feedResult = await fetchFeedsFromUrl(normalizedUrl)
@@ -78,97 +202,11 @@ export async function discoverAndEnrichFeed(
     feedUrl: firstFeed.feedUrl,
     favicon: typeof firstFeed.favicon === 'string' ? firstFeed.favicon : '',
     itemCount: rssFeed.items.length,
+    enrich: looksLikeLinkAggregator(rssFeed.items, firstFeed.feedUrl),
   }
 
-  // Limit items if maxItems specified
-  const itemsToProcess = options?.maxItems
-    ? rssFeed.items.slice(0, options.maxItems)
-    : rssFeed.items
-
-  // Enrich all items using createEnrichedPost
-  const posts: Post[] = (
-    await Promise.all(
-      itemsToProcess.map(async (item) => {
-        if (!item.link) return null
-
-        // Skip enrichment if requested
-        if (options?.skipEnrichment) {
-          return createPost({
-            url: item.link,
-            metadata: {
-              title: htmlToMarkdown(item.title || ''),
-              description: htmlToMarkdown(item.description || ''),
-              icon: discoveredFeed.favicon,
-              image: '',
-              name: '',
-              siteName: '',
-              url: item.link,
-              feedUrl: discoveredFeed.feedUrl,
-              feedTitle: discoveredFeed.name,
-              feedLinks: [],
-              createdAt: item.created || Date.now(),
-              updatedAt: item.created || Date.now(),
-              author: '',
-            },
-            originUrl: discoveredFeed.url,
-            rssItem: item,
-            createdAt: item.created,
-            feedName: discoveredFeed.name,
-            feedIcon: discoveredFeed.favicon,
-          }).post
-        }
-
-        let enrichedResult: { post: Post; title: string } | null = null
-        try {
-          enrichedResult = await timeout(
-            enrichmentTimeout,
-            createEnrichedPost(item.link, {
-              rssItem: item,
-              createdAt: item.created,
-              feedName: discoveredFeed.name,
-              feedIcon: discoveredFeed.favicon,
-              feedOrigin: discoveredFeed.url,
-              skipFeedDiscovery: true,
-            }),
-          )
-        } catch {
-          // timeout or error - stays null, will use fallback
-        }
-
-        let post: Post
-        if (enrichedResult) {
-          post = enrichedResult.post
-        } else {
-          // Fallback: create post from RSS item only (no enrichment)
-          post = createPost({
-            url: item.link,
-            metadata: {
-              title: htmlToMarkdown(item.title || ''),
-              description: htmlToMarkdown(item.description || ''),
-              icon: discoveredFeed.favicon,
-              image: '',
-              name: '',
-              siteName: '',
-              url: item.link,
-              feedUrl: discoveredFeed.feedUrl,
-              feedTitle: discoveredFeed.name,
-              feedLinks: [],
-              createdAt: item.created || Date.now(),
-              updatedAt: item.created || Date.now(),
-              author: '',
-            },
-            originUrl: discoveredFeed.url,
-            rssItem: item,
-            createdAt: item.created,
-            feedName: discoveredFeed.name,
-            feedIcon: discoveredFeed.favicon,
-          }).post
-        }
-
-        return applyDiscoveredFeedDefaults(post, discoveredFeed.feedUrl, item)
-      }),
-    )
-  ).filter((post): post is Post => post !== null)
+  const items = options?.maxItems ? rssFeed.items.slice(0, options.maxItems) : rssFeed.items
+  const posts = await enrichRssItems(items, discoveredFeed, options)
 
   return { feed: discoveredFeed, posts }
 }
@@ -194,5 +232,6 @@ export async function discoverFeedFromUrl(url: string): Promise<DiscoveredFeedIn
     feedUrl: firstFeed.feedUrl,
     favicon: typeof firstFeed.favicon === 'string' ? firstFeed.favicon : '',
     itemCount: 0, // Not fetched in simple discovery
+    enrich: false, // items aren't fetched here, so aggregator detection can't run
   }
 }
