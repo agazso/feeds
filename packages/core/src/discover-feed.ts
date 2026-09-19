@@ -134,29 +134,37 @@ export async function enrichRssItems(
         return known
       }
 
-      if (options?.skipEnrichment) {
-        return postFromRssItem(item, feed, tags)
-      }
-
       let enriched: { post: Post; title: string } | null = null
-      try {
-        enriched = await timeout(
-          enrichmentTimeout,
-          createEnrichedPost(item.link, {
-            rssItem: item,
-            createdAt: item.created,
-            feedName: feed.name,
-            feedIcon: feed.favicon,
-            feedOrigin: feed.url,
-            skipFeedDiscovery: true,
-          }),
-        )
-      } catch {
-        // timeout or error - stays null, will use fallback
+      if (!options?.skipEnrichment) {
+        try {
+          enriched = await timeout(
+            enrichmentTimeout,
+            createEnrichedPost(item.link, {
+              rssItem: item,
+              createdAt: item.created,
+              feedName: feed.name,
+              feedIcon: feed.favicon,
+              feedOrigin: feed.url,
+              skipFeedDiscovery: true,
+            }),
+          )
+        } catch {
+          // timeout or error - stays null, will use fallback
+        }
       }
 
       const post = enriched?.post ?? postFromRssItem(item, feed, tags)
       if (enriched && tags?.length) post.tags = tags
+      // Credit the aggregator only where the post no longer says so itself: the item
+      // came from another site (not a self-post) and the author on display isn't the
+      // feed. Enriched posts show the linked site; so do most fallback posts, whose
+      // author createPost derives from the link's hostname.
+      if (
+        getHumanHostname(item.link) !== getHumanHostname(feed.feedUrl) &&
+        post.author?.name !== feed.name
+      ) {
+        post.via = { name: feed.name, url: feed.url, icon: feed.favicon || undefined }
+      }
       return applyDiscoveredFeedDefaults(post, feed.feedUrl, item)
     }),
   )

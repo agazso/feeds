@@ -33,6 +33,7 @@ const thumbnailAspectRatio = $derived(post.images?.[0]?.aspectRatio)
 const postLink = $derived(post.link || '')
 const authorImage = $derived(post.author?.image ? resolvedImageSrc(post.author.image, prefix()) : undefined)
 let avatarError = $state(false)
+let viaIconError = $state(false)
 
 async function removeFromMyFeed() {
   const postId = post._id
@@ -223,6 +224,17 @@ function handleImageLoad(e: Event) {
     </div>
   {/if}
 
+  {#if post.via}
+    <div class="text">
+      <a class="via-link" href={post.via.url} target="_blank" rel="noopener noreferrer">
+        {#if post.via.icon && !viaIconError}
+          <img src={post.via.icon} alt="" class="via-icon" onerror={() => (viaIconError = true)} />
+        {/if}
+        Originally from {post.via.name}
+      </a>
+    </div>
+  {/if}
+
   {#if comment}
     <div class="text">
       <a class="comment-link" href={comment} target="_blank" rel="noopener noreferrer">Comments</a>
@@ -361,6 +373,27 @@ function handleImageLoad(e: Event) {
   .comment-link {
     text-decoration: underline;
     display: inline !important;
+  }
+
+  .via-link {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 6px;
+    color: var(--color-step-30);
+    font-size: 0.9em;
+    text-decoration: none;
+  }
+
+  .via-link:hover {
+    text-decoration: underline;
+  }
+
+  .via-icon {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    object-fit: contain;
+    flex-shrink: 0;
   }
 
   .comment-link:hover {

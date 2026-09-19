@@ -131,7 +131,11 @@ post. `looksLikeLinkAggregator` (`discover-feed.ts`) detects that at discover ti
 pre-sets `Feed.enrich`. `feed-cache.ts` then treats such feeds as cached (like
 CACHED_HOSTS, but for cost rather than rate limits) and refreshes them via
 `loadEnrichedFeedPosts`, whose per-item loop (`enrichRssItems`) is shared with
-`discoverAndEnrichFeed`. A cache entry records which rendering produced it, so toggling
+`discoverAndEnrichFeed`. Enriched posts carry `Post.via` (the aggregator's name, url and
+icon) because enrichment replaces the author — and `applyDiscoveredFeedDefaults` only
+backfills `feedUrl` when empty, so a post can end up holding the *source site's* feed url
+instead of the aggregator's. `via` is the only reliable link back.
+A cache entry records which rendering produced it, so toggling
 the flag invalidates it at once; `MAX_ENRICH_REFRESH` bounds how many aggregators one
 page load may refresh.
 
