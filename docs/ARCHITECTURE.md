@@ -128,8 +128,12 @@ enrich path**: it computes the author identity (`shouldUseFeedName`,
 A feed whose items mostly link off-site (Hacker News, Two Stop Bits) renders identically
 on the plain path — `convertRSSFeedtoPosts` stamps the feed's own name and icon on every
 post. `looksLikeLinkAggregator` (`discover-feed.ts`) detects that at discover time and
-pre-sets `Feed.enrich`; the feed page then renders via `loadEnrichedFeedPosts`, which
-shares its per-item loop (`enrichRssItems`) with `discoverAndEnrichFeed`.
+pre-sets `Feed.enrich`. `feed-cache.ts` then treats such feeds as cached (like
+CACHED_HOSTS, but for cost rather than rate limits) and refreshes them via
+`loadEnrichedFeedPosts`, whose per-item loop (`enrichRssItems`) is shared with
+`discoverAndEnrichFeed`. A cache entry records which rendering produced it, so toggling
+the flag invalidates it at once; `MAX_ENRICH_REFRESH` bounds how many aggregators one
+page load may refresh.
 
 ### Multi-user scoping
 A path may start with `/@name`. `reroute` (`src/hooks.ts`) strips the prefix so a single
@@ -208,10 +212,11 @@ are gated (`requireRootScope`): it displays keys.
   `fetch` that means reading or writing the wrong user's data.
 - **Every persistence call must be passed `locals.user`.** Omitting it is not a type error
   (the param is optional, for single-user mode) — it just reads/writes the root scope.
-- **`feed.enrich` costs one page fetch per item, so it runs on the feed page only.**
-  `/feeds/[...url]` calls `loadEnrichedFeedPosts`; `/all-posts` and `/tags` stay on the
-  cached `loadPostsCached` path. Don't wire enrichment into the multi-feed views without
-  caching it first — that's 30 outbound fetches per feed per render.
+- **`feed.enrich` costs one page fetch per *new* item, and is only affordable because it
+  is cached.** Everything renders through `loadPostsCached`; never call
+  `loadEnrichedFeedPosts` straight from a route. The refresh passes the previous entry's
+  posts as `reuse`, so unchanged items are not refetched — drop that and every refresh
+  becomes 30 outbound fetches again.
 - **Saving reuses the enriched `previewPost` (post-mode).** Any field you attach at
   save time (tags, `feedUrl`, favicon) must be handled on **both** the post-mode and
   url-mode branches of `POST /api/myfeed`.

@@ -53,6 +53,12 @@ export interface DiscoverFeedOptions {
 export interface EnrichItemsOptions extends DiscoverFeedOptions {
   /** Feed tags to stamp on every post, as convertRSSFeedtoPosts does on the plain path. */
   tags?: string[]
+  /**
+   * Posts enriched on a previous pass. An item whose link is already among them is
+   * reused as-is instead of refetching its page — on a refresh most of a feed's items
+   * are unchanged, so this is where nearly all the saving is.
+   */
+  reuse?: Post[]
 }
 
 /**
@@ -111,9 +117,22 @@ export async function enrichRssItems(
   const enrichmentTimeout = options?.enrichmentTimeout ?? 5000
   const tags = options?.tags
 
+  // ponytail: an item whose enrichment failed last time is reused as a fallback post
+  // and never retried — acceptable because aggregator items roll off within hours.
+  const reusable = new Map(
+    (options?.reuse ?? []).filter((post) => post.link).map((post) => [post.link as string, post]),
+  )
+
   const posts = await Promise.all(
     items.map(async (item) => {
       if (!item.link) return null
+
+      const known = reusable.get(item.link)
+      if (known) {
+        // Tags can have been edited since; everything else about the post still holds.
+        if (tags?.length) known.tags = tags
+        return known
+      }
 
       if (options?.skipEnrichment) {
         return postFromRssItem(item, feed, tags)

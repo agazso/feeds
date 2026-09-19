@@ -1,5 +1,5 @@
 import type { Feed, Post } from '@feeds/core'
-import { loadPosts, fetchFeedPosts, getHumanHostname } from '@feeds/core'
+import { loadPosts, fetchFeedPosts, loadEnrichedFeedPosts, getHumanHostname } from '@feeds/core'
 import { readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { dataDir } from './paths'
@@ -11,12 +11,18 @@ const CACHED_HOSTS = ['youtube.com']
 const DEFAULT_TTL = 30 * 60_000 // used when a feed sends no Cache-Control max-age
 const MIN_TTL = 5 * 60_000 // floor, so max-age=0/no-cache can't force a refetch every load
 const MAX_REFRESH = 8 // cap live requests per load, so we never burst a rate limiter
+// An enriched refresh costs a page fetch per *new* item, so its worst case is far more
+// expensive than a plain one. Refreshing at most this many per load keeps a batch of
+// simultaneously-stale aggregators from stalling /all-posts or /tags.
+const MAX_ENRICH_REFRESH = 2
 const CONCURRENCY = 3
 
 const cachePath = (user?: string) => join(dataDir(user), 'feed-cache.json')
 
 // ttl is the feed's own Cache-Control max-age (clamped); staleness = now - fetchedAt > ttl.
-type CacheEntry = { fetchedAt: number; ttl: number; posts: Post[] }
+// `enriched` records which rendering produced these posts, so toggling feed.enrich
+// invalidates the entry instead of serving posts of the wrong kind until the TTL runs out.
+type CacheEntry = { fetchedAt: number; ttl: number; posts: Post[]; enriched?: boolean }
 type FeedCache = Record<string, CacheEntry>
 
 // Parse `max-age=<seconds>` from a Cache-Control header into a clamped ms TTL.
@@ -25,8 +31,21 @@ function ttlFromCacheControl(cacheControl?: string): number {
   return maxAge ? Math.max(Number(maxAge) * 1000, MIN_TTL) : DEFAULT_TTL
 }
 
+// Enriched feeds are cached for a different reason than CACHED_HOSTS: not rate limits,
+// but cost — one page fetch per item. Without this they could only be rendered on the
+// feed's own page; cached, they can appear in /all-posts and /tags too.
 function isCached(feed: Feed): boolean {
-  return CACHED_HOSTS.includes(getHumanHostname(feed.feedUrl))
+  return feed.enrich === true || CACHED_HOSTS.includes(getHumanHostname(feed.feedUrl))
+}
+
+/** Refetch a feed, reusing already-enriched posts for items that haven't changed. */
+async function refetch(
+  feed: Feed,
+  previous?: CacheEntry,
+): Promise<{ posts: Post[]; cacheControl?: string }> {
+  if (!feed.enrich) return fetchFeedPosts(feed)
+  const reuse = previous?.enriched ? previous.posts : undefined
+  return { posts: await loadEnrichedFeedPosts(feed, { reuse }) }
 }
 
 async function loadCache(user?: string): Promise<FeedCache> {
@@ -68,18 +87,31 @@ export async function loadPostsCached(feeds: Feed[], user?: string): Promise<Pos
   const now = Date.now()
   const isStale = (f: Feed) => {
     const e = cache[f.feedUrl]
-    return !e || now - e.fetchedAt > (e.ttl ?? DEFAULT_TTL)
+    if (!e) return true
+    if (!!e.enriched !== (f.enrich === true)) return true // rendering mode was toggled
+    return now - e.fetchedAt > (e.ttl ?? DEFAULT_TTL)
   }
-  const toRefresh = cached
+  const stale = cached
     .filter(isStale)
     .sort((a, b) => (cache[a.feedUrl]?.fetchedAt ?? 0) - (cache[b.feedUrl]?.fetchedAt ?? 0))
+
+  // Oldest-first within each budget; whatever misses out keeps serving its last copy
+  // and is refreshed on a later load.
+  let enrichBudget = MAX_ENRICH_REFRESH
+  const toRefresh = stale
+    .filter((feed) => !feed.enrich || enrichBudget-- > 0)
     .slice(0, MAX_REFRESH)
 
   await pool(toRefresh, CONCURRENCY, async (feed) => {
     try {
-      const { posts, cacheControl } = await fetchFeedPosts(feed)
+      const { posts, cacheControl } = await refetch(feed, cache[feed.feedUrl])
       if (posts.length > 0) {
-        cache[feed.feedUrl] = { fetchedAt: now, ttl: ttlFromCacheControl(cacheControl), posts }
+        cache[feed.feedUrl] = {
+          fetchedAt: now,
+          ttl: ttlFromCacheControl(cacheControl),
+          posts,
+          enriched: feed.enrich === true,
+        }
       }
     } catch {
       // network error / block → keep last-good entry

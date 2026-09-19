@@ -263,8 +263,9 @@ RSS only has the aggregator's own name and icon — every post looks the same. D
 detects this (a clear majority of items linking off-site) and pre-ticks **Show enriched
 posts** when you add the feed; the feed page then fetches each linked page for its own
 title, author and image. You can flip it later with the **Enriched** button on the feed
-page. It applies to the feed's own page only: `/all-posts` and `/tags` keep the cheap
-rendering, since enriching costs one page fetch per item.
+page. Enriched posts are cached per feed and show up everywhere — the feed's page,
+`/all-posts` and `/tags`. A refresh only fetches pages for items it hasn't seen before,
+so the cost falls on the first load of a feed rather than on every read.
 
 ## Authentication
 

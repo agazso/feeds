@@ -1,7 +1,6 @@
 import type { PageServerLoad } from './$types'
 import { loadConfig, findFeedByKey } from '$lib/config'
 import { loadPostsCached } from '$lib/feed-cache'
-import { loadEnrichedFeedPosts } from '@feeds/core'
 import { loadMyfeedPosts } from '$lib/myfeed'
 import { collectAvailableTags } from '$lib/tags'
 import { tagShorts } from '$lib/shorts'
@@ -22,13 +21,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     throw error(404, 'Feed not found')
   }
 
-  // Link aggregators are enriched live here (and only here — /all-posts and /tags stay
-  // on the cheap cached path, since enriching means one page fetch per item).
-  const posts = tagShorts(
-    feed.enrich
-      ? await loadEnrichedFeedPosts(feed).catch(() => [])
-      : await loadPostsCached([feed], locals.user),
-  )
+  // Load posts for this specific feed. Enriched feeds go through the same cache as
+  // everything else, so this page, /all-posts and /tags all render them identically.
+  const posts = tagShorts(await loadPostsCached([feed], locals.user))
   const sorted = posts.sort((a, b) => b.createdAt - a.createdAt)
 
   const myfeedPosts = await loadMyfeedPosts(locals.user)
