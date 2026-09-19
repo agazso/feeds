@@ -194,3 +194,41 @@ describe('createPost comments link', () => {
     expect(result.post.text).not.toContain('[Comments]')
   })
 })
+
+describe('createPost text from an RSS item', () => {
+  // A link whose page yields no description of its own — a PDF, say — falls back to the
+  // RSS item. That description is HTML and must reach the markdown text as markdown.
+  const rssItem = {
+    title: "Economics Nobel Laureates' Letter [pdf]",
+    description: '<a href="https://news.ycombinator.com/item?id=1">Comments</a>',
+    link: 'https://example.org/paper.pdf',
+    url: 'https://example.org/paper.pdf',
+    created: 0,
+    comments: 'https://news.ycombinator.com/item?id=1',
+  }
+
+  test('converts the html description instead of embedding it raw', () => {
+    const { post } = createPost({
+      url: 'https://example.org/paper.pdf',
+      metadata: {},
+      originUrl: 'https://news.ycombinator.com/',
+      feedName: 'Hacker News',
+      rssItem,
+    })
+    expect(post.text).not.toMatch(/<[a-z][^>]*>/i)
+    expect(post.text).toContain('[Comments](https://news.ycombinator.com/item?id=1)')
+  })
+
+  test('keeps the title, and leaves a real description readable', () => {
+    const { post } = createPost({
+      url: 'https://example.org/paper.pdf',
+      metadata: {},
+      originUrl: 'https://news.ycombinator.com/',
+      feedName: 'Hacker News',
+      rssItem: { ...rssItem, description: '<p>Some &amp; body text</p>' },
+    })
+    expect(post.text).toContain("**Economics Nobel Laureates' Letter [pdf]**")
+    expect(post.text).toContain('Some & body text')
+    expect(post.text).not.toMatch(/<[a-z][^>]*>/i)
+  })
+})

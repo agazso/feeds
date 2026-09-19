@@ -22,7 +22,7 @@ const cachePath = (user?: string) => join(dataDir(user), 'feed-cache.json')
 // Bump whenever the shape of a built post changes. Without this, entries written by an
 // older build are served as-is, and — because an enriched refresh reuses cached posts
 // verbatim for unchanged links — items that stay in a feed would never pick the change up.
-const POSTS_VERSION = 2
+const POSTS_VERSION = 3
 
 // ttl is the feed's own Cache-Control max-age (clamped); staleness = now - fetchedAt > ttl.
 // `enriched` records which rendering produced these posts, so toggling feed.enrich
