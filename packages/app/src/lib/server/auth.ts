@@ -1,6 +1,6 @@
 import type { Cookies } from '@sveltejs/kit'
 import { error } from '@sveltejs/kit'
-import { randomBytes } from 'node:crypto'
+import { randomInt } from 'node:crypto'
 import { readFile, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { DATA_DIR } from '../paths'
@@ -38,13 +38,18 @@ export async function keyForUser(user: string): Promise<string | undefined> {
   return (await loadKeys())[user]
 }
 
+// Base58: alphanumeric only — no '+/-_' to break a double-click selection, and no
+// 0/O/I/l to misread when a key is typed by hand off another screen.
+const KEY_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+const KEY_LENGTH = 23 // 23 × log2(58) ≈ 135 bits
+
 /**
- * 128 bits, base64url — 22 URL-safe characters. Unguessable (a brute force is ~2^127
- * tries) while keeping sign-in links short enough to read out. Longer keys minted by
- * earlier versions keep working: keys are only ever compared for equality.
+ * An unguessable write key: ~135 bits, so a brute force is ~2^134 tries. Keys in other
+ * formats minted by earlier versions keep working — keys are only compared for equality.
  */
 export function generateKey(): string {
-  return randomBytes(16).toString('base64url')
+  // randomInt rejection-samples; `randomBytes()[i] % 58` would bias the first 24 letters.
+  return Array.from({ length: KEY_LENGTH }, () => KEY_ALPHABET[randomInt(KEY_ALPHABET.length)]).join('')
 }
 
 /** Mint and persist a write key for `user`. Overwrites any key they already had. */
