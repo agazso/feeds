@@ -222,6 +222,10 @@ The keyfile (`FEEDS_KEYFILE`, default `users.json` beside `FEEDS_DATA_DIR`) gate
 
 - **Missing/empty file → auth is OFF → writes are open to everyone.** No keyfile does
   **not** block you; it means the public can write to your instance.
+  > **Upgrading from `FEEDS_AUTH_KEYS`:** that variable no longer does anything. A server
+  > whose `.env` still sets it and has no keyfile is running **unauthenticated**. Run
+  > `./scripts/mint-key.sh user@server` (or redeploy — `build-deploy.sh` now installs the
+  > keyfile when the server has none) and remove the dead variable from `.env`.
 - **One or more entries → auth is ON.** Writes return `401` until you present that
   scope's key. The entry named `""` is single-user mode; `"bob"` covers `/@bob`.
 
@@ -235,6 +239,9 @@ echo "save this key: $KEY"
 printf '{"": "%s"}\n' "$KEY" | sudo tee /srv/feeds/data/users.json
 sudo systemctl restart feeds        # keys are read once per process
 ```
+
+`mint-key.sh` also adds a key for a single user: `./scripts/mint-key.sh user@server bob`.
+It keeps every key already in the file, so it is safe to rerun.
 
 Add further users from `https://<host>/invite` once the root key is set — it writes their
 key into `users.json` and gives you a link to send them.

@@ -9,6 +9,8 @@ cd "$(dirname "$0")/.."
 
 OUT="${OUT:-./deploy-out}"
 REMOTE="${1:-}"
+DATA_ROOT="${DATA_ROOT:-/srv/feeds/data}"          # must match FEEDS_DATA_DIR's parent
+LOCAL_KEYS="${LOCAL_KEYS:-packages/app/users.json}"
 
 pnpm --filter @feeds/core build
 pnpm --filter @feeds/app build
@@ -77,4 +79,21 @@ if [ -n "$REMOTE" ]; then
   rsync -az --partial --info=progress2 --delete-after \
     --exclude=.env --exclude=/static/ --exclude=/cache/ --exclude=/models/ \
     "$OUT"/ "$REMOTE":/srv/feeds/app/
+
+  # No keyfile means auth is OFF and anyone can write, so a deploy must never leave the
+  # server without one. This only ever *adds* it: an existing keyfile is the server's
+  # own and is never overwritten here (use SYNC_KEYS=1 ./scripts/sync-data.sh for that).
+  if ssh "$REMOTE" "[ -s '$DATA_ROOT/users.json' ]"; then
+    echo "keys: $DATA_ROOT/users.json present — left untouched"
+  elif [ -s "$LOCAL_KEYS" ]; then
+    ssh "$REMOTE" "mkdir -p '$DATA_ROOT'"
+    rsync -az --no-g --partial "$LOCAL_KEYS" "$REMOTE:$DATA_ROOT/users.json"
+    echo "keys: installed $LOCAL_KEYS -> $DATA_ROOT/users.json (writes now need a key)"
+  else
+    echo
+    echo "WARNING: no keyfile at $DATA_ROOT/users.json on the server, and none locally"
+    echo "         at $LOCAL_KEYS. WRITES ARE OPEN TO ANYONE. Create one with:"
+    echo "           ./scripts/mint-key.sh $REMOTE"
+    echo
+  fi
 fi
