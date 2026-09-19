@@ -163,7 +163,13 @@ export async function enrichRssItems(
         getHumanHostname(item.link) !== getHumanHostname(feed.feedUrl) &&
         post.author?.name !== feed.name
       ) {
-        post.via = { name: feed.name, url: feed.url, icon: feed.favicon || undefined }
+        // The aggregator's page for *this* item (its discussion thread) when the feed
+        // gives one, so the credit links where the post was submitted, not just home.
+        post.via = {
+          name: feed.name,
+          url: item.comments || feed.url,
+          icon: feed.favicon || undefined,
+        }
       }
       return applyDiscoveredFeedDefaults(post, feed.feedUrl, item)
     }),

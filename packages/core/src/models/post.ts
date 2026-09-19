@@ -12,6 +12,7 @@ export interface PublicPost extends Model {
 /** The link aggregator a post reached us through — see `Post.via`. */
 export interface PostVia {
   name: string
+  /** The aggregator's page for this item (its discussion), else the aggregator's site. */
   url: string
   icon?: string
 }

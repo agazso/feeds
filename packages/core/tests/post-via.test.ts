@@ -12,12 +12,13 @@ const feed: DiscoveredFeedInfo = {
   enrich: true,
 }
 
-const item = (link: string): RSSItem => ({
+const item = (link: string, comments?: string): RSSItem => ({
   title: 'a title',
   description: '',
   link,
   url: link,
   created: 1_700_000_000_000,
+  comments,
 })
 
 // skipEnrichment keeps these offline: no page is fetched, so the attribution is decided
@@ -25,13 +26,22 @@ const item = (link: string): RSSItem => ({
 const build = (links: string[]) => enrichRssItems(links.map(item), feed, { skipEnrichment: true })
 
 describe('post.via (link aggregator attribution)', () => {
-  test('credits the aggregator for an item that came from another site', async () => {
-    const [post] = await build(['https://elsewhere.example/article'])
-    expect(post.via).toEqual({
+  test('links to the aggregator page for this item, not its homepage', async () => {
+    const posts = await enrichRssItems(
+      [item('https://elsewhere.example/article', 'https://news.ycombinator.com/item?id=42')],
+      feed,
+      { skipEnrichment: true },
+    )
+    expect(posts[0].via).toEqual({
       name: 'Hacker News',
-      url: 'https://news.ycombinator.com/',
+      url: 'https://news.ycombinator.com/item?id=42',
       icon: 'https://news.ycombinator.com/y18.svg',
     })
+  })
+
+  test('falls back to the aggregator site when the item has no discussion link', async () => {
+    const [post] = await build(['https://elsewhere.example/article'])
+    expect(post.via?.url).toBe('https://news.ycombinator.com/')
   })
 
   test('leaves a self-post alone — it is already attributed to the aggregator', async () => {
