@@ -127,7 +127,8 @@ enrich path**: it computes the author identity (`shouldUseFeedName`,
 ### Multi-user scoping
 A path may start with `/@name`. `reroute` (`src/hooks.ts`) strips the prefix so a single
 route tree serves both modes; `handle` (`hooks.server.ts`) reads the name back off the
-untouched `event.url`, 404s unknown users, and puts it in `locals.user`. Every persistence
+untouched `event.url`, 404s unknown users, and puts it in `locals.user` — lowercased,
+and restricted to `[a-z0-9_]` so it can never escape the data dir. Every persistence
 call takes that `user` and resolves against `dataDir(user)` / `cacheDir(user)`
 (`$lib/paths.ts`) — `DATA_DIR/@bob/` and `CACHE_DIR/@bob/`, or the roots when undefined.
 On the client, `prefix()` (`$lib/prefix.ts`) supplies the same prefix for links and

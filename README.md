@@ -285,7 +285,9 @@ Any path may be prefixed with `/@name`, which scopes everything after it to that
 single-user mode, exactly as before.
 
 - **Creating a user:** make an `@name` directory in the data dir (`static/@bob/`). The app
-  never creates one — an unknown `/@name` path returns `404`. Its `feeds.json`,
+  never creates one — an unknown `/@name` path returns `404`. Names are lowercase latin
+  letters, digits and underscore; a URL may capitalize (`/@Bob`) but resolves to the
+  lowercase folder, so a directory named `@Bob` is not a user. Its `feeds.json`,
   `myposts.json`, and caches live there, and its images under `cache/@bob/`.
 - **Listing:** `/users` lists the existing users.
 - **Access:** every user is readable by anyone; writes need that user's key from
