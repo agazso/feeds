@@ -124,6 +124,15 @@ enrich path**: it computes the author identity (`shouldUseFeedName`,
    Both attach `feedUrl` + `tags`, run `processImage`/`processFavicon`, then prepend
    to `static/myposts.json`.
 
+### Multi-user scoping
+A path may start with `/@name`. `reroute` (`src/hooks.ts`) strips the prefix so a single
+route tree serves both modes; `handle` (`hooks.server.ts`) reads the name back off the
+untouched `event.url`, 404s unknown users, and puts it in `locals.user`. Every persistence
+call takes that `user` and resolves against `dataDir(user)` / `cacheDir(user)`
+(`$lib/paths.ts`) — `DATA_DIR/@bob/` and `CACHE_DIR/@bob/`, or the roots when undefined.
+On the client, `prefix()` (`$lib/prefix.ts`) supplies the same prefix for links and
+`fetch`. Write auth is per scope, keyed by `DATA_DIR/users.json` (`$lib/server/auth.ts`).
+
 ### Persistence & caching
 - `loadConfig`/`saveConfig` (`$lib/config.ts`) ⇄ `static/feeds.json`
   (`{ feeds, maxPosts }`); `loadMyfeedPosts` (`$lib/myfeed.ts`) ⇄ `static/myposts.json`.
@@ -182,6 +191,11 @@ enrich path**: it computes the author identity (`shouldUseFeedName`,
   the **origin**, not a deep feed path (else `…/feeds/videos.xml/favicon.ico` 404s).
 - **Metadata UA matters.** `getHeadersForUrl` defaults to Discordbot, which YouTube
   serves og data to — changing it can break previews.
+- **Every in-app link and `fetch` must go through `prefix()`.** A hardcoded `/feeds` or
+  `fetch('/api/…')` silently drops a `/@bob` session back into single-user mode — and in a
+  `fetch` that means reading or writing the wrong user's data.
+- **Every persistence call must be passed `locals.user`.** Omitting it is not a type error
+  (the param is optional, for single-user mode) — it just reads/writes the root scope.
 - **Saving reuses the enriched `previewPost` (post-mode).** Any field you attach at
   save time (tags, `feedUrl`, favicon) must be handled on **both** the post-mode and
   url-mode branches of `POST /api/myfeed`.

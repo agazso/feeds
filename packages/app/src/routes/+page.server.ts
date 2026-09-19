@@ -4,9 +4,9 @@ import { loadConfig } from '$lib/config'
 import { buildFeedUrlToPageUrl } from '$lib/tags'
 import { transformPostImages } from '@feeds/core'
 
-export const load: PageServerLoad = async () => {
-  const posts = await loadMyfeedPosts()
-  const config = await loadConfig()
+export const load: PageServerLoad = async ({ locals }) => {
+  const posts = await loadMyfeedPosts(locals.user)
+  const config = await loadConfig(locals.user)
 
   const transformedPosts = await Promise.all(
     posts.map((post) => transformPostImages(post, post.link || '')),

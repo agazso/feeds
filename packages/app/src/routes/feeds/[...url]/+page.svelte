@@ -7,6 +7,7 @@ import TagSelector from '$lib/components/TagSelector.svelte'
 import { searchPosts } from '$lib/search'
 import { buildTagCooccurrence, getSuggestedTags } from '$lib/tags'
 import { auth } from '$lib/stores/auth.svelte'
+import { prefix } from '$lib/prefix'
 
 let { data }: { data: PageData } = $props()
 
@@ -42,7 +43,7 @@ function cancelEditingTags() {
 async function saveTags() {
   isSaving = true
   try {
-    const response = await fetch(`/api/feeds/${encodeURIComponent(data.feed.feedUrl)}`, {
+    const response = await fetch(`${prefix()}/api/feeds/${encodeURIComponent(data.feed.feedUrl)}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ tags: editedTags }),
@@ -89,7 +90,7 @@ async function saveTags() {
       <div class="feed-tags">
         {#if data.feed.tags && data.feed.tags.length > 0}
           {#each data.feed.tags as tag}
-            <a href="/tags/{tag}" class="tag-chip">#{tag}</a>
+            <a href="{prefix()}/tags/{tag}" class="tag-chip">#{tag}</a>
           {/each}
         {/if}
         {#if auth.canWrite}

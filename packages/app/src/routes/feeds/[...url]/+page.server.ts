@@ -6,14 +6,14 @@ import { collectAvailableTags } from '$lib/tags'
 import { tagShorts } from '$lib/shorts'
 import { error } from '@sveltejs/kit'
 
-export const load: PageServerLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params, locals }) => {
   const feedUrl = params.url || ''
 
   if (!feedUrl) {
     throw error(400, 'Feed URL is required')
   }
 
-  const config = await loadConfig()
+  const config = await loadConfig(locals.user)
 
   const feed = findFeedByKey(config.feeds, decodeURIComponent(feedUrl))
 
@@ -22,10 +22,10 @@ export const load: PageServerLoad = async ({ params }) => {
   }
 
   // Load posts for this specific feed
-  const posts = tagShorts(await loadPostsCached([feed]))
+  const posts = tagShorts(await loadPostsCached([feed], locals.user))
   const sorted = posts.sort((a, b) => b.createdAt - a.createdAt)
 
-  const myfeedPosts = await loadMyfeedPosts()
+  const myfeedPosts = await loadMyfeedPosts(locals.user)
   const availableTags = collectAvailableTags(config.feeds, myfeedPosts)
 
   return {

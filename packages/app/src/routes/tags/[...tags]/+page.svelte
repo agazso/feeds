@@ -11,6 +11,7 @@ import { formatTagsForPath } from '$lib/tags'
 import { goto } from '$app/navigation'
 import { untrack } from 'svelte'
 import { slide } from 'svelte/transition'
+import { prefix } from '$lib/prefix'
 
 let { data }: { data: PageData } = $props()
 
@@ -31,7 +32,7 @@ async function loadTagData(tags: string[]) {
   isLoading = true
   try {
     const tagsParam = tags.map(encodeURIComponent).join('%2B')
-    const response = await fetch(`/api/tags?tags=${tagsParam}`)
+    const response = await fetch(`${prefix()}/api/tags?tags=${tagsParam}`)
     const result = await response.json()
     cachedPosts = result.posts
     allTags = result.allTags
@@ -75,14 +76,14 @@ function handleRemoveTag(tag: string) {
   const canUseCache = baseTags.every((t) => newTags.includes(t))
 
   if (newTags.length === 0) {
-    goto('/tags')
+    goto(`${prefix()}/tags`)
   } else if (canUseCache) {
     // Filter client-side from cached posts
     selectedTags = newTags
-    goto(`/tags/${formatTagsForPath(newTags)}`, { replaceState: true })
+    goto(`${prefix()}/tags/${formatTagsForPath(newTags)}`, { replaceState: true })
   } else {
     // Need broader data - navigate and load via API
-    goto(`/tags/${formatTagsForPath(newTags)}`)
+    goto(`${prefix()}/tags/${formatTagsForPath(newTags)}`)
   }
 }
 
@@ -93,12 +94,12 @@ function togglePanel(panel: 'add' | 'replace') {
 function handleAddTag(tag: string) {
   selectedTags = [...selectedTags, tag]
   openPanel = null
-  goto(`/tags/${formatTagsForPath(selectedTags)}`, { replaceState: true })
+  goto(`${prefix()}/tags/${formatTagsForPath(selectedTags)}`, { replaceState: true })
 }
 
 function handleReplaceTag(tag: string) {
   openPanel = null
-  goto(`/tags/${encodeURIComponent(tag)}`)
+  goto(`${prefix()}/tags/${encodeURIComponent(tag)}`)
 }
 </script>
 

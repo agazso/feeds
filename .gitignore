@@ -35,6 +35,7 @@ packages/app/static/myposts.json
 packages/app/static/feeds.json
 packages/app/static/tag-embeddings.json
 packages/app/static/feed-cache.json
+packages/app/static/@*/
 packages/app/cache/
 # Build / deploy artifacts
 deploy-out/

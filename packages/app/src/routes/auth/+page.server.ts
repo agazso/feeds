@@ -1,6 +1,7 @@
 import type { PageServerLoad, Actions } from './$types'
 import { redirect, fail } from '@sveltejs/kit'
 import { AUTH_COOKIE, AUTH_COOKIE_MAX_AGE, isValidKey } from '$lib/server/auth'
+import { userPrefix } from '$lib/user'
 
 function setAuthCookie(cookies: import('@sveltejs/kit').Cookies, key: string) {
   cookies.set(AUTH_COOKIE, key, {
@@ -14,10 +15,11 @@ function setAuthCookie(cookies: import('@sveltejs/kit').Cookies, key: string) {
 export const load: PageServerLoad = async ({ url, cookies, locals }) => {
   const keyFromUrl = url.searchParams.get('key')
 
-  if (keyFromUrl && isValidKey(keyFromUrl)) {
+  // A key authenticates one scope only — the user whose /@name path we're on.
+  if (keyFromUrl && (await isValidKey(keyFromUrl, locals.user))) {
     setAuthCookie(cookies, keyFromUrl)
     // Redirect to a clean URL; the re-run reflects the new cookie via hooks.
-    redirect(303, '/auth')
+    redirect(303, `${userPrefix(url.pathname)}/auth`)
   }
 
   return {
@@ -28,19 +30,19 @@ export const load: PageServerLoad = async ({ url, cookies, locals }) => {
 }
 
 export const actions: Actions = {
-  login: async ({ request, cookies }) => {
+  login: async ({ request, url, cookies, locals }) => {
     const data = await request.formData()
     const key = String(data.get('key') ?? '').trim()
 
-    if (!isValidKey(key)) {
+    if (!(await isValidKey(key, locals.user))) {
       return fail(401, { invalid: true })
     }
 
     setAuthCookie(cookies, key)
-    redirect(303, '/auth')
+    redirect(303, `${userPrefix(url.pathname)}/auth`)
   },
-  logout: async ({ cookies }) => {
+  logout: async ({ url, cookies }) => {
     cookies.delete(AUTH_COOKIE, { path: '/' })
-    redirect(303, '/auth')
+    redirect(303, `${userPrefix(url.pathname)}/auth`)
   },
 }

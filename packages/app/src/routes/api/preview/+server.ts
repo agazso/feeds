@@ -3,7 +3,7 @@ import type { RequestHandler } from './$types'
 import { createEnrichedPost, normalizeUrl, discoverFeedFromUrl, transformPostImages, timeout } from '@feeds/core'
 import { processImage, processFavicon } from '$lib/server/imageProcessing'
 
-export const POST: RequestHandler = async ({ request }) => {
+export const POST: RequestHandler = async ({ request, locals }) => {
   const body = await request.json()
   const url = normalizeUrl(body.url)
 
@@ -34,10 +34,10 @@ export const POST: RequestHandler = async ({ request }) => {
     const faviconUri = post.author?.image?.uri
     const [imageResult, faviconResult] = await Promise.all([
       post.images?.[0]?.uri && !post.images[0].blurhash
-        ? timeout(8000, processImage(post.images[0].uri)).catch(() => undefined)
+        ? timeout(8000, processImage(post.images[0].uri, locals.user)).catch(() => undefined)
         : undefined,
       faviconUri && !faviconUri.startsWith('data:')
-        ? timeout(8000, processFavicon(faviconUri)).catch(() => undefined)
+        ? timeout(8000, processFavicon(faviconUri, locals.user)).catch(() => undefined)
         : undefined,
     ])
 

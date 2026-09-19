@@ -3,6 +3,7 @@ import { normalizeUrl, type Post } from '@feeds/core'
 import { goto } from '$app/navigation'
 import { debounce } from '$lib/search'
 import PostCard from '$lib/components/PostCard.svelte'
+import { prefix } from '$lib/prefix'
 
 interface DiscoveredFeed {
   name: string
@@ -28,7 +29,7 @@ async function fetchPreview(urlValue: string) {
 
   previewLoading = true
   try {
-    const response = await fetch('/api/preview', {
+    const response = await fetch(`${prefix()}/api/preview`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url: urlValue }),
@@ -74,7 +75,7 @@ function handleSubmit(e: SubmitEvent) {
     sessionStorage.setItem(`share-preview:${url.trim()}`, JSON.stringify(previewPost))
   }
 
-  goto(`/share/${encodeURIComponent(url.trim())}`)
+  goto(`${prefix()}/share/${encodeURIComponent(url.trim())}`)
 }
 </script>
 
@@ -112,7 +113,7 @@ function handleSubmit(e: SubmitEvent) {
           <span class="feed-name">{discoveredFeed.name}</span>
           <span class="feed-url">{discoveredFeed.feedUrl}</span>
         </div>
-        <a href="/discover/{encodeURIComponent(discoveredFeed.url)}" class="view-feed-link">
+        <a href="{prefix()}/discover/{encodeURIComponent(discoveredFeed.url)}" class="view-feed-link">
           View Feed
         </a>
       </div>

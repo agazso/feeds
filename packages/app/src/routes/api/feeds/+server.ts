@@ -4,7 +4,7 @@ import type { Feed } from '@feeds/core'
 import { resolveYoutubeChannelUrl } from '@feeds/core'
 import { loadConfig, saveConfig } from '$lib/config'
 
-export const POST: RequestHandler = async ({ request }) => {
+export const POST: RequestHandler = async ({ request, locals }) => {
   const body = await request.json()
   const feed: Feed = body.feed
 
@@ -13,7 +13,7 @@ export const POST: RequestHandler = async ({ request }) => {
   }
 
   try {
-    const config = await loadConfig()
+    const config = await loadConfig(locals.user)
 
     // Check if feed already exists
     const existingFeed = config.feeds.find(f => f.feedUrl === feed.feedUrl)
@@ -39,7 +39,7 @@ export const POST: RequestHandler = async ({ request }) => {
       tags: feed.tags || [],
     })
 
-    await saveConfig(config)
+    await saveConfig(config, locals.user)
 
     return json({ success: true })
   } catch (e) {

@@ -4,6 +4,7 @@ import PostCard from '$lib/components/PostCard.svelte'
 import TagSelector from '$lib/components/TagSelector.svelte'
 import { buildTagCooccurrence, getSuggestedTags, getContentBasedTags } from '$lib/tags'
 import { auth } from '$lib/stores/auth.svelte'
+import { prefix } from '$lib/prefix'
 
 interface Props {
   data: {
@@ -52,7 +53,7 @@ function getPostText(post: Post | null): string {
 $effect(() => {
   const text = getPostText(previewPost)
   if (text) {
-    fetch('/api/suggest-tags', {
+    fetch(`${prefix()}/api/suggest-tags`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text })
@@ -94,7 +95,7 @@ async function fetchPreview() {
   }
 
   try {
-    const response = await fetch('/api/preview', {
+    const response = await fetch(`${prefix()}/api/preview`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url: data.url }),
@@ -181,7 +182,7 @@ $effect(() => {
           {/each}
         </div>
       {/if}
-      <a href="/myfeed" class="goto-button">Go to My Feed</a>
+      <a href="{prefix()}/myfeed" class="goto-button">Go to My Feed</a>
     </div>
   {:else if loading}
     <div class="loading-container">
@@ -190,7 +191,7 @@ $effect(() => {
   {:else if error && !previewPost}
     <div class="error-container">
       <p class="error">{error}</p>
-      <a href="/share" class="back-link">Try another URL</a>
+      <a href="{prefix()}/share" class="back-link">Try another URL</a>
     </div>
   {:else if previewPost}
     <div class="preview-section">
@@ -214,7 +215,7 @@ $effect(() => {
         {saving ? 'Saving...' : 'Save to My Feed'}
       </button>
     {:else}
-      <p class="error"><a href="/auth">Authenticate</a> to save to your feed.</p>
+      <p class="error"><a href="{prefix()}/auth">Authenticate</a> to save to your feed.</p>
     {/if}
   {/if}
 </div>

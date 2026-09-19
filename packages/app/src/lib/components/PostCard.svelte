@@ -6,6 +6,7 @@ import PostCardMenu, { type MenuItem } from './PostCardMenu.svelte'
 import BlurhashImage from './BlurhashImage.svelte'
 import { preloadOnScroll } from '$lib/actions/preloadOnScroll'
 import { auth } from '$lib/stores/auth.svelte'
+import { prefix } from '$lib/prefix'
 
 interface Props {
   post: Post
@@ -23,11 +24,14 @@ const timestamp = $derived(post.updatedAt || post.createdAt)
 const printableTime = $derived(timestamp ? formatTimestamp(timestamp) : '')
 const hostname = $derived(post.link ? getHumanHostname(post.link) : '')
 const thumbnail = $derived(thumbnailSrc(post))
-const cachedThumbnail = $derived(post.images?.[0] ? resolvedImageSrc(post.images[0]) : undefined)
+// Only set when the image is actually in our cache; otherwise fall back to the remote url.
+const cachedThumbnail = $derived(
+  post.images?.[0]?.cacheHash ? resolvedImageSrc(post.images[0], prefix()) : undefined,
+)
 const thumbnailBlurhash = $derived(post.images?.[0]?.blurhash)
 const thumbnailAspectRatio = $derived(post.images?.[0]?.aspectRatio)
 const postLink = $derived(post.link || '')
-const authorImage = $derived(post.author?.image ? resolvedImageSrc(post.author.image) : undefined)
+const authorImage = $derived(post.author?.image ? resolvedImageSrc(post.author.image, prefix()) : undefined)
 let avatarError = $state(false)
 
 async function removeFromMyFeed() {
@@ -35,7 +39,7 @@ async function removeFromMyFeed() {
   if (!postId) return
 
   try {
-    const response = await fetch('/api/myfeed', {
+    const response = await fetch(`${prefix()}/api/myfeed`, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: postId }),
@@ -84,15 +88,15 @@ const menuItems = $derived.by(() => {
   if (auth.canWrite && onremove && post._id) {
     items.push({
       label: 'Edit Tags',
-      href: `/edit-tags/${encodeURIComponent(post._id)}`,
+      href: `${prefix()}/edit-tags/${encodeURIComponent(post._id)}`,
     })
   }
 
   // Add to my feed (when not in "my feed" context)
   if (auth.canWrite && !onremove && post.link) {
     const shareUrl = post.feedUrl
-      ? `/share/${encodeURIComponent(post.link)}?feedUrl=${encodeURIComponent(post.feedUrl)}`
-      : `/share/${encodeURIComponent(post.link)}`
+      ? `${prefix()}/share/${encodeURIComponent(post.link)}?feedUrl=${encodeURIComponent(post.feedUrl)}`
+      : `${prefix()}/share/${encodeURIComponent(post.link)}`
     items.push({
       label: 'Add to my feed',
       href: shareUrl,
@@ -107,13 +111,13 @@ const menuItems = $derived.by(() => {
       // Route by feedUrl (unique) — url collides across YouTube channels.
       items.push({
         label: 'View feed',
-        href: `/feeds/${encodeURIComponent(post.feedUrl)}`,
+        href: `${prefix()}/feeds/${encodeURIComponent(post.feedUrl)}`,
       })
     } else if (auth.canWrite) {
       // Feed is not followed - show "Discover Feed" only (entry to the add-feed flow)
       items.push({
         label: 'Discover Feed',
-        href: `/discover/${encodeURIComponent(post.feedUrl)}`,
+        href: `${prefix()}/discover/${encodeURIComponent(post.feedUrl)}`,
       })
     }
   }
@@ -194,11 +198,11 @@ function handleImageLoad(e: Event) {
       target="_blank"
       rel="noopener noreferrer"
       class="thumbnail-link"
-      use:preloadOnScroll={cachedThumbnail?.startsWith('/cache/') ? cachedThumbnail : thumbnail}
+      use:preloadOnScroll={cachedThumbnail ?? thumbnail}
     >
       <BlurhashImage
-        src={cachedThumbnail?.startsWith('/cache/') ? cachedThumbnail : thumbnail}
-        fallbackSrc={cachedThumbnail?.startsWith('/cache/') ? thumbnail : undefined}
+        src={cachedThumbnail ?? thumbnail}
+        fallbackSrc={cachedThumbnail ? thumbnail : undefined}
         blurhash={thumbnailBlurhash}
         aspectRatio={thumbnailAspectRatio}
         class="thumbnail"
@@ -228,7 +232,7 @@ function handleImageLoad(e: Event) {
   {#if post.tags && post.tags.length > 0}
     <div class="tags">
       {#each post.tags as tag}
-        <a href="/tags/{tag}" class="tag" onclick={(e) => e.stopPropagation()}>#{tag}</a>
+        <a href="{prefix()}/tags/{tag}" class="tag" onclick={(e) => e.stopPropagation()}>#{tag}</a>
       {/each}
     </div>
   {/if}

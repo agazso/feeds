@@ -1,5 +1,6 @@
 <script lang="ts">
 import type { PageData } from './$types'
+import { prefix } from '$lib/prefix'
 
 let { data }: { data: PageData } = $props()
 </script>
@@ -13,7 +14,7 @@ let { data }: { data: PageData } = $props()
   {#if data.tags.length > 0}
     <div class="tags-list">
       {#each data.tags as tag}
-        <a href="/tags/{tag}" class="tag">#{tag}</a>
+        <a href="{prefix()}/tags/{tag}" class="tag">#{tag}</a>
       {/each}
     </div>
   {:else}

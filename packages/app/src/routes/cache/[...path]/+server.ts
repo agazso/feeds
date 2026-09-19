@@ -1,7 +1,7 @@
 import { readFile } from 'fs/promises'
 import { join } from 'path'
 import type { RequestHandler } from './$types'
-import { CACHE_DIR } from '$lib/paths'
+import { cacheDir } from '$lib/paths'
 
 const ALLOWED_EXTENSIONS: Record<string, string> = {
   '.webp': 'image/webp',
@@ -9,7 +9,7 @@ const ALLOWED_EXTENSIONS: Record<string, string> = {
   '.png': 'image/png',
 }
 
-export const GET: RequestHandler = async ({ params }) => {
+export const GET: RequestHandler = async ({ params, locals }) => {
   const path = params.path
 
   if (!path) {
@@ -27,7 +27,7 @@ export const GET: RequestHandler = async ({ params }) => {
     return new Response('Not found', { status: 404 })
   }
 
-  const filePath = join(CACHE_DIR, path)
+  const filePath = join(cacheDir(locals.user), path)
 
   try {
     const file = await readFile(filePath)

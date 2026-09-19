@@ -2,20 +2,16 @@ import type { RequestHandler } from './$types'
 import type { Post } from '@feeds/core'
 import { createEnrichedPost, discoverFeedFromUrl, getFaviconForUrl, timeout } from '@feeds/core'
 import { processImage, processFavicon, deleteCachedImage } from '$lib/server/imageProcessing'
-import { readFile, writeFile } from 'fs/promises'
-import { join } from 'path'
+import { writeFile } from 'fs/promises'
 import { json } from '@sveltejs/kit'
-import { DATA_DIR } from '$lib/paths'
+import { loadMyfeedPosts, myPostsPath } from '$lib/myfeed'
 
-async function savePost(post: Post): Promise<void> {
-  const filePath = join(DATA_DIR, 'myposts.json')
-  const content = await readFile(filePath, 'utf-8')
-  const posts: Post[] = JSON.parse(content)
-  const newPosts = [post, ...posts]
-  await writeFile(filePath, JSON.stringify(newPosts, null, 4))
+async function savePost(post: Post, user?: string): Promise<void> {
+  const posts = await loadMyfeedPosts(user)
+  await writeFile(myPostsPath(user), JSON.stringify([post, ...posts], null, 4))
 }
 
-export const PATCH: RequestHandler = async ({ request }) => {
+export const PATCH: RequestHandler = async ({ request, locals }) => {
   const body = await request.json()
   const { id, tags } = body
 
@@ -27,9 +23,8 @@ export const PATCH: RequestHandler = async ({ request }) => {
     return json({ error: 'Tags must be an array' }, { status: 400 })
   }
 
-  const filePath = join(DATA_DIR, 'myposts.json')
-  const content = await readFile(filePath, 'utf-8')
-  const posts: Post[] = JSON.parse(content)
+  const filePath = myPostsPath(locals.user)
+  const posts = await loadMyfeedPosts(locals.user)
 
   const postIndex = posts.findIndex((p) => p._id === id)
   if (postIndex === -1) {
@@ -42,7 +37,7 @@ export const PATCH: RequestHandler = async ({ request }) => {
   return json({ success: true, post: posts[postIndex] })
 }
 
-export const DELETE: RequestHandler = async ({ request }) => {
+export const DELETE: RequestHandler = async ({ request, locals }) => {
   const body = await request.json()
   const postId = body.id
 
@@ -50,9 +45,8 @@ export const DELETE: RequestHandler = async ({ request }) => {
     return json({ error: 'Post ID required' }, { status: 400 })
   }
 
-  const filePath = join(DATA_DIR, 'myposts.json')
-  const content = await readFile(filePath, 'utf-8')
-  const posts: Post[] = JSON.parse(content)
+  const filePath = myPostsPath(locals.user)
+  const posts = await loadMyfeedPosts(locals.user)
 
   // Find the post being deleted and extract cache hashes
   const deletedPost = posts.find((p) => p._id === postId)
@@ -87,16 +81,16 @@ export const DELETE: RequestHandler = async ({ request }) => {
 
   // Delete caches only if this was the sole reference
   if (imageCacheHash && imageRefCount === 1) {
-    await deleteCachedImage(imageCacheHash, imageCacheExt)
+    await deleteCachedImage(imageCacheHash, imageCacheExt, locals.user)
   }
   if (faviconCacheHash && faviconRefCount === 1) {
-    await deleteCachedImage(faviconCacheHash, 'webp')
+    await deleteCachedImage(faviconCacheHash, 'webp', locals.user)
   }
 
   return json({ success: true })
 }
 
-export const POST: RequestHandler = async ({ request, url }) => {
+export const POST: RequestHandler = async ({ request, url, locals }) => {
   const body = await request.json()
 
   // URL mode: fetch metadata and build post
@@ -155,7 +149,7 @@ export const POST: RequestHandler = async ({ request, url }) => {
 
       // Process primary image: generate blurhash and cache
       if (post.images?.[0]?.uri && !post.images[0].blurhash) {
-        const result = await processImage(post.images[0].uri)
+        const result = await processImage(post.images[0].uri, locals.user)
         if (result) {
           post.images = [{
             ...post.images[0],
@@ -169,13 +163,13 @@ export const POST: RequestHandler = async ({ request, url }) => {
 
       // Process favicon: cache as WebP (skip data URIs)
       if (post.author?.image?.uri && !post.author.image.uri.startsWith('data:')) {
-        const result = await processFavicon(post.author.image.uri)
+        const result = await processFavicon(post.author.image.uri, locals.user)
         if (result) {
           post.author.image.cacheHash = result.cacheHash
         }
       }
 
-      await savePost(post)
+      await savePost(post, locals.user)
 
       return json({
         success: true,
@@ -221,7 +215,7 @@ export const POST: RequestHandler = async ({ request, url }) => {
       // persist the post with its existing image.uri (no blurhash/cache).
       if (post.images?.[0]?.uri && !post.images[0].blurhash) {
         try {
-          const result = await timeout(8000, processImage(post.images[0].uri))
+          const result = await timeout(8000, processImage(post.images[0].uri, locals.user))
           if (result) {
             post.images = [{
               ...post.images[0],
@@ -243,7 +237,7 @@ export const POST: RequestHandler = async ({ request, url }) => {
         !post.author.image.cacheHash
       ) {
         try {
-          const result = await timeout(8000, processFavicon(post.author.image.uri))
+          const result = await timeout(8000, processFavicon(post.author.image.uri, locals.user))
           if (result) {
             post.author.image.cacheHash = result.cacheHash
           }
@@ -252,7 +246,7 @@ export const POST: RequestHandler = async ({ request, url }) => {
         }
       }
 
-      await savePost(post)
+      await savePost(post, locals.user)
 
       return json({
         success: true,

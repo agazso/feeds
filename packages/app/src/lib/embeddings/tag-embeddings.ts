@@ -4,7 +4,7 @@ import { rankBySimilarity, type ScoredItem } from './similarity'
 import { normalizeText } from '../text'
 import fs from 'fs'
 import path from 'path'
-import { DATA_DIR } from '../paths'
+import { dataDir } from '../paths'
 
 export interface TagEmbedding {
   tag: string
@@ -23,8 +23,8 @@ const CACHE_FILE = 'tag-embeddings.json'
 /**
  * Get static directory path for cache storage
  */
-function getCachePath(): string {
-  return path.join(DATA_DIR, CACHE_FILE)
+function getCachePath(user?: string): string {
+  return path.join(dataDir(user), CACHE_FILE)
 }
 
 /**
@@ -58,9 +58,9 @@ export function buildTagContext(tag: string, feeds: Feed[], posts: Post[]): stri
 /**
  * Load tag embeddings from cache file
  */
-export function loadTagEmbeddings(): TagEmbeddingCache | null {
+export function loadTagEmbeddings(user?: string): TagEmbeddingCache | null {
   try {
-    const cachePath = getCachePath()
+    const cachePath = getCachePath(user)
     if (!fs.existsSync(cachePath)) {
       return null
     }
@@ -80,9 +80,9 @@ export function loadTagEmbeddings(): TagEmbeddingCache | null {
 /**
  * Save tag embeddings to cache file
  */
-export function saveTagEmbeddings(cache: TagEmbeddingCache): void {
+export function saveTagEmbeddings(cache: TagEmbeddingCache, user?: string): void {
   try {
-    const cachePath = getCachePath()
+    const cachePath = getCachePath(user)
     fs.writeFileSync(cachePath, JSON.stringify(cache, null, 2))
   } catch (e) {
     console.error('Failed to save tag embeddings cache:', e)
@@ -95,12 +95,13 @@ export function saveTagEmbeddings(cache: TagEmbeddingCache): void {
 export async function getTagEmbeddings(
   tags: string[],
   feeds: Feed[],
-  posts: Post[]
+  posts: Post[],
+  user?: string
 ): Promise<TagEmbedding[]> {
   if (tags.length === 0) return []
 
   // Try to load from cache
-  const cache = loadTagEmbeddings()
+  const cache = loadTagEmbeddings(user)
   const cachedTags = new Map<string, TagEmbedding>()
 
   if (cache) {
@@ -141,7 +142,7 @@ export async function getTagEmbeddings(
     saveTagEmbeddings({
       version: CACHE_VERSION,
       embeddings: result
-    })
+    }, user)
   }
 
   return result
@@ -155,6 +156,7 @@ export async function getEmbeddingBasedTags(
   availableTags: string[],
   feeds: Feed[],
   posts: Post[],
+  user?: string,
   limit: number = 5,
   minScore: number = 0.15
 ): Promise<string[]> {
@@ -168,7 +170,7 @@ export async function getEmbeddingBasedTags(
     const textVector = await embed(normalizedText)
 
     // Get embeddings for all available tags
-    const tagEmbeddings = await getTagEmbeddings(availableTags, feeds, posts)
+    const tagEmbeddings = await getTagEmbeddings(availableTags, feeds, posts, user)
 
     // Rank tags by similarity
     const candidates = tagEmbeddings.map((te) => ({

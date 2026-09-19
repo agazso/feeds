@@ -207,7 +207,6 @@ PORT=3000
 FEEDS_DATA_DIR=/data/feeds
 FEEDS_CACHE_DIR=/data/cache
 FEEDS_MODELS_DIR=/data/models
-FEEDS_AUTH_KEYS=<comma-separated-secret-keys>
 ORIGIN=https://feeds.example.com
 PROTOCOL_HEADER=x-forwarded-proto
 HOST_HEADER=x-forwarded-host
@@ -218,12 +217,13 @@ HOST_HEADER=x-forwarded-host
 
 ### Authentication (write protection)
 
-`FEEDS_AUTH_KEYS` gates all writes (share/tag/delete). The logic (`hooks.server.ts`,
-`$lib/server/auth.ts`):
+`<FEEDS_DATA_DIR>/users.json` gates all writes (share/tag/delete). The logic
+(`hooks.server.ts`, `$lib/server/auth.ts`):
 
-- **Empty → auth is OFF → writes are open to everyone.** A missing key does **not** block
-  you; it means the public can write to your instance.
-- **One or more keys → auth is ON.** Writes return `401` until you present a valid key.
+- **Missing/empty file → auth is OFF → writes are open to everyone.** No keyfile does
+  **not** block you; it means the public can write to your instance.
+- **One or more entries → auth is ON.** Writes return `401` until you present that
+  scope's key. The entry named `""` is single-user mode; `"bob"` covers `/@bob`.
 
 So on a public deployment you almost always want a key set. Enable it:
 
@@ -231,14 +231,14 @@ So on a public deployment you almost always want a key set. Enable it:
 # on the server
 KEY=$(openssl rand -hex 24)
 echo "save this key: $KEY"
-sudo sed -i "s|^FEEDS_AUTH_KEYS=.*|FEEDS_AUTH_KEYS=$KEY|" /srv/feeds/app/.env   # or edit the compose .env
-sudo systemctl restart feeds        # container deploy: restart the stack instead
+printf '{"": "%s"}\n' "$KEY" | sudo tee /srv/feeds/data/feeds/users.json   # = $FEEDS_DATA_DIR
+sudo systemctl restart feeds        # keys are read once per process
 ```
 
 Then log in once per browser/device — visit `https://<host>/auth?key=<KEY>` (or the `/auth`
 form). It sets a 1-year httpOnly cookie (`feeds-auth-key`); after that you can share, and
-anyone without the cookie gets `401` on writes. Multiple devices → comma-separate keys
-(`FEEDS_AUTH_KEYS=key1,key2`).
+anyone without the cookie gets `401` on writes. Every device uses the same key for a given
+scope; per-user scopes (`/@bob`) get their own entry in `users.json`.
 
 Troubleshooting a failed share: `401 "Authentication required"` = not logged in / wrong key
 → redo `/auth?key=`. `403 "Cross-site POST … forbidden"` = it's **not** auth, it's `ORIGIN`

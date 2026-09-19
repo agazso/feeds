@@ -1,7 +1,7 @@
 import type { Feed } from '@feeds/core'
 import { readFile, writeFile } from 'node:fs/promises'
 import { join, isAbsolute } from 'node:path'
-import { DATA_DIR } from './paths'
+import { dataDir } from './paths'
 
 export interface AppConfig {
   feeds: Feed[]
@@ -26,7 +26,13 @@ async function loadJsonFile(path: string): Promise<AppConfig | null> {
   }
 }
 
-export async function loadConfig(): Promise<AppConfig> {
+export async function loadConfig(user?: string): Promise<AppConfig> {
+  // A user scope reads only its own dir — the env/cwd overrides below configure
+  // single-user mode and would otherwise leak one user's feeds into every scope.
+  if (user) {
+    return (await loadJsonFile(join(dataDir(user), 'feeds.json'))) ?? DEFAULT_CONFIG
+  }
+
   // Check for FEEDS_CONFIG env (inline JSON)
   const envFeeds = process.env.FEEDS_CONFIG
   if (envFeeds) {
@@ -59,12 +65,12 @@ export async function loadConfig(): Promise<AppConfig> {
   }
 
   // Load from the data dir (static/feeds.json by default)
-  const staticConfig = await loadJsonFile(join(DATA_DIR, 'feeds.json'))
+  const staticConfig = await loadJsonFile(join(dataDir(), 'feeds.json'))
   return staticConfig ?? DEFAULT_CONFIG
 }
 
-export async function saveConfig(config: AppConfig): Promise<void> {
-  const path = join(DATA_DIR, 'feeds.json')
+export async function saveConfig(config: AppConfig, user?: string): Promise<void> {
+  const path = join(dataDir(user), 'feeds.json')
   await writeFile(path, JSON.stringify(config, null, 2))
 }
 

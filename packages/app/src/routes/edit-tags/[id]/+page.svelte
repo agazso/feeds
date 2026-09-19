@@ -4,6 +4,7 @@ import { goto } from '$app/navigation'
 import Loader from '$lib/components/Loader.svelte'
 import TagSelector from '$lib/components/TagSelector.svelte'
 import { auth } from '$lib/stores/auth.svelte'
+import { prefix } from '$lib/prefix'
 
 interface Props {
   data: { postId: string }
@@ -20,7 +21,7 @@ let error = $state<string | null>(null)
 
 async function fetchPostData() {
   try {
-    const response = await fetch(`/api/myfeed/${encodeURIComponent(data.postId)}`)
+    const response = await fetch(`${prefix()}/api/myfeed/${encodeURIComponent(data.postId)}`)
     if (!response.ok) {
       error = 'Post not found'
       return
@@ -43,7 +44,7 @@ async function save() {
   error = null
 
   try {
-    const response = await fetch('/api/myfeed', {
+    const response = await fetch(`${prefix()}/api/myfeed`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: data.postId, tags: selectedTags }),
@@ -55,7 +56,7 @@ async function save() {
       return
     }
 
-    goto('/myfeed')
+    goto(`${prefix()}/myfeed`)
   } catch {
     error = 'Failed to save'
   } finally {

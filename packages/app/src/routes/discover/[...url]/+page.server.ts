@@ -3,13 +3,13 @@ import { loadConfig } from '$lib/config'
 import { loadMyfeedPosts } from '$lib/myfeed'
 import { collectAvailableTags } from '$lib/tags'
 
-export const load: PageServerLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params, locals }) => {
   // The rest parameter captures everything after /discover/
   // e.g., /discover/https://example.com → url = "https://example.com"
   const url = params.url || ''
 
-  const config = await loadConfig()
-  const myfeedPosts = await loadMyfeedPosts()
+  const config = await loadConfig(locals.user)
+  const myfeedPosts = await loadMyfeedPosts(locals.user)
 
   return {
     url,

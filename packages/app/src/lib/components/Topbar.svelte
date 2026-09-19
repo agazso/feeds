@@ -3,6 +3,7 @@ import { preferences } from '$lib/stores/preferences.svelte'
 import { auth } from '$lib/stores/auth.svelte'
 import { Grid, List, Asleep, Light, User, Locked, Unlocked } from 'carbon-icons-svelte'
 import Dropdown from './Dropdown.svelte'
+import { prefix } from '$lib/prefix'
 
 const authLabel = $derived(
   !auth.enabled ? 'Auth disabled' : auth.authenticated ? 'Authenticated' : 'Not authenticated',
@@ -17,14 +18,15 @@ const authLabel = $derived(
       {/snippet}
 
       <div class="menu-dropdown">
-        <a href="/" class="menu-item">Myfeed</a>
-        <a href="/all-posts" class="menu-item">All Posts</a>
-        <a href="/feeds" class="menu-item">Feeds</a>
-        <a href="/tags" class="menu-item">Tags</a>
+        <a href="{prefix()}/" class="menu-item">Myfeed</a>
+        <a href="{prefix()}/all-posts" class="menu-item">All Posts</a>
+        <a href="{prefix()}/feeds" class="menu-item">Feeds</a>
+        <a href="{prefix()}/tags" class="menu-item">Tags</a>
         {#if auth.canWrite}
-          <a href="/discover" class="menu-item">Discover</a>
-          <a href="/share" class="menu-item">Share</a>
+          <a href="{prefix()}/discover" class="menu-item">Discover</a>
+          <a href="{prefix()}/share" class="menu-item">Share</a>
         {/if}
+        <a href="/users" class="menu-item">Users</a>
       </div>
     </Dropdown>
   </div>
@@ -55,7 +57,7 @@ const authLabel = $derived(
           {/if}
           <span>Theme: {preferences.theme === 'dark' ? 'Dark' : 'Light'}</span>
         </button>
-        <a href="/auth" class="menu-item auth-item">
+        <a href="{prefix()}/auth" class="menu-item auth-item">
           {#if !auth.enabled}
             <Unlocked size={16} />
           {:else if auth.authenticated}

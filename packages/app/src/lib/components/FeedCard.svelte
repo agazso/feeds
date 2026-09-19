@@ -1,5 +1,6 @@
 <script lang="ts">
 import type { Feed } from '@feeds/core'
+import { prefix } from '$lib/prefix'
 
 interface Props {
   feed: Feed
@@ -14,7 +15,7 @@ $effect(() => {
 })
 </script>
 
-<a href="/feeds/{encodeURIComponent(feed.feedUrl)}" class="feed-card">
+<a href="{prefix()}/feeds/{encodeURIComponent(feed.feedUrl)}" class="feed-card">
   <div class="feed-icon-container">
     {#if typeof feed.favicon === 'string' && feed.favicon && !faviconError}
       <img

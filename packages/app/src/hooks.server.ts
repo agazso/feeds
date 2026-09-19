@@ -1,10 +1,20 @@
 import type { Handle } from '@sveltejs/kit'
 import { getAuthState } from '$lib/server/auth'
+import { userExists } from '$lib/paths'
+import { stripUser, userFromPath } from '$lib/user'
 
 const WRITE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
 
 export const handle: Handle = async ({ event, resolve }) => {
-  const { enabled, authenticated } = getAuthState(event.cookies)
+  // `reroute` stripped the /@name prefix off the route, so read the scope back off
+  // the original path. Users are folders created out-of-band — unknown ones 404.
+  const user = userFromPath(event.url.pathname)
+  if (user && !(await userExists(user))) {
+    return new Response('Unknown user', { status: 404 })
+  }
+  event.locals.user = user
+
+  const { enabled, authenticated } = await getAuthState(event.cookies, user)
   event.locals.authEnabled = enabled
   event.locals.authenticated = authenticated
 
@@ -13,7 +23,7 @@ export const handle: Handle = async ({ event, resolve }) => {
   if (
     WRITE_METHODS.has(event.request.method) &&
     !authenticated &&
-    event.url.pathname !== '/auth'
+    stripUser(event.url.pathname) !== '/auth'
   ) {
     return new Response(JSON.stringify({ error: 'Authentication required' }), {
       status: 401,

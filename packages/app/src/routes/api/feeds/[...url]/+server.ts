@@ -2,7 +2,7 @@ import { json } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
 import { loadConfig, saveConfig, findFeedIndexByKey } from '$lib/config'
 
-export const PATCH: RequestHandler = async ({ params, request }) => {
+export const PATCH: RequestHandler = async ({ params, request, locals }) => {
   const feedUrl = params.url || ''
 
   if (!feedUrl) {
@@ -17,7 +17,7 @@ export const PATCH: RequestHandler = async ({ params, request }) => {
   }
 
   try {
-    const config = await loadConfig()
+    const config = await loadConfig(locals.user)
 
     const feedIndex = findFeedIndexByKey(config.feeds, decodeURIComponent(feedUrl))
 
@@ -28,7 +28,7 @@ export const PATCH: RequestHandler = async ({ params, request }) => {
     // Update the feed's tags
     config.feeds[feedIndex].tags = tags
 
-    await saveConfig(config)
+    await saveConfig(config, locals.user)
 
     return json({ success: true, tags })
   } catch (e) {

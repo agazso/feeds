@@ -78,12 +78,14 @@ export function thumbnailSrc(post: Post): string | undefined {
   return absImageSrc ? fixYoutubeThumbnail(absImageSrc) : undefined
 }
 
-export function resolvedImageSrc(image: ImageData): string | undefined {
+// `prefix` is the current user scope ('' in single-user mode) — each user's cache
+// is its own directory, so the URL has to carry the scope too.
+export function resolvedImageSrc(image: ImageData, prefix = ''): string | undefined {
   // Try cache first if cacheHash exists
   if (image.cacheHash) {
     const h = image.cacheHash
     const ext = image.cacheExt || 'webp'
-    return `/cache/${h[0]}/${h[1]}/${h}.${ext}`
+    return `${prefix}/cache/${h[0]}/${h[1]}/${h}.${ext}`
   }
   // Fall back to original URI
   return image.uri

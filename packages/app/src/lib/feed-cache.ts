@@ -2,7 +2,7 @@ import type { Feed, Post } from '@feeds/core'
 import { loadPosts, fetchFeedPosts, getHumanHostname } from '@feeds/core'
 import { readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { DATA_DIR } from './paths'
+import { dataDir } from './paths'
 
 // Hosts whose feeds are cached instead of fetched live, because they rate-limit
 // bulk requests (YouTube started per-IP limiting 2026-07). Add hosts to extend.
@@ -13,7 +13,7 @@ const MIN_TTL = 5 * 60_000 // floor, so max-age=0/no-cache can't force a refetch
 const MAX_REFRESH = 8 // cap live requests per load, so we never burst a rate limiter
 const CONCURRENCY = 3
 
-const CACHE_PATH = join(DATA_DIR, 'feed-cache.json')
+const cachePath = (user?: string) => join(dataDir(user), 'feed-cache.json')
 
 // ttl is the feed's own Cache-Control max-age (clamped); staleness = now - fetchedAt > ttl.
 type CacheEntry = { fetchedAt: number; ttl: number; posts: Post[] }
@@ -29,16 +29,16 @@ function isCached(feed: Feed): boolean {
   return CACHED_HOSTS.includes(getHumanHostname(feed.feedUrl))
 }
 
-async function loadCache(): Promise<FeedCache> {
+async function loadCache(user?: string): Promise<FeedCache> {
   try {
-    return JSON.parse(await readFile(CACHE_PATH, 'utf-8'))
+    return JSON.parse(await readFile(cachePath(user), 'utf-8'))
   } catch {
     return {}
   }
 }
 
-async function saveCache(cache: FeedCache): Promise<void> {
-  await writeFile(CACHE_PATH, JSON.stringify(cache, null, 2))
+async function saveCache(cache: FeedCache, user?: string): Promise<void> {
+  await writeFile(cachePath(user), JSON.stringify(cache, null, 2))
 }
 
 // Run `fn` over `items` with at most `n` in flight. No dependency needed.
@@ -57,14 +57,14 @@ async function pool<T>(items: T[], n: number, fn: (item: T) => Promise<void>): P
  * MAX_REFRESH per load, and a failed/empty refresh keeps the last good copy so a feed
  * never goes blank. All other feeds are fetched live and fresh, unchanged.
  */
-export async function loadPostsCached(feeds: Feed[]): Promise<Post[]> {
+export async function loadPostsCached(feeds: Feed[], user?: string): Promise<Post[]> {
   const cached = feeds.filter(isCached)
   const live = feeds.filter((f) => !isCached(f))
 
   const livePosts = live.length ? await loadPosts(live) : []
   if (cached.length === 0) return livePosts
 
-  const cache = await loadCache()
+  const cache = await loadCache(user)
   const now = Date.now()
   const isStale = (f: Feed) => {
     const e = cache[f.feedUrl]
@@ -85,7 +85,7 @@ export async function loadPostsCached(feeds: Feed[]): Promise<Post[]> {
       // network error / block → keep last-good entry
     }
   })
-  if (toRefresh.length) await saveCache(cache)
+  if (toRefresh.length) await saveCache(cache, user)
 
   const cachedPosts = cached.flatMap((f) => cache[f.feedUrl]?.posts ?? [])
   return [...livePosts, ...cachedPosts]

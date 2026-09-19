@@ -53,7 +53,6 @@ PORT=3000
 FEEDS_DATA_DIR=/srv/feeds/data/feeds
 FEEDS_CACHE_DIR=/srv/feeds/data/cache
 FEEDS_MODELS_DIR=/srv/feeds/data/models
-FEEDS_AUTH_KEYS=
 ORIGIN=https://your.domain
 PROTOCOL_HEADER=x-forwarded-proto
 HOST_HEADER=x-forwarded-host

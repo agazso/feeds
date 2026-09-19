@@ -1,12 +1,15 @@
 import type { Post } from '@feeds/core'
 import { readFile } from 'fs/promises'
 import { join } from 'path'
-import { DATA_DIR } from './paths'
+import { dataDir } from './paths'
 
-export async function loadMyfeedPosts(): Promise<Post[]> {
+export function myPostsPath(user?: string): string {
+  return join(dataDir(user), 'myposts.json')
+}
+
+export async function loadMyfeedPosts(user?: string): Promise<Post[]> {
   try {
-    const filePath = join(DATA_DIR, 'myposts.json')
-    const content = await readFile(filePath, 'utf-8')
+    const content = await readFile(myPostsPath(user), 'utf-8')
     return JSON.parse(content)
   } catch {
     return [] // File doesn't exist or is invalid

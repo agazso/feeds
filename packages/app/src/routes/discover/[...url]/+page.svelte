@@ -7,6 +7,7 @@ import { goto } from '$app/navigation'
 import { buildTagCooccurrence, getSuggestedTags } from '$lib/tags'
 import { auth } from '$lib/stores/auth.svelte'
 import { untrack } from 'svelte'
+import { prefix } from '$lib/prefix'
 
 interface Props {
   data: {
@@ -60,10 +61,10 @@ async function discover() {
 
   // Update browser URL to include the discovered URL
   const encodedUrl = encodeURIComponent(url.trim())
-  goto(`/discover/${encodedUrl}`)
+  goto(`${prefix()}/discover/${encodedUrl}`)
 
   try {
-    const response = await fetch('/api/discover', {
+    const response = await fetch(`${prefix()}/api/discover`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url: url.trim() }),
@@ -96,7 +97,7 @@ function reset() {
   feedAdded = false
   embeddingSuggestions = []
   // Update URL without the parameter
-  goto('/discover')
+  goto(`${prefix()}/discover`)
 }
 
 function enterAddMode() {
@@ -117,7 +118,7 @@ async function fetchEmbeddingSuggestions() {
   ].join('. ')
 
   try {
-    const res = await fetch('/api/suggest-tags', {
+    const res = await fetch(`${prefix()}/api/suggest-tags`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text })
@@ -135,7 +136,7 @@ async function saveFeed() {
   saving = true
 
   try {
-    const response = await fetch('/api/feeds', {
+    const response = await fetch(`${prefix()}/api/feeds`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -198,7 +199,7 @@ $effect(() => {
     <div class="feed-container">
       <FeedHeader name={discoveredFeed.name} url={discoveredFeed.url} favicon={discoveredFeed.favicon}>
         {#if feedExists}
-          <a href="/feeds/{encodeURIComponent(discoveredFeed.feedUrl)}" class="visit-button">Visit feed</a>
+          <a href="{prefix()}/feeds/{encodeURIComponent(discoveredFeed.feedUrl)}" class="visit-button">Visit feed</a>
         {:else if auth.canWrite}
           <button type="button" class="add-button" onclick={enterAddMode}>Add feed</button>
         {/if}

@@ -12,14 +12,14 @@ import {
 import { loadMyfeedPosts } from '$lib/myfeed'
 import { tagShorts } from '$lib/shorts'
 
-export const GET: RequestHandler = async ({ url }) => {
+export const GET: RequestHandler = async ({ url, locals }) => {
   const tagsParam = url.searchParams.get('tags') || ''
   const selectedTags = tagsParam.split('+').filter(Boolean).map(decodeURIComponent)
 
-  const config = await loadConfig()
+  const config = await loadConfig(locals.user)
   const filteredFeeds = filterFeedsByTags(config.feeds, selectedTags)
-  const feedPosts = tagShorts(await loadPostsCached(filteredFeeds))
-  const myfeedPosts = await loadMyfeedPosts()
+  const feedPosts = tagShorts(await loadPostsCached(filteredFeeds, locals.user))
+  const myfeedPosts = await loadMyfeedPosts(locals.user)
   const filteredMyfeedPosts = filterPostsByTags(myfeedPosts, selectedTags)
 
   const allPosts = [...feedPosts, ...filteredMyfeedPosts]

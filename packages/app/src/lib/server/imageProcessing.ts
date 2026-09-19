@@ -3,7 +3,7 @@ import sharp from 'sharp'
 import { createHash } from 'crypto'
 import { mkdir, writeFile, unlink } from 'fs/promises'
 import { join } from 'path'
-import { CACHE_DIR } from '../paths'
+import { cacheDir } from '../paths'
 
 const BLURHASH_WIDTH = 32
 const BLURHASH_HEIGHT = 32
@@ -22,7 +22,10 @@ export interface ImageProcessingResult {
  * Returns undefined if processing fails entirely (e.g., network error, invalid image).
  * Individual operations (blurhash, caching) may fail independently.
  */
-export async function processImage(imageUrl: string): Promise<ImageProcessingResult | undefined> {
+export async function processImage(
+  imageUrl: string,
+  user?: string,
+): Promise<ImageProcessingResult | undefined> {
   try {
     const response = await fetch(imageUrl, {
       headers: {
@@ -72,11 +75,11 @@ export async function processImage(imageUrl: string): Promise<ImageProcessingRes
     try {
       const isAnimated = (metadata.pages ?? 1) > 1 && (metadata.format === 'gif' || metadata.format === 'png')
       if (isAnimated) {
-        const result = await cacheAnimatedImage(imageBuffer, metadata.format!)
+        const result = await cacheAnimatedImage(imageBuffer, metadata.format!, user)
         cacheHash = result?.hash
         cacheExt = result?.ext
       } else {
-        cacheHash = await cacheImageAsWebP(imageBuffer)
+        cacheHash = await cacheImageAsWebP(imageBuffer, user)
         cacheExt = cacheHash ? 'webp' : undefined
       }
     } catch (e) {
@@ -99,7 +102,7 @@ export async function processImage(imageUrl: string): Promise<ImageProcessingRes
  * Convert image to WebP, calculate SHA256 hash, and save to cache folder.
  * Returns the hash on success, undefined on failure.
  */
-async function cacheImageAsWebP(imageBuffer: Buffer): Promise<string | undefined> {
+async function cacheImageAsWebP(imageBuffer: Buffer, user?: string): Promise<string | undefined> {
   // Resize to max 560px width (preserve aspect ratio, don't upscale) and convert to WebP
   const webpBuffer = await sharp(imageBuffer)
     .resize({ width: 560, withoutEnlargement: true })
@@ -110,11 +113,11 @@ async function cacheImageAsWebP(imageBuffer: Buffer): Promise<string | undefined
   const hash = createHash('sha256').update(webpBuffer).digest('hex')
 
   // Create cache folder structure: /cache/[hex[0]]/[hex[1]]/
-  const cacheDir = join(CACHE_DIR, hash[0], hash[1])
-  await mkdir(cacheDir, { recursive: true })
+  const dir = join(cacheDir(user), hash[0], hash[1])
+  await mkdir(dir, { recursive: true })
 
   // Save the WebP file
-  const cachePath = join(cacheDir, `${hash}.webp`)
+  const cachePath = join(dir, `${hash}.webp`)
   await writeFile(cachePath, webpBuffer)
 
   return hash
@@ -127,6 +130,7 @@ async function cacheImageAsWebP(imageBuffer: Buffer): Promise<string | undefined
 async function cacheAnimatedImage(
   imageBuffer: Buffer,
   format: string,
+  user?: string,
 ): Promise<{ hash: string; ext: string } | undefined> {
   // Determine extension from format
   const ext = format === 'gif' ? 'gif' : 'png'
@@ -140,11 +144,11 @@ async function cacheAnimatedImage(
   const hash = createHash('sha256').update(resizedBuffer).digest('hex')
 
   // Create cache folder structure: /cache/[hex[0]]/[hex[1]]/
-  const cacheDir = join(CACHE_DIR, hash[0], hash[1])
-  await mkdir(cacheDir, { recursive: true })
+  const dir = join(cacheDir(user), hash[0], hash[1])
+  await mkdir(dir, { recursive: true })
 
   // Save with original extension
-  const cachePath = join(cacheDir, `${hash}.${ext}`)
+  const cachePath = join(dir, `${hash}.${ext}`)
   await writeFile(cachePath, resizedBuffer)
 
   return { hash, ext }
@@ -154,8 +158,12 @@ async function cacheAnimatedImage(
  * Delete a cached image by its hash and extension.
  * Logs a warning if deletion fails (file may not exist).
  */
-export async function deleteCachedImage(cacheHash: string, cacheExt: string = 'webp'): Promise<void> {
-  const cachePath = join(CACHE_DIR, cacheHash[0], cacheHash[1], `${cacheHash}.${cacheExt}`)
+export async function deleteCachedImage(
+  cacheHash: string,
+  cacheExt: string = 'webp',
+  user?: string,
+): Promise<void> {
+  const cachePath = join(cacheDir(user), cacheHash[0], cacheHash[1], `${cacheHash}.${cacheExt}`)
   try {
     await unlink(cachePath)
   } catch (e) {
@@ -171,7 +179,10 @@ export interface FaviconProcessingResult {
  * Process a favicon: resize to 64x64 and cache as WebP.
  * Returns undefined if processing fails.
  */
-export async function processFavicon(faviconUrl: string): Promise<FaviconProcessingResult | undefined> {
+export async function processFavicon(
+  faviconUrl: string,
+  user?: string,
+): Promise<FaviconProcessingResult | undefined> {
   try {
     const response = await fetch(faviconUrl, {
       headers: {
@@ -196,11 +207,11 @@ export async function processFavicon(faviconUrl: string): Promise<FaviconProcess
     const hash = createHash('sha256').update(webpBuffer).digest('hex')
 
     // Create cache folder structure: /cache/[hex[0]]/[hex[1]]/
-    const cacheDir = join(CACHE_DIR, hash[0], hash[1])
-    await mkdir(cacheDir, { recursive: true })
+    const dir = join(cacheDir(user), hash[0], hash[1])
+    await mkdir(dir, { recursive: true })
 
     // Save the WebP file
-    const cachePath = join(cacheDir, `${hash}.webp`)
+    const cachePath = join(dir, `${hash}.webp`)
     await writeFile(cachePath, webpBuffer)
 
     return { cacheHash: hash }

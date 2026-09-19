@@ -193,7 +193,6 @@ and listens on `PORT` (default 3000).
 
 **Configuration (environment variables):**
 
-- `FEEDS_AUTH_KEYS` — comma-separated keys that enable write authentication (unset = open)
 - `FEEDS_CONFIG` — inline JSON feed configuration
 - `FEEDS_CHANNEL` — path to a feed configuration file
 - `PORT` — port for the production server (default 3000)
@@ -261,9 +260,14 @@ The web app (`packages/app`) supports optional, cookie-based authentication that
 all write actions (adding, editing, and removing feeds and posts). It is **disabled by
 default**.
 
-- **Enabling it:** set the `FEEDS_AUTH_KEYS` environment variable to a comma-separated
-  list of accepted keys (one or more). If the variable is unset or empty, authentication
-  is disabled and anyone can both read and write.
+- **Enabling it:** create `users.json` in the data dir (`static/` by default) mapping each
+  scope to the key that may write in it. The entry named `""` is single-user mode; a
+  `"bob"` entry covers `/@bob` (see [Multi-user](#multi-user)). A missing or empty file
+  disables authentication and anyone can both read and write.
+
+  ```json
+  { "": "my-secret-key", "bob": "bob-secret-key" }
+  ```
 - **What it protects:** when enabled, reading stays public, but writing requires
   authentication. Enforcement is server-side in `src/hooks.server.ts` — write requests
   (`POST`/`PATCH`/`DELETE`) return `401` when the caller isn't authenticated, and the
@@ -271,12 +275,21 @@ default**.
 - **Signing in:** visit `/auth` and enter a key, or open `/auth?key=YOUR_KEY`. A valid
   key is stored in an httpOnly cookie (`feeds-auth-key`). The `/auth` page shows the
   current status and a **Log out** button, and a settings-menu item mirrors the status
-  and links to `/auth`.
+  and links to `/auth`. A key authenticates one scope — sign in again under `/@bob/auth`
+  to write there.
 
-```bash
-# Run the web app with authentication enabled (one or more comma-separated keys)
-FEEDS_AUTH_KEYS="my-secret-key,teammate-key" pnpm --filter @feeds/app dev
-```
+## Multi-user
+
+Any path may be prefixed with `/@name`, which scopes everything after it to that user:
+`/@bob/myfeed`, `/@bob/feeds`, `/@bob/tags/music`. Without a prefix the app stays in
+single-user mode, exactly as before.
+
+- **Creating a user:** make an `@name` directory in the data dir (`static/@bob/`). The app
+  never creates one — an unknown `/@name` path returns `404`. Its `feeds.json`,
+  `myposts.json`, and caches live there, and its images under `cache/@bob/`.
+- **Listing:** `/users` lists the existing users.
+- **Access:** every user is readable by anyone; writes need that user's key from
+  `users.json`.
 
 ## License
 

@@ -4,11 +4,11 @@ import { loadMyfeedPosts } from '$lib/myfeed'
 import { collectAvailableTags } from '$lib/tags'
 import { fetchFeedsFromUrl, timeout } from '@feeds/core'
 
-export const load: PageServerLoad = async ({ params, url }) => {
+export const load: PageServerLoad = async ({ params, url, locals }) => {
   const postUrl = params.url || ''
 
-  const config = await loadConfig()
-  const myfeedPosts = await loadMyfeedPosts()
+  const config = await loadConfig(locals.user)
+  const myfeedPosts = await loadMyfeedPosts(locals.user)
   const availableTags = collectAvailableTags(config.feeds, myfeedPosts)
 
   // Get feedUrl from query parameters if available
