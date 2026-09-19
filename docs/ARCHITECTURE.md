@@ -135,7 +135,9 @@ CACHED_HOSTS, but for cost rather than rate limits) and refreshes them via
 for that item — `rssItem.comments` — and icon) because enrichment replaces the author — and `applyDiscoveredFeedDefaults` only
 backfills `feedUrl` when empty, so a post can end up holding the *source site's* feed url
 instead of the aggregator's. `via` is the only reliable link back.
-A cache entry records which rendering produced it, so toggling
+A cache entry records `POSTS_VERSION`, and neither serves nor reuses posts built by an
+older one — without it, reuse pins an item to the shape it had when first enriched.
+**Bump it whenever post building changes.** An entry also records which rendering produced it, so toggling
 the flag invalidates it at once; `MAX_ENRICH_REFRESH` bounds how many aggregators one
 page load may refresh.
 
