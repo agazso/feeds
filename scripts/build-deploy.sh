@@ -27,6 +27,13 @@ rm -rf "$OUT"/node_modules/.pnpm/@img+sharp-libvips-linuxmusl-x64@* \
 # any local runtime dirs (static/cache/models) — the server has its own /data volume.
 rm -rf "$OUT"/{src,tests,scripts,static,cache,models,vite.config.ts,vitest.config.ts,tsconfig.json,svelte.config.js}
 
+# DATA_DIR defaults to static/, so the build copies whatever lives there into
+# build/client/ and serves it publicly. Drop that snapshot: the server reads its own
+# /data volume, and shipping it would publish local feeds, saved posts and — since
+# multi-user — every /@user's copy of the same, at e.g. /@bob/myposts.json.
+rm -rf "$OUT"/build/client/@*
+rm -f "$OUT"/build/client/{feeds,myposts,feed-cache,tag-embeddings}.json*
+
 # systemd unit — install once on the server: sudo cp feeds.service /etc/systemd/system/
 # then `sudo systemctl daemon-reload && sudo systemctl enable --now feeds`.
 # Check `which node` on the server and fix ExecStart if it isn't /usr/bin/node.
