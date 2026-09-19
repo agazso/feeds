@@ -235,6 +235,9 @@ printf '{"": "%s"}\n' "$KEY" | sudo tee /srv/feeds/data/feeds/users.json   # = $
 sudo systemctl restart feeds        # keys are read once per process
 ```
 
+Add further users from `https://<host>/invite` once the root key is set — it writes their
+key into `users.json` and gives you a link to send them.
+
 Then log in once per browser/device — visit `https://<host>/auth?key=<KEY>` (or the `/auth`
 form). It sets a 1-year httpOnly cookie (`feeds-auth-key`); after that you can share, and
 anyone without the cookie gets `401` on writes. Every device uses the same key for a given

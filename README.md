@@ -284,10 +284,17 @@ Any path may be prefixed with `/@name`, which scopes everything after it to that
 `/@bob/myfeed`, `/@bob/feeds`, `/@bob/tags/music`. Without a prefix the app stays in
 single-user mode, exactly as before.
 
-- **Creating a user:** make an `@name` directory in the data dir (`static/@bob/`). The app
-  never creates one — an unknown `/@name` path returns `404`. Names are lowercase latin
-  letters, digits and underscore; a URL may capitalize (`/@Bob`) but resolves to the
-  lowercase folder, so a directory named `@Bob` is not a user. Its `feeds.json`,
+- **Creating a user:** open `/invite`, enter a name, and you get a shareable link that
+  signs that person in on their device. It creates the `@name` directory and mints their
+  key. You can also make the directory by hand (`static/@bob/`) and add a key to
+  `users.json` yourself. Nothing else creates a user — an unknown `/@name` path returns
+  `404`. Names are lowercase latin letters, digits and underscore; a URL may capitalize
+  (`/@Bob`) but resolves to the lowercase folder, so a directory named `@Bob` is not a
+  user.
+- **Inviting:** `/invite` and `/invite/<name>` display write keys, so unlike every other
+  page they are **not** public — they need the root key, in the root scope, and refuse
+  outright until `users.json` has a root (`""`) entry. `/invite/<name>` shows an existing
+  user's link again, so you can resend one you lost. Its `feeds.json`,
   `myposts.json`, and caches live there, and its images under `cache/@bob/`.
 - **Listing:** `/users` lists the existing users.
 - **Access:** every user is readable by anyone; writes need that user's key from

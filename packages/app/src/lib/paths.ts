@@ -21,9 +21,10 @@ export const dataDir = (user?: string) => userSubdir(DATA_DIR, user)
 export const cacheDir = (user?: string) => userSubdir(CACHE_DIR, user)
 
 /**
- * Users are the `@name` dirs under DATA_DIR — created out-of-band, never by the app.
- * A dir whose name isn't a valid user (uppercase, dots, dashes) is not a user: it
- * would never be reachable, since a path resolves to the lowercase name.
+ * Users are the `@name` dirs under DATA_DIR — made by hand or by `/invite`, never as a
+ * side effect of visiting a path. A dir whose name isn't a valid user (uppercase, dots,
+ * dashes) is not a user: it would never be reachable, since a path resolves to the
+ * lowercase name.
  */
 export async function listUsers(): Promise<string[]> {
   try {

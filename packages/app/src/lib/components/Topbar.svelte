@@ -27,6 +27,10 @@ const authLabel = $derived(
           <a href="{prefix()}/share" class="menu-item">Share</a>
         {/if}
         <a href="/users" class="menu-item">Users</a>
+        <!-- Inviting is root-scope only; /invite 403s under a /@name path. -->
+        {#if auth.canWrite && !prefix()}
+          <a href="/invite" class="menu-item">Invite</a>
+        {/if}
       </div>
     </Dropdown>
   </div>

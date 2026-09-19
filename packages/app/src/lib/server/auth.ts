@@ -1,5 +1,7 @@
 import type { Cookies } from '@sveltejs/kit'
-import { readFile } from 'node:fs/promises'
+import { error } from '@sveltejs/kit'
+import { randomBytes } from 'node:crypto'
+import { readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { DATA_DIR } from '../paths'
 
@@ -17,14 +19,43 @@ export const AUTH_COOKIE_MAX_AGE = 60 * 60 * 24 * 365 // 1 year
  */
 type KeyFile = Record<string, string>
 
-// ponytail: read once per process; restart to pick up key changes.
+const KEY_FILE = join(DATA_DIR, 'users.json')
+
+// ponytail: read once per process; restart to pick up edits made outside the app.
+// `createKey` refreshes it, so invites take effect immediately.
 let keys: Promise<KeyFile> | undefined
 
 function loadKeys(): Promise<KeyFile> {
-  keys ??= readFile(join(DATA_DIR, 'users.json'), 'utf-8')
+  keys ??= readFile(KEY_FILE, 'utf-8')
     .then((content) => JSON.parse(content) as KeyFile)
     .catch(() => ({}))
   return keys
+}
+
+export async function keyForUser(user: string): Promise<string | undefined> {
+  return (await loadKeys())[user]
+}
+
+/** Mint and persist a write key for `user`. Overwrites any key they already had. */
+// ponytail: last write wins if two invites race; this is a single-admin app.
+export async function createKey(user: string): Promise<string> {
+  const updated = { ...(await loadKeys()), [user]: randomBytes(24).toString('hex') }
+  await writeFile(KEY_FILE, JSON.stringify(updated, null, 2))
+  keys = Promise.resolve(updated)
+  return updated[user]
+}
+
+/**
+ * Gate for pages that hand out keys (`/invite`). Unlike every other read in the app
+ * these are not public: only the holder of the root key, in the root scope, gets in.
+ */
+export async function requireRootScope(locals: App.Locals): Promise<void> {
+  if ((await keyForUser('')) === undefined) {
+    error(403, 'Set a root key in users.json before inviting users')
+  }
+  if (locals.user || !locals.authenticated) {
+    error(403, 'Only the root user can invite users')
+  }
 }
 
 /** Authentication is enabled only when at least one key is configured. */
