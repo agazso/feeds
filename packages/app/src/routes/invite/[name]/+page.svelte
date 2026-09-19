@@ -1,19 +1,8 @@
 <script lang="ts">
 import type { PageData } from './$types'
+import CopyLink from '$lib/components/CopyLink.svelte'
 
 let { data }: { data: PageData } = $props()
-
-let copied = $state(false)
-
-async function copy() {
-  try {
-    await navigator.clipboard.writeText(data.inviteUrl)
-    copied = true
-    setTimeout(() => (copied = false), 2000)
-  } catch {
-    // Clipboard blocked (insecure origin, denied permission) — the link is on screen.
-  }
-}
 </script>
 
 <svelte:head>
@@ -27,10 +16,7 @@ async function copy() {
     <code>/@{data.name}</code>. Anyone holding it gets that access, so share it directly.
   </p>
 
-  <div class="link-row">
-    <input class="link" readonly value={data.inviteUrl} onfocus={(e) => e.currentTarget.select()} />
-    <button type="button" onclick={copy}>{copied ? 'Copied' : 'Copy'}</button>
-  </div>
+  <CopyLink url={data.inviteUrl} />
 
   <p class="explanation">
     <a href="/@{data.name}">Open their feed</a> · <a href="/invite">Invite someone else</a>
@@ -67,28 +53,4 @@ async function copy() {
     font-size: 0.9em;
   }
 
-  .link-row {
-    display: flex;
-    gap: var(--half-padding);
-    width: 100%;
-    max-width: 520px;
-    margin-top: var(--padding);
-  }
-
-  .link {
-    flex: 1;
-    min-width: 0;
-    padding: var(--half-padding) var(--padding);
-    font-size: 14px;
-    border: 1px solid #88888888;
-    border-radius: 4px;
-    background: var(--background-color);
-    color: var(--color);
-  }
-
-  .link-row button {
-    padding: var(--half-padding) var(--padding);
-    font-size: 16px;
-    cursor: pointer;
-  }
 </style>

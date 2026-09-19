@@ -1,11 +1,15 @@
 <script lang="ts">
 import type { PageData, ActionData } from './$types'
+import CopyLink from '$lib/components/CopyLink.svelte'
 
 let { data, form }: { data: PageData; form: ActionData } = $props()
 
 const showInvalid = $derived(form?.invalid === true || data.invalidKey)
 // A key authenticates one scope: the /@name path it was used on, else the root feed.
 const scope = $derived(data.user ? `@${data.user}` : 'root')
+
+// Kept behind a click: the link carries the key, so it shouldn't sit on screen.
+let showLink = $state(false)
 </script>
 
 <svelte:head>
@@ -22,6 +26,19 @@ const scope = $derived(data.user ? `@${data.user}` : 'root')
     <div class="status-icon"><span class="checkmark">&#10003;</span></div>
     <h2>Authenticated as {scope}</h2>
     <p class="explanation">You can add and edit feeds and posts.</p>
+    {#if data.signInUrl}
+      {#if showLink}
+        <p class="explanation">
+          Open this on another device to sign in there as {scope}. It carries your key —
+          treat it like a password.
+        </p>
+        <CopyLink url={data.signInUrl} />
+      {:else}
+        <button type="button" class="link-button" onclick={() => (showLink = true)}>
+          Show sign-in link
+        </button>
+      {/if}
+    {/if}
     <form method="POST" action="?/logout" class="auth-form">
       <button type="submit">Log out</button>
     </form>
@@ -112,6 +129,13 @@ const scope = $derived(data.user ? `@${data.user}` : 'root')
     padding: var(--half-padding) var(--padding);
     font-size: 16px;
     cursor: pointer;
+  }
+
+  .link-button {
+    padding: var(--half-padding) var(--padding);
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: var(--padding);
   }
 
   .error {
