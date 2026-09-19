@@ -132,9 +132,9 @@ and restricted to `[a-z0-9_]` so it can never escape the data dir. Every persist
 call takes that `user` and resolves against `dataDir(user)` / `cacheDir(user)`
 (`$lib/paths.ts`) — `DATA_DIR/@bob/` and `CACHE_DIR/@bob/`, or the roots when undefined.
 On the client, `prefix()` (`$lib/prefix.ts`) supplies the same prefix for links and
-`fetch`. Write auth is per scope, keyed by `DATA_DIR/users.json` (`$lib/server/auth.ts`), which is
-read once per process — `createKey` refreshes that cache so an invite works immediately.
-`/invite` is the only page whose **reads** are gated (`requireRootScope`): it displays keys.
+`fetch`. Write auth is per scope, keyed by `DATA_DIR/users.json` (`$lib/server/auth.ts`), read per
+request so a hand-edited key needs no restart. `/invite` is the only page whose **reads**
+are gated (`requireRootScope`): it displays keys.
 
 ### Persistence & caching
 - `loadConfig`/`saveConfig` (`$lib/config.ts`) ⇄ `static/feeds.json`

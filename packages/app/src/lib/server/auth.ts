@@ -21,15 +21,14 @@ type KeyFile = Record<string, string>
 
 const KEY_FILE = join(DATA_DIR, 'users.json')
 
-// ponytail: read once per process; restart to pick up edits made outside the app.
-// `createKey` refreshes it, so invites take effect immediately.
-let keys: Promise<KeyFile> | undefined
-
-function loadKeys(): Promise<KeyFile> {
-  keys ??= readFile(KEY_FILE, 'utf-8')
-    .then((content) => JSON.parse(content) as KeyFile)
-    .catch(() => ({}))
-  return keys
+// Read per request, like feeds.json. Caching it meant a hand-edited key — or one added
+// by another process — needed a server restart before it worked.
+async function loadKeys(): Promise<KeyFile> {
+  try {
+    return JSON.parse(await readFile(KEY_FILE, 'utf-8')) as KeyFile
+  } catch {
+    return {}
+  }
 }
 
 export async function keyForUser(user: string): Promise<string | undefined> {
@@ -41,7 +40,6 @@ export async function keyForUser(user: string): Promise<string | undefined> {
 export async function createKey(user: string): Promise<string> {
   const updated = { ...(await loadKeys()), [user]: randomBytes(24).toString('hex') }
   await writeFile(KEY_FILE, JSON.stringify(updated, null, 2))
-  keys = Promise.resolve(updated)
   return updated[user]
 }
 
