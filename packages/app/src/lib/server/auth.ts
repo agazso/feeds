@@ -38,10 +38,19 @@ export async function keyForUser(user: string): Promise<string | undefined> {
   return (await loadKeys())[user]
 }
 
+/**
+ * 128 bits, base64url — 22 URL-safe characters. Unguessable (a brute force is ~2^127
+ * tries) while keeping sign-in links short enough to read out. Longer keys minted by
+ * earlier versions keep working: keys are only ever compared for equality.
+ */
+export function generateKey(): string {
+  return randomBytes(16).toString('base64url')
+}
+
 /** Mint and persist a write key for `user`. Overwrites any key they already had. */
 // ponytail: last write wins if two invites race; this is a single-admin app.
 export async function createKey(user: string): Promise<string> {
-  const updated = { ...(await loadKeys()), [user]: randomBytes(24).toString('hex') }
+  const updated = { ...(await loadKeys()), [user]: generateKey() }
   await writeFile(KEY_FILE, JSON.stringify(updated, null, 2))
   return updated[user]
 }

@@ -229,7 +229,7 @@ So on a public deployment you almost always want a key set. Enable it:
 
 ```bash
 # on the server
-KEY=$(openssl rand -hex 24)
+KEY=$(openssl rand -base64 16 | tr '+/' '-_' | tr -d '=')   # 128-bit, url-safe
 echo "save this key: $KEY"
 # beside FEEDS_DATA_DIR, never inside it — that dir is served publicly
 printf '{"": "%s"}\n' "$KEY" | sudo tee /srv/feeds/data/users.json
