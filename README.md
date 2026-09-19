@@ -193,6 +193,8 @@ and listens on `PORT` (default 3000).
 
 **Configuration (environment variables):**
 
+- `FEEDS_KEYFILE` — path to the write-key file (default: `users.json` beside the data
+  dir). It must stay **outside** the data dir: that directory is served publicly.
 - `FEEDS_CONFIG` — inline JSON feed configuration
 - `FEEDS_CHANNEL` — path to a feed configuration file
 - `PORT` — port for the production server (default 3000)
@@ -260,7 +262,8 @@ The web app (`packages/app`) supports optional, cookie-based authentication that
 all write actions (adding, editing, and removing feeds and posts). It is **disabled by
 default**.
 
-- **Enabling it:** create `users.json` in the data dir (`static/` by default) mapping each
+- **Enabling it:** create `users.json` **next to** the data dir (`packages/app/users.json`
+  by default, or `FEEDS_KEYFILE`) mapping each
   scope to the key that may write in it. The entry named `""` is single-user mode; a
   `"bob"` entry covers `/@bob` (see [Multi-user](#multi-user)). A missing or empty file
   disables authentication and anyone can both read and write.

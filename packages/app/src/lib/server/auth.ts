@@ -2,7 +2,7 @@ import type { Cookies } from '@sveltejs/kit'
 import { error } from '@sveltejs/kit'
 import { randomBytes } from 'node:crypto'
 import { readFile, writeFile } from 'node:fs/promises'
-import { join } from 'node:path'
+import { resolve } from 'node:path'
 import { DATA_DIR } from '../paths'
 
 export const AUTH_COOKIE = 'feeds-auth-key'
@@ -19,7 +19,10 @@ export const AUTH_COOKIE_MAX_AGE = 60 * 60 * 24 * 365 // 1 year
  */
 type KeyFile = Record<string, string>
 
-const KEY_FILE = join(DATA_DIR, 'users.json')
+// Deliberately a SIBLING of the data dir, never inside it: DATA_DIR defaults to
+// `static/`, which SvelteKit serves publicly — a keyfile there is downloadable at
+// /users.json (and gets copied into build/client/ at build time).
+const KEY_FILE = process.env.FEEDS_KEYFILE ?? resolve(DATA_DIR, '..', 'users.json')
 
 // Read per request, like feeds.json. Caching it meant a hand-edited key — or one added
 // by another process — needed a server restart before it worked.

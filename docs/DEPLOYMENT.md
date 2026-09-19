@@ -217,7 +217,7 @@ HOST_HEADER=x-forwarded-host
 
 ### Authentication (write protection)
 
-`<FEEDS_DATA_DIR>/users.json` gates all writes (share/tag/delete). The logic
+The keyfile (`FEEDS_KEYFILE`, default `users.json` beside `FEEDS_DATA_DIR`) gates all writes (share/tag/delete). The logic
 (`hooks.server.ts`, `$lib/server/auth.ts`):
 
 - **Missing/empty file → auth is OFF → writes are open to everyone.** No keyfile does
@@ -231,7 +231,8 @@ So on a public deployment you almost always want a key set. Enable it:
 # on the server
 KEY=$(openssl rand -hex 24)
 echo "save this key: $KEY"
-printf '{"": "%s"}\n' "$KEY" | sudo tee /srv/feeds/data/feeds/users.json   # = $FEEDS_DATA_DIR
+# beside FEEDS_DATA_DIR, never inside it — that dir is served publicly
+printf '{"": "%s"}\n' "$KEY" | sudo tee /srv/feeds/data/users.json
 sudo systemctl restart feeds        # keys are read once per process
 ```
 

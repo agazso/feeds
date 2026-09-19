@@ -36,8 +36,10 @@ packages/app/static/feeds.json
 packages/app/static/tag-embeddings.json
 packages/app/static/feed-cache.json
 packages/app/static/@*/
-packages/app/static/users.json
 packages/app/cache/
 # Build / deploy artifacts
 deploy-out/
 packages/app/models/
+
+# Secrets: the write-key file (kept OUT of static/, which is served publicly)
+packages/app/users.json
