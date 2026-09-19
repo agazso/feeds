@@ -25,6 +25,7 @@ export const load: PageServerLoad = async ({ url, cookies, locals }) => {
   return {
     authEnabled: locals.authEnabled,
     authenticated: locals.authenticated,
+    user: locals.user,
     invalidKey: keyFromUrl != null && keyFromUrl.length > 0,
   }
 }

@@ -4,6 +4,8 @@ import type { PageData, ActionData } from './$types'
 let { data, form }: { data: PageData; form: ActionData } = $props()
 
 const showInvalid = $derived(form?.invalid === true || data.invalidKey)
+// A key authenticates one scope: the /@name path it was used on, else the root feed.
+const scope = $derived(data.user ? `@${data.user}` : 'root')
 </script>
 
 <svelte:head>
@@ -18,7 +20,7 @@ const showInvalid = $derived(form?.invalid === true || data.invalidKey)
     </p>
   {:else if data.authenticated}
     <div class="status-icon"><span class="checkmark">&#10003;</span></div>
-    <h2>Authenticated</h2>
+    <h2>Authenticated as {scope}</h2>
     <p class="explanation">You can add and edit feeds and posts.</p>
     <form method="POST" action="?/logout" class="auth-form">
       <button type="submit">Log out</button>
