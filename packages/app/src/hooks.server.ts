@@ -1,4 +1,5 @@
 import type { Handle } from '@sveltejs/kit'
+import { error } from '@sveltejs/kit'
 import { getAuthState } from '$lib/server/auth'
 import { userExists } from '$lib/paths'
 import { stripUser, userFromPath } from '$lib/user'
@@ -10,7 +11,7 @@ export const handle: Handle = async ({ event, resolve }) => {
   // the original path. Users are folders created out-of-band — unknown ones 404.
   const user = userFromPath(event.url.pathname)
   if (user && !(await userExists(user))) {
-    return new Response('Unknown user', { status: 404 })
+    error(404, `There is no @${user} here`)
   }
   event.locals.user = user
 
