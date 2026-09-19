@@ -117,10 +117,14 @@ export async function enrichRssItems(
   const enrichmentTimeout = options?.enrichmentTimeout ?? 5000
   const tags = options?.tags
 
-  // ponytail: an item whose enrichment failed last time is reused as a fallback post
-  // and never retried — acceptable because aggregator items roll off within hours.
+  // Only well-enriched posts are reused. A page that was slow or blocked still yields a
+  // post, just one wearing the feed's own icon and carrying no body — and reuse would
+  // pin that in place for as long as the item stays in the feed. Retrying them costs a
+  // fetch per refresh and lets a bad window heal itself.
+  const isEnriched = (post: Post) =>
+    !!post.link && (!feed.favicon || post.author?.image?.uri !== feed.favicon)
   const reusable = new Map(
-    (options?.reuse ?? []).filter((post) => post.link).map((post) => [post.link as string, post]),
+    (options?.reuse ?? []).filter(isEnriched).map((post) => [post.link as string, post]),
   )
 
   const posts = await Promise.all(

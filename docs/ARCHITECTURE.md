@@ -222,7 +222,10 @@ are gated (`requireRootScope`): it displays keys.
   is cached.** Everything renders through `loadPostsCached`; never call
   `loadEnrichedFeedPosts` straight from a route. The refresh passes the previous entry's
   posts as `reuse`, so unchanged items are not refetched — drop that and every refresh
-  becomes 30 outbound fetches again.
+  becomes 30 outbound fetches again. Only *well-enriched* posts are reusable: a page that
+  was slow or blocked still yields a post, wearing the feed's icon with no body, and
+  reusing those would pin a transient bad window in place for as long as the item stays
+  in the feed.
 - **Saving reuses the enriched `previewPost` (post-mode).** Any field you attach at
   save time (tags, `feedUrl`, favicon) must be handled on **both** the post-mode and
   url-mode branches of `POST /api/myfeed`.
