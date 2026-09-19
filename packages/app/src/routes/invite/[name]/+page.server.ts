@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types'
 import { error } from '@sveltejs/kit'
-import { keyForUser, requireRootScope } from '$lib/server/auth'
+import { createKey, keyForUser, requireRootScope } from '$lib/server/auth'
 import { userExists } from '$lib/paths'
 import { isValidUserName } from '$lib/user'
 
@@ -12,10 +12,11 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
     error(404, 'No such user')
   }
 
-  const key = await keyForUser(name)
-  if (!key) {
-    error(404, `@${name} has no key — it was not created by an invite`)
-  }
+  // A directory made by hand has no key yet — mint one on first view so it can be
+  // shared. Existing keys are shown as-is, never replaced.
+  // ponytail: two overlapping loads could each mint; the second read sees the first's
+  // key in practice. Move to a POST action if that ever actually bites.
+  const key = (await keyForUser(name)) ?? (await createKey(name))
 
   return {
     name,

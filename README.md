@@ -297,7 +297,8 @@ single-user mode, exactly as before.
 - **Inviting:** `/invite` and `/invite/<name>` display write keys, so unlike every other
   page they are **not** public — they need the root key, in the root scope, and refuse
   outright until `users.json` has a root (`""`) entry. `/invite/<name>` shows an existing
-  user's link again, so you can resend one you lost. Its `feeds.json`,
+  user's link again, so you can resend one you lost — and if that user has no key yet
+  (a directory you made by hand), it mints one. Its `feeds.json`,
   `myposts.json`, and caches live there, and its images under `cache/@bob/`.
 - **Listing:** `/users` lists the existing users.
 - **Access:** every user is readable by anyone; writes need that user's key from
