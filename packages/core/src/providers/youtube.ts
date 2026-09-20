@@ -79,9 +79,8 @@ export async function fetchYoutubeFeed(
     const feed = await fetchFeedFromUrl(feedUrl)
     if (feed != null) {
       return feed
-    } else {
-      return undefined
     }
+    return undefined
   }
 
   const canonicalUrl = urlUtils.getCanonicalUrl(url)

@@ -12,8 +12,8 @@ export function isXUrl(url: string): boolean {
     return (
       hostname === X_COM ||
       hostname === TWITTER_COM ||
-      hostname.endsWith('.' + X_COM) ||
-      hostname.endsWith('.' + TWITTER_COM)
+      hostname.endsWith(`.${X_COM}`) ||
+      hostname.endsWith(`.${TWITTER_COM}`)
     )
   } catch {
     return false
@@ -23,7 +23,7 @@ export function isXUrl(url: string): boolean {
 export function isRedditUrl(url: string): boolean {
   try {
     const hostname = new URL(url).hostname
-    return hostname === REDDIT_COM || hostname.endsWith('.' + REDDIT_COM)
+    return hostname === REDDIT_COM || hostname.endsWith(`.${REDDIT_COM}`)
   } catch {
     return false
   }
@@ -38,16 +38,14 @@ export function isImageUrl(url: string): boolean {
   return IMAGE_EXTENSIONS.some((ext) => lowercaseUrl.includes(ext))
 }
 
-export function getHumanHostname(url: string): string {
-  if (!url) {
+export function getHumanHostname(input: string): string {
+  if (!input) {
     return ''
   }
-  if (typeof url.startsWith !== 'function') {
+  if (typeof input.startsWith !== 'function') {
     return ''
   }
-  if (url.startsWith('//')) {
-    url = 'https:' + url
-  }
+  const url = input.startsWith('//') ? `https:${input}` : input
   try {
     const parsedUrl = new URL(url)
     const hostname = parsedUrl.hostname
@@ -59,14 +57,12 @@ export function getHumanHostname(url: string): string {
   }
 }
 
-export function createUrlFromUrn(urn: string, baseUrl: string): string {
-  if (!baseUrl.endsWith('/')) {
-    baseUrl += '/'
-  }
+export function createUrlFromUrn(urn: string, base: string): string {
+  const baseUrl = base.endsWith('/') ? base : `${base}/`
   if (urn.startsWith('//')) {
     const parts = baseUrl.split(':', 2)
     const protocol = parts.length > 1 ? parts[0] : 'https'
-    return protocol + ':' + urn
+    return `${protocol}:${urn}`
   }
   if (urn.startsWith('http')) {
     return urn
@@ -77,22 +73,18 @@ export function createUrlFromUrn(urn: string, baseUrl: string): string {
   return baseUrl + urn
 }
 
-export function getBaseUrl(url: string): string {
-  if (url.startsWith('//')) {
-    url = 'https:' + url
-  }
+export function getBaseUrl(input: string): string {
+  const url = input.startsWith('//') ? `https:${input}` : input
 
   return url.replace(/(http.?:\/\/.*?)[\/\?].*/, '$1/')
 }
 
-export function getCanonicalUrl(url: string): string {
-  if (url === '') {
+export function getCanonicalUrl(input: string): string {
+  if (input === '') {
     return ''
   }
-  const queryParts = url.split('?', 2)
-  if (queryParts.length !== 1) {
-    url = queryParts[0] ?? ''
-  }
+  const queryParts = input.split('?', 2)
+  let url = queryParts.length !== 1 ? (queryParts[0] ?? '') : input
   const parts = url.split('//', 2)
   if (parts.length === 1) {
     if (!url.includes('/')) {
@@ -104,10 +96,10 @@ export function getCanonicalUrl(url: string): string {
     }
   }
   if (url.startsWith('//')) {
-    url = 'https:' + url
+    url = `https:${url}`
   }
   if (!url.startsWith('http')) {
-    url = 'https://' + url
+    url = `https://${url}`
   }
   return url
 }
@@ -115,12 +107,13 @@ export function getCanonicalUrl(url: string): string {
 export function getHttpsUrl(url: string): string {
   const httpProtocol = 'http:'
   if (url.startsWith(httpProtocol)) {
-    return 'https:' + url.slice(httpProtocol.length)
+    return `https:${url.slice(httpProtocol.length)}`
   }
   return url
 }
 
 export function stripNonAscii(s: string): string {
+  // biome-ignore lint/suspicious/noControlCharactersInRegex: the ASCII range is the point
   return s.replace(/[^\x00-\x7F]/g, '')
 }
 
@@ -179,9 +172,9 @@ export function normalizeUrl(input: string): string | null {
 
   // Add protocol if missing
   if (url.startsWith('//')) {
-    url = 'https:' + url
+    url = `https:${url}`
   } else if (!url.startsWith('http://') && !url.startsWith('https://')) {
-    url = 'https://' + url
+    url = `https://${url}`
   }
 
   // Add trailing slash to bare domains (no path)
@@ -190,7 +183,7 @@ export function normalizeUrl(input: string): string | null {
     if (parsed.pathname === '' || (parsed.pathname === '/' && !url.endsWith('/'))) {
       // Only add slash if there's no query string and URL doesn't have one
       if (!parsed.search && !url.includes('?')) {
-        url = parsed.origin + '/'
+        url = `${parsed.origin}/`
       }
     }
     return url

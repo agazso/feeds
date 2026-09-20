@@ -85,10 +85,9 @@ function findBestResolutionRedditImage(redditImage: RedditImage): RedditImageDat
 }
 
 function redditPostDataImages(postData: RedditPostData): RSSThumbnail[] {
-  const image =
-    postData.preview != null && postData.preview.images[0]
-      ? findBestResolutionRedditImage(postData.preview.images[0])
-      : undefined
+  const image = postData.preview?.images[0]
+    ? findBestResolutionRedditImage(postData.preview.images[0])
+    : undefined
 
   if (!image) {
     return []
@@ -110,13 +109,13 @@ function redditPostDataImages(postData: RedditPostData): RSSThumbnail[] {
 
 function redditPostDataToRSSItem(postData: RedditPostData): RSSItem {
   const redditMobileLink =
-    urlUtils.getCanonicalUrl('m.' + urlUtils.REDDIT_COM).slice(0, -1) + postData.permalink
+    urlUtils.getCanonicalUrl(`m.${urlUtils.REDDIT_COM}`).slice(0, -1) + postData.permalink
   const created = Math.floor(postData.created_utc * 1000)
   const thumbnail = redditPostDataImages(postData)
   if (postData.post_hint == null) {
     return {
       title: '',
-      description: postData.title + `<p/>[Comments](${redditMobileLink})`,
+      description: `${postData.title}<p/>[Comments](${redditMobileLink})`,
       link: postData.url,
       url: postData.url,
       created,
@@ -124,17 +123,16 @@ function redditPostDataToRSSItem(postData: RedditPostData): RSSItem {
         thumbnail,
       },
     }
-  } else {
-    return {
-      title: '',
-      description: postData.title,
-      link: redditMobileLink,
-      url: redditMobileLink,
-      created,
-      media: {
-        thumbnail,
-      },
-    }
+  }
+  return {
+    title: '',
+    description: postData.title,
+    link: redditMobileLink,
+    url: redditMobileLink,
+    created,
+    media: {
+      thumbnail,
+    },
   }
 }
 
@@ -253,8 +251,8 @@ export async function fetchRedditFeed(url: string): Promise<Feed | undefined> {
   }
   const canonicalUrl = redditLink.canonicalUrl
   // We store the feedUrl as RSS, so that it can be exported easily
-  const feedUrl = canonicalUrl + '.rss'
-  const aboutJsonUrl = canonicalUrl + '/about.json'
+  const feedUrl = `${canonicalUrl}.rss`
+  const aboutJsonUrl = `${canonicalUrl}/about.json`
 
   try {
     // about.json needs authentication now (Reddit shut down the unauthenticated
@@ -324,7 +322,7 @@ export async function fetchRedditPostMetadata(
   try {
     // Clean up URL and append .json
     const cleanUrl = url.split('?')[0] ?? url // Remove query params
-    const jsonUrl = cleanUrl.endsWith('/') ? cleanUrl.slice(0, -1) + '.json' : cleanUrl + '.json'
+    const jsonUrl = cleanUrl.endsWith('/') ? `${cleanUrl.slice(0, -1)}.json` : `${cleanUrl}.json`
 
     const response = await safeFetch(jsonUrl, { headers: HEADERS_WITH_FELFELE })
     const data = await response.json()

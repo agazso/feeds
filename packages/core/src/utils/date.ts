@@ -14,7 +14,7 @@ export function timestampToDateString(timestamp: number, withTimezone = false): 
   if (withTimezone) {
     date.setTime(date.getTime() - date.getTimezoneOffset() * 60 * 1000)
   }
-  const prefix = (s: number, p: string) => ('' + p + s).substring(('' + s).length)
+  const prefix = (s: number, p: string) => `${p}${s}`.substring(`${s}`.length)
   const prefix2 = (s: number) => prefix(s, '00')
   const prefix3 = (s: number) => prefix(s, '000')
   const datePart = `${date.getUTCFullYear()}-${prefix2(date.getUTCMonth() + 1)}-${prefix2(date.getUTCDate())}`
@@ -25,7 +25,7 @@ export function timestampToDateString(timestamp: number, withTimezone = false): 
 export function printableElapsedTime(timestamp: number, now: number = Date.now()): string {
   const diff = now >= timestamp ? new Date(now - timestamp) : new Date(timestamp - now)
 
-  const pluralize = (s: string, num: number) => (num > 1 ? s + 's' : s)
+  const pluralize = (s: string, num: number) => (num > 1 ? `${s}s` : s)
 
   const years = diff.getUTCFullYear() - 1970
   if (years > 0) {

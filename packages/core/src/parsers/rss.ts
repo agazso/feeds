@@ -65,7 +65,7 @@ export function parseRedditJson(
   const items: RSSItem[] = posts.map((post) => {
     const postData = post.data
     const redditMobileLink =
-      urlUtils.getCanonicalUrl('m.' + urlUtils.REDDIT_COM).slice(0, -1) + postData.permalink
+      urlUtils.getCanonicalUrl(`m.${urlUtils.REDDIT_COM}`).slice(0, -1) + postData.permalink
     const created = Math.floor(postData.created_utc * 1000)
 
     // Get thumbnail image
@@ -232,9 +232,11 @@ export async function loadRSSFeed(
 function parseFeed(json: any): RSSFeed | undefined {
   if (json.feed) {
     return parseAtomFeed(json)
-  } else if (json.rss) {
+  }
+  if (json.rss) {
     return parseRSSFeed(json)
-  } else if (json['rdf:RDF']) {
+  }
+  if (json['rdf:RDF']) {
     return parseRDFFeed(json)
   }
   return undefined
@@ -312,11 +314,11 @@ function parseRSSChannel(channel: any, items?: [] | undefined): RSSFeed {
         obj.media = obj.media || {}
         obj.media.thumbnail = val['media:thumbnail']
       }
-      if (val['thumb_large'] || val['thumb']) {
+      if (val.thumb_large || val.thumb) {
         obj.media = {}
         obj.media.thumbnail = [
           {
-            url: val['thumb_large'] || val['thumb'],
+            url: val.thumb_large || val.thumb,
           },
         ]
       }

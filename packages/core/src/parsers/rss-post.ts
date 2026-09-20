@@ -189,9 +189,7 @@ async function tryFetchFeedFromAltLocations(baseUrl: string, feed: Feed): Promis
           ...feed,
           name: rssFeed.feed.title === '' ? feed.name : rssFeed.feed.title,
         }
-      } catch {
-        continue
-      }
+      } catch {}
     }
   }
   return null
@@ -209,9 +207,9 @@ export async function augmentFeedWithMetadata(
   url: string,
   feedName: string,
   rssFeed: RSSFeedWithMetrics,
-  html?: string,
+  pageHtml?: string,
 ): Promise<Feed | null> {
-  const channelLink = (rssFeed.feed && rssFeed.feed.url) || undefined
+  const channelLink = rssFeed.feed?.url || undefined
   // Use RSS channel link directly if available (preserves author path for multi-author platforms)
   // Fall back to getBaseUrl() only when channel link is not available
   const baseUrl = channelLink
@@ -225,10 +223,7 @@ export async function augmentFeedWithMetadata(
     favicon: rssFeed.feed.icon || '',
   }
   // Fetch the website to augment the feed data with favicon and title
-  if (!html) {
-    const contentWithMimeType = await fetchContentWithMimeType(baseUrl)
-    html = contentWithMimeType?.content
-  }
+  const html = pageHtml || (await fetchContentWithMimeType(baseUrl))?.content
   if (!html) {
     // Website unreachable — keep the successfully parsed feed (favicon best-effort).
     // Resolve the default favicon against the origin, not a deep feed path
@@ -442,11 +437,11 @@ function convertRSSFeedtoPosts(
           ? ''
           : item.title === '(Untitled)'
             ? ''
-            : '**' + htmlToMarkdown(item.title || '') + '**' + '\n\n'
+            : `**${htmlToMarkdown(item.title || '')}**\n\n`
         const commentsLink = item.comments ? `\n\n[Comments](${item.comments})` : ''
 
         const post: Post = {
-          _id: feedUrl + '/' + item.link,
+          _id: `${feedUrl}/${item.link}`,
           text: (title + text + commentsLink).trim(),
           createdAt: adjustCreatedAt(item.created),
           images,

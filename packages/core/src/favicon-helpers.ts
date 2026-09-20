@@ -36,26 +36,15 @@ export function getFaviconForUrl(url: string, originalIcon?: string): string | u
  * Handles author favicons for X/Twitter and Reddit posts.
  */
 export async function transformPostImages(post: Post, url: string): Promise<Post> {
-  // Use hardcoded favicon for X/Twitter URLs
-  if (isXUrl(url) && post.author) {
-    post = {
+  // Hardcoded favicon for X/Twitter and Reddit URLs (a URL is never both)
+  const favicon = isXUrl(url) ? getXFavicon() : isRedditUrl(url) ? getRedditFavicon() : ''
+  if (favicon && post.author) {
+    return {
       ...post,
       author: {
         name: post.author.name,
         uri: post.author.uri,
-        image: { uri: getXFavicon() },
-      },
-    }
-  }
-
-  // Use hardcoded favicon for Reddit URLs
-  if (isRedditUrl(url) && post.author) {
-    post = {
-      ...post,
-      author: {
-        name: post.author.name,
-        uri: post.author.uri,
-        image: { uri: getRedditFavicon() },
+        image: { uri: favicon },
       },
     }
   }

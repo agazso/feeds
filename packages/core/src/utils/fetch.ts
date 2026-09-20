@@ -4,12 +4,7 @@ export async function safeFetch(input: string | URL, init?: RequestInit): Promis
   const response = await fetch(input, init)
   if (!response.ok) {
     throw new Error(
-      'Network error: ' +
-        response.status +
-        ', text: ' +
-        response.statusText +
-        ', request: ' +
-        input.toString(),
+      `Network error: ${response.status}, text: ${response.statusText}, request: ${input.toString()}`,
     )
   }
   return response

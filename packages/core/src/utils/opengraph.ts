@@ -91,7 +91,7 @@ function normalizeOpenGraphData(ogData: OpenGraphData, baseUrl: string): OpenGra
   const absoluteUrlImage = createUrlFromUrn(ogData.image, baseUrl)
 
   // remove broken images pointing to the website and not an image
-  const image = absoluteUrlImage === baseUrl + '/' ? '' : absoluteUrlImage
+  const image = absoluteUrlImage === `${baseUrl}/` ? '' : absoluteUrlImage
 
   return {
     ...ogData,

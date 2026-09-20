@@ -161,6 +161,7 @@ function decodeHtmlEntities(text: string): string {
     .replace(/&amp;/g, '&') // Must be last
 }
 
+// biome-ignore lint/complexity/noStaticOnlyClass: a namespace, used as `HtmlUtils.x` throughout
 export class HtmlUtils {
   public static parse(html: string): ParsedNode {
     return parseHtml(html)
@@ -173,9 +174,8 @@ export class HtmlUtils {
       if (childNode.nodeName === pathPart) {
         if (path.length > 1) {
           return HtmlUtils.findPath(childNode, path.slice(1))
-        } else {
-          foundNodes.push(childNode)
         }
+        foundNodes.push(childNode)
       }
     }
 
