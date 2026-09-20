@@ -2,14 +2,17 @@
 import { page } from '$app/state'
 import type { Feed } from '@feeds/core'
 
-// Without `feeds`: this page's own feed twins, so a reader finds them without
-// knowing the convention. With `feeds`: the source feeds the page lists — a followed
-// feed already publishes its own, and its URL may itself end in `.rss` (Reddit), so
-// advertise that instead of a twin we would have to serve.
-//
-// `sep` is the separator before the format. `.` for pages whose path has no dots;
-// `/` for a feed page, whose path is a URL full of them (see routes/feeds/syndicate.ts).
-const { feeds, sep = '.' }: { feeds?: Feed[]; sep?: string } = $props()
+// Three ways to advertise a feed, one per page shape:
+// - `feeds`: the source feeds a page lists. A followed feed already publishes its
+//   own, and its URL may itself end in `.rss` (Reddit), so point at that rather than
+//   a twin we would have to serve.
+// - `rss`/`json`: given explicitly, for a page whose feed URL is not its own path
+//   plus an extension — a feed page, served from `/feeds.rss/<url>`.
+// - neither: this page's own `.rss` / `.json` twins.
+const { feeds, rss, json }: { feeds?: Feed[]; rss?: string; json?: string } = $props()
+
+const rssHref = $derived(rss ?? `${page.url.pathname}.rss`)
+const jsonHref = $derived(json ?? `${page.url.pathname}.json`)
 </script>
 
 <svelte:head>
@@ -18,17 +21,7 @@ const { feeds, sep = '.' }: { feeds?: Feed[]; sep?: string } = $props()
       <link rel="alternate" type="application/rss+xml" title={feed.name} href={feed.feedUrl} />
     {/each}
   {:else}
-    <link
-      rel="alternate"
-      type="application/rss+xml"
-      title="RSS"
-      href="{page.url.pathname}{sep}rss"
-    />
-    <link
-      rel="alternate"
-      type="application/feed+json"
-      title="JSON Feed"
-      href="{page.url.pathname}{sep}json"
-    />
+    <link rel="alternate" type="application/rss+xml" title="RSS" href={rssHref} />
+    <link rel="alternate" type="application/feed+json" title="JSON Feed" href={jsonHref} />
   {/if}
 </svelte:head>

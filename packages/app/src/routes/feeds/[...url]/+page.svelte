@@ -10,8 +10,13 @@ import { buildTagCooccurrence, getSuggestedTags } from '$lib/tags'
 import { auth } from '$lib/stores/auth.svelte'
 import { prefix } from '$lib/prefix'
 import { invalidateAll } from '$app/navigation'
+import { page } from '$app/state'
 
 let { data }: { data: PageData } = $props()
+
+// This page is /feeds/<url>; its feeds are /feeds.rss/<url> and /feeds.json/<url>.
+const feedFormatUrl = (format: 'rss' | 'json') =>
+  page.url.pathname.replace('/feeds/', `/feeds.${format}/`)
 
 let searchQuery = $state('')
 let isEditingTags = $state(false)
@@ -88,7 +93,7 @@ async function saveTags() {
 <FeedLinks feeds={[data.feed]} />
 <!-- Only when enriched: otherwise our version is the source feed, already above. -->
 {#if data.feed.enrich}
-  <FeedLinks sep="/" />
+  <FeedLinks rss={feedFormatUrl('rss')} json={feedFormatUrl('json')} />
 {/if}
 
 <div class="feed-page">

@@ -1,5 +1,6 @@
 import type { Post } from '@feeds/core'
 import { describe, expect, test } from 'vitest'
+import { feedPageUrl } from '../src/lib/server/syndicate-feed'
 import { feedUrls, isSyndicationFormat, syndicate } from '../src/lib/server/syndication'
 
 const META = { title: 'Feeds', link: 'https://x.test/myfeed', self: 'https://x.test/myfeed.rss' }
@@ -109,12 +110,15 @@ describe('route helpers', () => {
     })
   })
 
-  // A feed page uses `/rss`, not `.rss` — its path is a URL full of dots.
-  test('drops a trailing format segment the same way', () => {
-    const self = 'https://x.test/feeds/https%3A%2F%2Fa.test%2Ffeed.rss/json'
-    expect(feedUrls(new URL(self), 'json')).toEqual({
-      link: 'https://x.test/feeds/https%3A%2F%2Fa.test%2Ffeed.rss',
-      self,
-    })
+  // A feed page puts the format ahead of the URL, which is full of dots and may
+  // itself end in `.rss` — so the extension form cannot be used there.
+  test('a feed page url maps back to its page, user scope intact', () => {
+    const reddit = 'https%3A%2F%2Freddit.com%2Fr%2FFire.rss'
+    expect(feedPageUrl(new URL(`https://x.test/feeds.rss/${reddit}`), 'rss')).toBe(
+      `https://x.test/feeds/${reddit}`,
+    )
+    expect(feedPageUrl(new URL(`https://x.test/@bob/feeds.json/${reddit}`), 'json')).toBe(
+      `https://x.test/@bob/feeds/${reddit}`,
+    )
   })
 })
