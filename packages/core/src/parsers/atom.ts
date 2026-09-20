@@ -110,12 +110,8 @@ function findBestLink(entry: Record<string, unknown>): string {
   return ''
 }
 
-interface AtomTitle {
-  _?: string
-}
-
 interface AtomFeed {
-  title?: (string | AtomTitle)[]
+  title?: unknown
   icon?: string[]
   link?: AtomLink[]
   entry: Record<string, unknown>[]
@@ -134,10 +130,7 @@ export function parseAtomFeed(json: AtomJson): RSSFeed {
     items: [],
   }
 
-  if (feed.title) {
-    const firstTitle = feed.title[0]
-    rss.title = typeof firstTitle === 'string' ? firstTitle : ((firstTitle as AtomTitle)?._ ?? '')
-  }
+  rss.title = atomText(feed.title)
   if (feed.icon) {
     rss.icon = feed.icon[0]
   }
@@ -148,17 +141,9 @@ export function parseAtomFeed(json: AtomJson): RSSFeed {
   rss.items = feed.entry.map((entry: Record<string, unknown>) => {
     const entryDate = getEntryDate(entry)
     const link = findBestLink(entry)
-    const title = entry.title as (string | AtomTitle)[] | undefined
-    const summary = entry.summary as { _?: string }[] | undefined
-    const content = entry.content as { _?: string }[] | undefined
-
     const item: RSSItem = {
-      title: title
-        ? typeof title[0] === 'string'
-          ? title[0]
-          : ((title[0] as AtomTitle)?._ ?? '')
-        : '',
-      description: summary ? (summary[0]?._ ?? '') : content ? (content[0]?._ ?? '') : '',
+      title: atomText(entry.title),
+      description: atomText(entry.summary) || atomText(entry.content),
       created: entryDate ? Date.parse(entryDate) : Date.now(),
       link,
       url: link,

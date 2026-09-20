@@ -22,8 +22,7 @@ describe('parseAtomFeed image extraction', () => {
     const json = makeJson({
       content: [
         {
-          _text:
-            '<a href="x"><img src="https://preview.redd.it/x.jpg?width=640&amp;s=sig"/></a>',
+          _text: '<a href="x"><img src="https://preview.redd.it/x.jpg?width=640&amp;s=sig"/></a>',
           type: 'html',
         },
       ],
@@ -38,7 +37,11 @@ describe('parseAtomFeed image extraction', () => {
     const json = makeJson({
       content: [{ _text: '<img src="https://preview.redd.it/x.jpg"/>', type: 'html' }],
       'media:group': [
-        { 'media:thumbnail': [{ url: 'https://i.ytimg.com/thumb.jpg', width: '480', height: '360' }] },
+        {
+          'media:thumbnail': [
+            { url: 'https://i.ytimg.com/thumb.jpg', width: '480', height: '360' },
+          ],
+        },
       ],
     })
     const feed = parseAtomFeed(json)
@@ -57,5 +60,29 @@ describe('parseAtomFeed image extraction', () => {
     const json = makeJson({ content: [{ _text: '<p>hello</p>', type: 'html' }] })
     const feed = parseAtomFeed(json)
     expect(feed.items[0]?.media).toBeUndefined()
+  })
+})
+
+// The XML parser is configured with textNodeName '_text'; a `<title type='text'>`
+// (Blogger) parses to an object, so reading only `_` lost the name → "Unknown Feed".
+describe('parseAtomFeed titles', () => {
+  test('reads titles carrying attributes', () => {
+    const feed = parseAtomFeed({
+      feed: {
+        title: [{ _text: 'Indie Retro News', type: 'text' }],
+        entry: [{ title: [{ _text: 'A post', type: 'text' }], summary: [{ _text: 'Body' }] }],
+      },
+    })
+    expect(feed.title).toBe('Indie Retro News')
+    expect(feed.items[0]?.title).toBe('A post')
+    expect(feed.items[0]?.description).toBe('Body')
+  })
+
+  test('still reads plain string and `_` titles', () => {
+    const feed = parseAtomFeed({
+      feed: { title: ['Plain'], entry: [{ title: [{ _: 'Legacy' }] }] },
+    })
+    expect(feed.title).toBe('Plain')
+    expect(feed.items[0]?.title).toBe('Legacy')
   })
 })
