@@ -1,199 +1,188 @@
 <script lang="ts">
-import type { Post, Feed } from '@feeds/core'
-import PostList from '$lib/components/PostList.svelte'
-import TagSelector from '$lib/components/TagSelector.svelte'
-import FeedHeader from '$lib/components/FeedHeader.svelte'
-import { goto } from '$app/navigation'
-import { buildTagCooccurrence, getSuggestedTags } from '$lib/tags'
-import { auth } from '$lib/stores/auth.svelte'
-import { untrack } from 'svelte'
-import { prefix } from '$lib/prefix'
+  import { untrack } from 'svelte'
+  import type { Feed, Post } from '@feeds/core'
+  import { goto } from '$app/navigation'
+  import FeedHeader from '$lib/components/FeedHeader.svelte'
+  import PostList from '$lib/components/PostList.svelte'
+  import TagSelector from '$lib/components/TagSelector.svelte'
+  import { prefix } from '$lib/prefix'
+  import { auth } from '$lib/stores/auth.svelte'
+  import { buildTagCooccurrence, getSuggestedTags } from '$lib/tags'
 
-interface Props {
-  data: {
+  interface Props {
+    data: {
+      url: string
+      availableTags: string[]
+      existingFeedUrls: string[]
+      feeds: Feed[]
+      myfeedPosts: Post[]
+    }
+  }
+
+  const { data }: Props = $props()
+
+  interface DiscoveredFeed {
+    name: string
     url: string
-    availableTags: string[]
-    existingFeedUrls: string[]
-    feeds: Feed[]
-    myfeedPosts: Post[]
+    feedUrl: string
+    favicon: string
+    itemCount: number
+    enrich: boolean
   }
-}
 
-let { data }: Props = $props()
+  let url = $state(untrack(() => data.url) || '')
+  let loading = $state(false)
+  let error = $state<string | null>(null)
+  let discoveredFeed = $state<DiscoveredFeed | null>(null)
+  let posts = $state<Post[]>([])
 
-interface DiscoveredFeed {
-  name: string
-  url: string
-  feedUrl: string
-  favicon: string
-  itemCount: number
-  enrich: boolean
-}
+  // Add feed mode state
+  let addMode = $state(false)
+  let selectedTags = $state<string[]>([])
+  // Pre-ticked when the feed looks like a link aggregator; you can override it here.
+  let enrichFeed = $state(false)
+  let saving = $state(false)
+  let feedAdded = $state(false)
+  let embeddingSuggestions = $state<string[]>([])
 
-let url = $state(untrack(() => data.url) || '')
-let loading = $state(false)
-let error = $state<string | null>(null)
-let discoveredFeed = $state<DiscoveredFeed | null>(null)
-let posts = $state<Post[]>([])
+  const cooccurrence = $derived(buildTagCooccurrence(data.feeds, data.myfeedPosts))
+  const suggestedTags = $derived(
+    [...new Set([...embeddingSuggestions, ...getSuggestedTags(selectedTags, cooccurrence)])].slice(
+      0,
+      5,
+    ),
+  )
 
+  // Check if the discovered feed already exists
+  const feedExists = $derived(
+    discoveredFeed ? data.existingFeedUrls.includes(discoveredFeed.feedUrl) || feedAdded : false,
+  )
 
-// Add feed mode state
-let addMode = $state(false)
-let selectedTags = $state<string[]>([])
-// Pre-ticked when the feed looks like a link aggregator; you can override it here.
-let enrichFeed = $state(false)
-let saving = $state(false)
-let feedAdded = $state(false)
-let embeddingSuggestions = $state<string[]>([])
+  async function discover() {
+    if (!url.trim()) return
 
-const cooccurrence = $derived(buildTagCooccurrence(data.feeds, data.myfeedPosts))
-const suggestedTags = $derived(
-  [...new Set([...embeddingSuggestions, ...getSuggestedTags(selectedTags, cooccurrence)])].slice(0, 5)
-)
-
-// Check if the discovered feed already exists
-const feedExists = $derived(
-  discoveredFeed ? data.existingFeedUrls.includes(discoveredFeed.feedUrl) || feedAdded : false
-)
-
-async function discover() {
-  if (!url.trim()) return
-
-  loading = true
-  error = null
-
-  // Update browser URL to include the discovered URL
-  const encodedUrl = encodeURIComponent(url.trim())
-  goto(`${prefix()}/discover/${encodedUrl}`)
-
-  try {
-    const response = await fetch(`${prefix()}/api/discover`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: url.trim() }),
-    })
-
-    const responseData = await response.json()
-
-    if (!response.ok) {
-      error = responseData.error || 'Failed to discover feed'
-      return
-    }
-
-    discoveredFeed = responseData.feed
-    posts = responseData.posts
-    fetchEmbeddingSuggestions()
-  } catch {
-    error = 'Failed to discover feed. Please check the URL and try again.'
-  } finally {
-    loading = false
-  }
-}
-
-function reset() {
-  discoveredFeed = null
-  posts = []
-  error = null
-  url = ''
-  addMode = false
-  selectedTags = []
-  feedAdded = false
-  embeddingSuggestions = []
-  // Update URL without the parameter
-  goto(`${prefix()}/discover`)
-}
-
-function enterAddMode() {
-  addMode = true
-  selectedTags = []
-  enrichFeed = discoveredFeed?.enrich ?? false
-}
-
-function cancelAddMode() {
-  addMode = false
-  selectedTags = []
-}
-
-async function fetchEmbeddingSuggestions() {
-  if (!discoveredFeed || !posts.length) return
-  const text = [
-    discoveredFeed.name,
-    ...posts.slice(0, 5).map(p => p.rssItem?.title || p.text.slice(0, 100))
-  ].join('. ')
-
-  try {
-    const res = await fetch(`${prefix()}/api/suggest-tags`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text })
-    })
-    const data = await res.json()
-    embeddingSuggestions = data.tags || []
-  } catch {
-    // Ignore errors, fall back to co-occurrence only
-  }
-}
-
-async function saveFeed() {
-  if (!discoveredFeed) return
-
-  saving = true
-
-  try {
-    const response = await fetch(`${prefix()}/api/feeds`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        feed: {
-          name: discoveredFeed.name,
-          url: discoveredFeed.url,
-          feedUrl: discoveredFeed.feedUrl,
-          favicon: discoveredFeed.favicon,
-          tags: selectedTags,
-          enrich: enrichFeed,
-        },
-      }),
-    })
-
-    const result = await response.json()
-
-    if (!response.ok) {
-      error = result.error || 'Failed to save feed'
-      return
-    }
-
-    addMode = false
-    selectedTags = []
-    feedAdded = true
-  } catch {
-    error = 'Failed to save feed. Please try again.'
-  } finally {
-    saving = false
-  }
-}
-
-// Auto-discover if URL parameter is provided
-$effect(() => {
-  if (data.url && !discoveredFeed && !loading && !error) {
-    url = data.url
-    discover()
-  }
-})
-
-// Reset state when navigating to /discover without URL param (handles menu navigation)
-$effect(() => {
-  if (!data.url) {
-    discoveredFeed = null
-    posts = []
+    loading = true
     error = null
-    url = ''
+
+    // Update browser URL to include the discovered URL
+    const encodedUrl = encodeURIComponent(url.trim())
+    goto(`${prefix()}/discover/${encodedUrl}`)
+
+    try {
+      const response = await fetch(`${prefix()}/api/discover`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: url.trim() }),
+      })
+
+      const responseData = await response.json()
+
+      if (!response.ok) {
+        error = responseData.error || 'Failed to discover feed'
+        return
+      }
+
+      discoveredFeed = responseData.feed
+      posts = responseData.posts
+      fetchEmbeddingSuggestions()
+    } catch {
+      error = 'Failed to discover feed. Please check the URL and try again.'
+    } finally {
+      loading = false
+    }
+  }
+
+  function enterAddMode() {
+    addMode = true
+    selectedTags = []
+    enrichFeed = discoveredFeed?.enrich ?? false
+  }
+
+  function cancelAddMode() {
     addMode = false
     selectedTags = []
-    enrichFeed = false
-    feedAdded = false
-    embeddingSuggestions = []
   }
-})
+
+  async function fetchEmbeddingSuggestions() {
+    if (!discoveredFeed || !posts.length) return
+    const text = [
+      discoveredFeed.name,
+      ...posts.slice(0, 5).map((p) => p.rssItem?.title || p.text.slice(0, 100)),
+    ].join('. ')
+
+    try {
+      const res = await fetch(`${prefix()}/api/suggest-tags`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      })
+      const data = await res.json()
+      embeddingSuggestions = data.tags || []
+    } catch {
+      // Ignore errors, fall back to co-occurrence only
+    }
+  }
+
+  async function saveFeed() {
+    if (!discoveredFeed) return
+
+    saving = true
+
+    try {
+      const response = await fetch(`${prefix()}/api/feeds`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          feed: {
+            name: discoveredFeed.name,
+            url: discoveredFeed.url,
+            feedUrl: discoveredFeed.feedUrl,
+            favicon: discoveredFeed.favicon,
+            tags: selectedTags,
+            enrich: enrichFeed,
+          },
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        error = result.error || 'Failed to save feed'
+        return
+      }
+
+      addMode = false
+      selectedTags = []
+      feedAdded = true
+    } catch {
+      error = 'Failed to save feed. Please try again.'
+    } finally {
+      saving = false
+    }
+  }
+
+  // Auto-discover if URL parameter is provided
+  $effect(() => {
+    if (data.url && !discoveredFeed && !loading && !error) {
+      url = data.url
+      discover()
+    }
+  })
+
+  // Reset state when navigating to /discover without URL param (handles menu navigation)
+  $effect(() => {
+    if (!data.url) {
+      discoveredFeed = null
+      posts = []
+      error = null
+      url = ''
+      addMode = false
+      selectedTags = []
+      enrichFeed = false
+      feedAdded = false
+      embeddingSuggestions = []
+    }
+  })
 </script>
 
 <svelte:head>
@@ -203,14 +192,20 @@ $effect(() => {
 <div class="discover-page">
   {#if discoveredFeed}
     <div class="feed-container">
-      <FeedHeader name={discoveredFeed.name} url={discoveredFeed.url} favicon={discoveredFeed.favicon}>
+      <FeedHeader
+        name={discoveredFeed.name}
+        url={discoveredFeed.url}
+        favicon={discoveredFeed.favicon}
+      >
         {#if feedExists}
-          <a href="{prefix()}/feeds/{encodeURIComponent(discoveredFeed.feedUrl)}" class="visit-button">Visit feed</a>
+          <a
+            href="{prefix()}/feeds/{encodeURIComponent(discoveredFeed.feedUrl)}"
+            class="visit-button">Visit feed</a
+          >
         {:else if auth.canWrite}
           <button type="button" class="add-button" onclick={enterAddMode}>Add feed</button>
         {/if}
       </FeedHeader>
-
 
       {#if addMode}
         <div class="add-feed-screen">
@@ -224,8 +219,8 @@ $effect(() => {
             <span>
               Show enriched posts
               <small>
-                Fetches each linked page for its own title, author and image — for link
-                aggregators, whose items all point elsewhere.
+                Fetches each linked page for its own title, author and image — for link aggregators,
+                whose items all point elsewhere.
               </small>
             </span>
           </label>
@@ -332,8 +327,13 @@ $effect(() => {
   }
 
   @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.4;
+    }
   }
 
   .enrich-option {

@@ -90,7 +90,7 @@ function getYoutubeWatchInfo(url: string, html: string): { name: string; feedUrl
   const id = html.match(/"externalChannelId":"(UC[A-Za-z0-9_-]+)"/)?.[1]
   const rawName = html.match(/"ownerChannelName":"([^"]*)"/)?.[1]
   if (!id && !rawName) return null
-  let name = ''
+  let name: string
   try {
     name = rawName ? JSON.parse(`"${rawName}"`) : ''
   } catch {

@@ -1,0 +1,17 @@
+node_modules
+pnpm-lock.yaml
+
+# Build output
+dist
+/packages/app/.svelte-kit
+/packages/app/build
+/packages/app/deploy-out
+
+# Feed data, image cache and auth keys — written by the app, never by hand.
+# users.json holds the per-scope write keys; it must not be rewritten by a formatter.
+/packages/app/static
+/packages/app/cache
+/packages/app/users.json
+
+# Vendored model files
+/packages/app/models

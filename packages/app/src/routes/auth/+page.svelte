@@ -1,15 +1,15 @@
 <script lang="ts">
-import type { PageData, ActionData } from './$types'
-import CopyLink from '$lib/components/CopyLink.svelte'
+  import CopyLink from '$lib/components/CopyLink.svelte'
+  import type { ActionData, PageData } from './$types'
 
-let { data, form }: { data: PageData; form: ActionData } = $props()
+  const { data, form }: { data: PageData; form: ActionData } = $props()
 
-const showInvalid = $derived(form?.invalid === true || data.invalidKey)
-// A key authenticates one scope: the /@name path it was used on, else the root feed.
-const scope = $derived(data.user ? `@${data.user}` : 'root')
+  const showInvalid = $derived(form?.invalid === true || data.invalidKey)
+  // A key authenticates one scope: the /@name path it was used on, else the root feed.
+  const scope = $derived(data.user ? `@${data.user}` : 'root')
 
-// Kept behind a click: the link carries the key, so it shouldn't sit on screen.
-let showLink = $state(false)
+  // Kept behind a click: the link carries the key, so it shouldn't sit on screen.
+  let showLink = $state(false)
 </script>
 
 <svelte:head>
@@ -29,8 +29,8 @@ let showLink = $state(false)
     {#if data.signInUrl}
       {#if showLink}
         <p class="explanation">
-          Open this on another device to sign in there as {scope}. It carries your key —
-          treat it like a password.
+          Open this on another device to sign in there as {scope}. It carries your key — treat it
+          like a password.
         </p>
         <CopyLink url={data.signInUrl} />
       {:else}
@@ -45,16 +45,11 @@ let showLink = $state(false)
   {:else}
     <h2>Enter access key</h2>
     <p class="explanation">
-      Enter your access key to enable adding and editing feeds and posts. You can also
-      open this page with the key in the URL: <code>/auth?key=YOUR_KEY</code>.
+      Enter your access key to enable adding and editing feeds and posts. You can also open this
+      page with the key in the URL: <code>/auth?key=YOUR_KEY</code>.
     </p>
     <form method="POST" action="?/login" class="auth-form">
-      <input
-        type="password"
-        name="key"
-        placeholder="Access key"
-        autocomplete="current-password"
-      />
+      <input type="password" name="key" placeholder="Access key" autocomplete="current-password" />
       <button type="submit">Authenticate</button>
       {#if showInvalid}
         <p class="error">Invalid key. Please try again.</p>

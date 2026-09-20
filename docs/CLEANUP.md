@@ -11,6 +11,7 @@ Status: items 1–5 **done**; B subsumed below.
 ## Progress (resume here)
 
 **Done:**
+
 - Items **1–5** (MIME module, `isYoutubeUrl`, dead-code removal, `collectAvailableTags`,
   `findFeedByKey`).
 - Item **B** — `redditJsonFeedUrl` unified into one robust impl; the survivor is kept
@@ -28,6 +29,7 @@ Status: items 1–5 **done**; B subsumed below.
 - 83 core tests green.
 
 **Pending:**
+
 - Item **C** — `/api/myfeed` POST calls `discoverFeedFromUrl` up to 2× in url-mode
   (feedUrl + favicon fallbacks); memoize to call once.
 - Item **E** — `fetchYoutubeFeed` `/channel/<id>` branch still sets `feed.url` to the
@@ -35,6 +37,7 @@ Status: items 1–5 **done**; B subsumed below.
   the `/feeds/videos.xml` branch.
 
 **New future item (not in the original list):**
+
 - `parseAtomFeed` description bug — it reads `content[0]?._` but the parser stores text
   under `_text`, so Atom **descriptions** are dropped entirely (images are now handled
   separately via `getImageFromAtomContent`). Fixing it would restore descriptions for
@@ -59,6 +62,7 @@ silently desync. The `isRssMimeType` / `isJsonFeedMimeType` / `isFeedMimeType` h
 exist only in `rss-post.ts` and are not referenced by `@feeds/app` or `@feeds/cli`.
 
 **Change.**
+
 - Add `packages/core/src/parsers/mime.ts` exporting `RSSMimeTypes`,
   `JsonFeedMimeTypes`, `allFeedMimeTypes`, and the three `is*MimeType` helpers.
 - `rss-post.ts` and `html-metadata.ts` import from `./mime` and delete their local
@@ -72,11 +76,13 @@ exist only in `rss-post.ts` and are not referenced by `@feeds/app` or `@feeds/cl
 ## 2. One YouTube hostname predicate (includes a small correctness fix)
 
 **Problem.** Two different YouTube hostname checks:
+
 - `providers/youtube.ts` `isYoutubeLink` → `getHumanHostname(getCanonicalUrl(url)) === 'youtube.com'` (correct).
 - `parsers/html-metadata.ts:106` `getYoutubeWatchInfo` → `hostname.endsWith('youtube.com')`,
   which **also matches `notyoutube.com`** (a latent bug). Neither handles `youtu.be`.
 
 **Change.**
+
 - Add to `utils/url.ts` (next to the existing `isXUrl` / `isRedditUrl`):
   ```ts
   export function isYoutubeUrl(url: string): boolean {
@@ -117,6 +123,7 @@ awareness.)
 `routes/feeds/[...url]/+page.server.ts`, `routes/api/suggest-tags/+server.ts`.
 
 **Change.**
+
 - Add `collectAvailableTags(feeds, posts)` to `$lib/tags.ts`, implemented with the
   existing `getAllTags(feeds)` + `getTagsFromPosts(posts)` (sorted, deduped).
 - Replace the four inline blocks with one call.
@@ -133,6 +140,7 @@ see ARCHITECTURE.md §5) is hand-written in two places:
 `routes/feeds/[...url]/+page.server.ts:21` and `routes/api/feeds/[...url]/+server.ts:24`.
 
 **Change.**
+
 - Add `findFeedByKey(feeds, key)` to `$lib/config.ts`:
   `feeds.find(f => f.feedUrl === key) ?? feeds.find(f => f.url === key)`.
 - Use it in both sites (PATCH derives its index from the returned feed, or add a

@@ -11,7 +11,7 @@ export async function resolveYoutubeChannelUrl(
   feedUrl: string,
   init?: RequestInit,
 ): Promise<string | undefined> {
-  let channelId: string | null = null
+  let channelId: string | null
   try {
     channelId = new URL(feedUrl).searchParams.get('channel_id')
   } catch {

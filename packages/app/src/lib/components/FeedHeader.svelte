@@ -1,32 +1,28 @@
 <script lang="ts">
-import type { Snippet } from 'svelte'
+  import type { Snippet } from 'svelte'
 
-interface Props {
-  name: string
-  url: string
-  favicon?: string | null
-  children?: Snippet
-}
+  interface Props {
+    name: string
+    url: string
+    favicon?: string | null
+    children?: Snippet
+  }
 
-let { name, url, favicon, children }: Props = $props()
+  const { name, url, favicon, children }: Props = $props()
 
-let faviconError = $state(false)
+  let faviconError = $state(false)
 
-// Reset error when favicon changes
-$effect(() => {
-  favicon
-  faviconError = false
-})
+  // Reset error when favicon changes
+  $effect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions -- tracks favicon
+    favicon
+    faviconError = false
+  })
 </script>
 
 <div class="feed-header">
   {#if favicon && !faviconError}
-    <img
-      src={favicon}
-      alt=""
-      class="feed-icon"
-      onerror={() => faviconError = true}
-    />
+    <img src={favicon} alt="" class="feed-icon" onerror={() => (faviconError = true)} />
   {/if}
   <div class="feed-info">
     <h2>{name}</h2>

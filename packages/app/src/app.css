@@ -29,21 +29,21 @@
   --loader-size: 10px;
 }
 
-[data-theme="light"] {
+[data-theme='light'] {
   --background-color: var(--white);
   --color: var(--black);
 }
 
-[data-theme="dark"] {
+[data-theme='dark'] {
   --background-color: var(--black);
   --color: var(--white);
 }
 
-[data-layout="one-column"] {
+[data-layout='one-column'] {
   --column-mode: var(--one-column-mode);
 }
 
-[data-layout="three-column"] {
+[data-layout='three-column'] {
   --column-mode: var(--three-column-mode);
 }
 
@@ -59,7 +59,7 @@
 
 body {
   width: 100vw;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   background-color: var(--background-color);
   color: var(--color);
   margin: 0;

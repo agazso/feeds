@@ -1,41 +1,44 @@
 <script lang="ts">
-interface Props {
-  availableTags: string[]
-  selectedTags?: string[]
-  suggestedTags?: string[]
-  onchange?: (tags: string[]) => void
-}
-
-let { availableTags, selectedTags = $bindable([]), suggestedTags = [], onchange }: Props = $props()
-let newTag = $state('')
-
-const allTags = $derived([
-  ...availableTags,
-  ...selectedTags.filter(t => !availableTags.includes(t))
-])
-
-// Filter suggested tags to exclude already selected ones
-const filteredSuggestions = $derived(
-  suggestedTags.filter(t => !selectedTags.includes(t))
-)
-
-function toggleTag(tag: string) {
-  if (selectedTags.includes(tag)) {
-    selectedTags = selectedTags.filter(t => t !== tag)
-  } else {
-    selectedTags = [...selectedTags, tag]
+  interface Props {
+    availableTags: string[]
+    selectedTags?: string[]
+    suggestedTags?: string[]
+    onchange?: (tags: string[]) => void
   }
-  onchange?.(selectedTags)
-}
 
-function addNewTag() {
-  const tag = newTag.trim().toLowerCase()
-  if (tag && !selectedTags.includes(tag)) {
-    selectedTags = [...selectedTags, tag]
+  let {
+    availableTags,
+    selectedTags = $bindable([]),
+    suggestedTags = [],
+    onchange,
+  }: Props = $props()
+  let newTag = $state('')
+
+  const allTags = $derived([
+    ...availableTags,
+    ...selectedTags.filter((t) => !availableTags.includes(t)),
+  ])
+
+  // Filter suggested tags to exclude already selected ones
+  const filteredSuggestions = $derived(suggestedTags.filter((t) => !selectedTags.includes(t)))
+
+  function toggleTag(tag: string) {
+    if (selectedTags.includes(tag)) {
+      selectedTags = selectedTags.filter((t) => t !== tag)
+    } else {
+      selectedTags = [...selectedTags, tag]
+    }
     onchange?.(selectedTags)
   }
-  newTag = ''
-}
+
+  function addNewTag() {
+    const tag = newTag.trim().toLowerCase()
+    if (tag && !selectedTags.includes(tag)) {
+      selectedTags = [...selectedTags, tag]
+      onchange?.(selectedTags)
+    }
+    newTag = ''
+  }
 </script>
 
 <div class="tag-selector">
@@ -44,11 +47,7 @@ function addNewTag() {
       <span class="suggested-label">Suggested:</span>
       <div class="suggested-tags">
         {#each filteredSuggestions as tag}
-          <button
-            type="button"
-            class="tag-chip suggested"
-            onclick={() => toggleTag(tag)}
-          >
+          <button type="button" class="tag-chip suggested" onclick={() => toggleTag(tag)}>
             #{tag}
           </button>
         {/each}

@@ -1,27 +1,27 @@
 <script lang="ts">
-import type { PageData } from './$types'
-import SearchBar from '$lib/components/SearchBar.svelte'
-import PostList from '$lib/components/PostList.svelte'
-import Spinner from '$lib/components/Spinner.svelte'
-import { searchPosts } from '$lib/search'
-import FeedLinks from '$lib/components/FeedLinks.svelte'
+  import FeedLinks from '$lib/components/FeedLinks.svelte'
+  import PostList from '$lib/components/PostList.svelte'
+  import SearchBar from '$lib/components/SearchBar.svelte'
+  import Spinner from '$lib/components/Spinner.svelte'
+  import { searchPosts } from '$lib/search'
+  import type { PageData } from './$types'
 
-let { data }: { data: PageData } = $props()
+  const { data }: { data: PageData } = $props()
 
-let searchQuery = $state('')
-let isLoading = $state(false)
+  let searchQuery = $state('')
+  const isLoading = $state(false)
 
-const filteredPosts = $derived(searchQuery ? searchPosts(data.posts, searchQuery) : data.posts)
+  const filteredPosts = $derived(searchQuery ? searchPosts(data.posts, searchQuery) : data.posts)
 
-function handleSearch(query: string) {
-  searchQuery = query
-}
+  function handleSearch(query: string) {
+    searchQuery = query
+  }
 
-function handleFilter(term: string) {
-  searchQuery = term
-  // Scroll to top when filtering
-  window.scrollTo({ top: 0, behavior: 'smooth' })
-}
+  function handleFilter(term: string) {
+    searchQuery = term
+    // Scroll to top when filtering
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 </script>
 
 <svelte:head>

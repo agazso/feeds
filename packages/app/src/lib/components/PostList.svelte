@@ -1,98 +1,96 @@
 <script lang="ts">
-import type { Post } from '@feeds/core'
-import type Colcade from 'colcade'
-import { browser } from '$app/environment'
-import PostCard from './PostCard.svelte'
-import BackToTop from './BackToTop.svelte'
-import { preferences } from '$lib/stores/preferences.svelte'
-import { supportsCSSMasonry } from '$lib/utils/masonry'
+  import type { Post } from '@feeds/core'
+  import type Colcade from 'colcade'
+  import { browser } from '$app/environment'
+  import { preferences } from '$lib/stores/preferences.svelte'
+  import { supportsCSSMasonry } from '$lib/utils/masonry'
+  import BackToTop from './BackToTop.svelte'
+  import PostCard from './PostCard.svelte'
 
-interface Props {
-  posts: Post[]
-  onfilter?: (term: string) => void
-  onremove?: (postId: string) => void
-  feedUrlToPageUrl?: Record<string, string>
-}
-
-let { posts, onfilter, onremove, feedUrlToPageUrl }: Props = $props()
-
-let listElement: HTMLUListElement | undefined = $state()
-let colcadeInstance: Colcade | undefined = $state()
-let colcadeReady = $state(true)
-let isMobile = $state(false)
-
-$effect(() => {
-  const mq = window.matchMedia('(max-width: 500px)')
-  isMobile = mq.matches
-  const handler = (e: MediaQueryListEvent) => {
-    isMobile = e.matches
-  }
-  mq.addEventListener('change', handler)
-  return () => mq.removeEventListener('change', handler)
-})
-
-const layoutClass = $derived(isMobile ? 'one-column' : preferences.layout)
-const needsJSMasonry = $derived(
-  browser && layoutClass === 'three-column' && !supportsCSSMasonry()
-)
-
-// Initialize/destroy Colcade when needed
-$effect(() => {
-  if (needsJSMasonry && listElement) {
-    // Re-add hiding class for SPA navigation (inline script handles initial load)
-    document.documentElement.classList.add('js-masonry-loading')
-
-    const element = listElement
-    import('colcade').then((module) => {
-      const Colcade = module.default
-      colcadeInstance = new Colcade(element, {
-        columns: '.masonry-col',
-        items: '.post-item'
-      })
-      colcadeReady = true
-      // Remove the early-hiding class now that Colcade is ready
-      document.documentElement.classList.remove('js-masonry-loading')
-    })
+  interface Props {
+    posts: Post[]
+    onfilter?: (term: string) => void
+    onremove?: (postId: string) => void
+    feedUrlToPageUrl?: Record<string, string>
   }
 
-  return () => {
-    if (colcadeInstance) {
-      colcadeInstance.destroy()
-      colcadeInstance = undefined
+  const { posts, onfilter, onremove, feedUrlToPageUrl }: Props = $props()
+
+  let listElement: HTMLUListElement | undefined = $state()
+  let colcadeInstance: Colcade | undefined = $state()
+  let isMobile = $state(false)
+
+  $effect(() => {
+    const mq = window.matchMedia('(max-width: 500px)')
+    isMobile = mq.matches
+    const handler = (e: MediaQueryListEvent) => {
+      isMobile = e.matches
     }
-  }
-})
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  })
 
-// Re-layout when posts change
-$effect(() => {
-  if (colcadeInstance && posts) {
-    // Trigger re-layout after DOM updates
-    requestAnimationFrame(() => {
-      colcadeInstance?.layout()
-    })
-  }
-})
+  const layoutClass = $derived(isMobile ? 'one-column' : preferences.layout)
+  const needsJSMasonry = $derived(
+    browser && layoutClass === 'three-column' && !supportsCSSMasonry(),
+  )
 
-// Resize handler with debounce
-$effect(() => {
-  if (!browser || !colcadeInstance) return
+  // Initialize/destroy Colcade when needed
+  $effect(() => {
+    if (needsJSMasonry && listElement) {
+      // Re-add hiding class for SPA navigation (inline script handles initial load)
+      document.documentElement.classList.add('js-masonry-loading')
 
-  let resizeTimeout: ReturnType<typeof setTimeout>
+      const element = listElement
+      import('colcade').then((module) => {
+        const Colcade = module.default
+        colcadeInstance = new Colcade(element, {
+          columns: '.masonry-col',
+          items: '.post-item',
+        })
+        // Remove the early-hiding class now that Colcade is ready
+        document.documentElement.classList.remove('js-masonry-loading')
+      })
+    }
 
-  const handleResize = () => {
-    clearTimeout(resizeTimeout)
-    resizeTimeout = setTimeout(() => {
-      colcadeInstance?.layout()
-    }, 100)
-  }
+    return () => {
+      if (colcadeInstance) {
+        colcadeInstance.destroy()
+        colcadeInstance = undefined
+      }
+    }
+  })
 
-  window.addEventListener('resize', handleResize)
+  // Re-layout when posts change
+  $effect(() => {
+    if (colcadeInstance && posts) {
+      // Trigger re-layout after DOM updates
+      requestAnimationFrame(() => {
+        colcadeInstance?.layout()
+      })
+    }
+  })
 
-  return () => {
-    clearTimeout(resizeTimeout)
-    window.removeEventListener('resize', handleResize)
-  }
-})
+  // Resize handler with debounce
+  $effect(() => {
+    if (!browser || !colcadeInstance) return
+
+    let resizeTimeout: ReturnType<typeof setTimeout>
+
+    const handleResize = () => {
+      clearTimeout(resizeTimeout)
+      resizeTimeout = setTimeout(() => {
+        colcadeInstance?.layout()
+      }, 100)
+    }
+
+    window.addEventListener('resize', handleResize)
+
+    return () => {
+      clearTimeout(resizeTimeout)
+      window.removeEventListener('resize', handleResize)
+    }
+  })
 </script>
 
 <ul bind:this={listElement} class="post-list {layoutClass}" class:js-masonry={needsJSMasonry}>

@@ -2,9 +2,9 @@ services:
   app:
     image: ghcr.io/agazso/feeds:latest
     restart: unless-stopped
-    userns_mode: "keep-id"          # rootless Podman: container node -> your host uid
+    userns_mode: 'keep-id' # rootless Podman: container node -> your host uid
     env_file: .env
     ports:
-      - "127.0.0.1:3000:3000"       # only the host nginx reaches it
+      - '127.0.0.1:3000:3000' # only the host nginx reaches it
     volumes:
       - /srv/feeds/data:/data

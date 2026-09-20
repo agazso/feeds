@@ -1,7 +1,7 @@
-import { loadConfig, saveConfig } from '$lib/config'
 import type { Feed } from '@feeds/core'
 import { resolveYoutubeChannelUrl } from '@feeds/core'
 import { json } from '@sveltejs/kit'
+import { loadConfig, saveConfig } from '$lib/config'
 import type { RequestHandler } from './$types'
 
 export const POST: RequestHandler = async ({ request, locals }) => {

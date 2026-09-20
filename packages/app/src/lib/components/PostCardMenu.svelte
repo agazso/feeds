@@ -11,16 +11,16 @@
     items: MenuItem[]
   }
 
-  let { items }: Props = $props()
+  const { items }: Props = $props()
 </script>
 
 <div class="post-card-menu">
   <Dropdown>
     {#snippet trigger()}
       <svg width="20" height="20" viewBox="0 0 32 32" fill="currentColor" aria-label="Menu">
-        <circle cx="16" cy="8" r="2"/>
-        <circle cx="16" cy="16" r="2"/>
-        <circle cx="16" cy="24" r="2"/>
+        <circle cx="16" cy="8" r="2" />
+        <circle cx="16" cy="16" r="2" />
+        <circle cx="16" cy="24" r="2" />
       </svg>
     {/snippet}
 
@@ -34,7 +34,10 @@
           <button
             type="button"
             class="menu-item"
-            onclick={(e) => { e.stopPropagation(); item.onclick?.(); }}
+            onclick={(e) => {
+              e.stopPropagation()
+              item.onclick?.()
+            }}
           >
             {item.label}
           </button>

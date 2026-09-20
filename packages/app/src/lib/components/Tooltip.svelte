@@ -1,15 +1,15 @@
 <script lang="ts">
-import type { Snippet } from 'svelte'
+  import type { Snippet } from 'svelte'
 
-interface Props {
-  label: string // aria-label for the trigger
-  icon?: string // trigger glyph, default ⓘ
-  children: Snippet // popover content
-}
+  interface Props {
+    label: string // aria-label for the trigger
+    icon?: string // trigger glyph, default ⓘ
+    children: Snippet // popover content
+  }
 
-let { label, icon = 'ⓘ', children }: Props = $props()
+  const { label, icon = 'ⓘ', children }: Props = $props()
 
-let open = $state(false)
+  let open = $state(false)
 </script>
 
 <div class="tooltip-wrap">
@@ -21,8 +21,8 @@ let open = $state(false)
     onclick={() => (open = !open)}
     onmousemove={() => (open = true)}
     onmouseleave={() => (open = false)}
-    onblur={() => (open = false)}
-  >{icon}</button>
+    onblur={() => (open = false)}>{icon}</button
+  >
   {#if open}
     <div class="tooltip-popover" role="tooltip">{@render children()}</div>
   {/if}

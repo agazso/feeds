@@ -1,5 +1,5 @@
 <script lang="ts">
-let { data }: { data: { users: string[] } } = $props()
+  const { data }: { data: { users: string[] } } = $props()
 </script>
 
 <div class="users">

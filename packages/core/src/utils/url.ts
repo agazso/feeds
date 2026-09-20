@@ -76,7 +76,7 @@ export function createUrlFromUrn(urn: string, base: string): string {
 export function getBaseUrl(input: string): string {
   const url = input.startsWith('//') ? `https:${input}` : input
 
-  return url.replace(/(http.?:\/\/.*?)[\/\?].*/, '$1/')
+  return url.replace(/(http.?:\/\/.*?)[/?].*/, '$1/')
 }
 
 export function getCanonicalUrl(input: string): string {
@@ -113,7 +113,7 @@ export function getHttpsUrl(url: string): string {
 }
 
 export function stripNonAscii(s: string): string {
-  // biome-ignore lint/suspicious/noControlCharactersInRegex: the ASCII range is the point
+  // eslint-disable-next-line no-control-regex -- the ASCII range is the point
   return s.replace(/[^\x00-\x7F]/g, '')
 }
 

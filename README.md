@@ -39,7 +39,8 @@ feeds/
 │           ├── lib/        # Components, stores, server utilities
 │           └── routes/     # Pages and API endpoints
 ├── pnpm-workspace.yaml # pnpm workspace definition
-├── biome.json          # Biome linter/formatter configuration
+├── .prettierrc         # Prettier formatting (covers .svelte markup)
+├── eslint.config.mjs   # ESLint rules, incl. eslint-plugin-svelte
 ├── tsconfig.base.json  # Shared TypeScript configuration
 └── vitest.workspace.ts # Vitest test configuration
 ```
@@ -136,6 +137,7 @@ The core library providing feed parsing and utilities.
 - `fetchHtmlMetaDataOnly(url)` - Extract HTML metadata
 
 **Dependencies:**
+
 - `fast-xml-parser` - XML/RSS parsing
 - `he` - HTML entity decoding
 
@@ -223,11 +225,7 @@ pnpm feeds --help
 ### Using the Library
 
 ```typescript
-import {
-  fetchFeedsFromUrl,
-  loadPosts,
-  fetchOpenGraphData,
-} from '@feeds/core'
+import { fetchFeedsFromUrl, fetchOpenGraphData, loadPosts } from '@feeds/core'
 
 // Discover feeds from a URL
 const feeds = await fetchFeedsFromUrl('https://example.com')
@@ -282,6 +280,7 @@ default**.
   ```json
   { "": "my-secret-key", "bob": "bob-secret-key" }
   ```
+
 - **What it protects:** when enabled, reading stays public, but writing requires
   authentication. Enforcement is server-side in `src/hooks.server.ts` — write requests
   (`POST`/`PATCH`/`DELETE`) return `401` when the caller isn't authenticated, and the

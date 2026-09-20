@@ -1,30 +1,30 @@
 <script lang="ts">
-import type { PageData } from './$types'
-import SearchBar from '$lib/components/SearchBar.svelte'
-import PostList from '$lib/components/PostList.svelte'
-import { searchPosts } from '$lib/search'
-import { untrack } from 'svelte'
-import FeedLinks from '$lib/components/FeedLinks.svelte'
+  import { untrack } from 'svelte'
+  import FeedLinks from '$lib/components/FeedLinks.svelte'
+  import PostList from '$lib/components/PostList.svelte'
+  import SearchBar from '$lib/components/SearchBar.svelte'
+  import { searchPosts } from '$lib/search'
+  import type { PageData } from './$types'
 
-let { data }: { data: PageData } = $props()
+  const { data }: { data: PageData } = $props()
 
-let posts = $state(untrack(() => data.posts))
-let searchQuery = $state('')
+  let posts = $state(untrack(() => data.posts))
+  let searchQuery = $state('')
 
-const filteredPosts = $derived(searchQuery ? searchPosts(posts, searchQuery) : posts)
+  const filteredPosts = $derived(searchQuery ? searchPosts(posts, searchQuery) : posts)
 
-function handleSearch(query: string) {
-  searchQuery = query
-}
+  function handleSearch(query: string) {
+    searchQuery = query
+  }
 
-function handleFilter(term: string) {
-  searchQuery = term
-  window.scrollTo({ top: 0, behavior: 'smooth' })
-}
+  function handleFilter(term: string) {
+    searchQuery = term
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
-function handleRemove(postId: string) {
-  posts = posts.filter((p) => String(p._id) !== postId)
-}
+  function handleRemove(postId: string) {
+    posts = posts.filter((p) => String(p._id) !== postId)
+  }
 </script>
 
 <svelte:head>
@@ -34,7 +34,12 @@ function handleRemove(postId: string) {
 
 <SearchBar value={searchQuery} onchange={handleSearch} />
 {#if filteredPosts.length > 0}
-  <PostList posts={filteredPosts} onfilter={handleFilter} onremove={handleRemove} feedUrlToPageUrl={data.feedUrlToPageUrl} />
+  <PostList
+    posts={filteredPosts}
+    onfilter={handleFilter}
+    onremove={handleRemove}
+    feedUrlToPageUrl={data.feedUrlToPageUrl}
+  />
 {:else if searchQuery}
   <p class="no-results">No posts found matching "{searchQuery}"</p>
 {:else}

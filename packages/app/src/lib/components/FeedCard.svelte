@@ -1,32 +1,29 @@
 <script lang="ts">
-import type { Feed } from '@feeds/core'
-import { prefix } from '$lib/prefix'
+  import type { Feed } from '@feeds/core'
+  import { prefix } from '$lib/prefix'
 
-interface Props {
-  feed: Feed
-}
+  interface Props {
+    feed: Feed
+  }
 
-let { feed }: Props = $props()
+  const { feed }: Props = $props()
 
-let faviconError = $state(false)
+  let faviconError = $state(false)
 
-$effect(() => {
-  faviconError = false
-})
+  $effect(() => {
+    faviconError = false
+  })
 </script>
 
 <a href="{prefix()}/feeds/{encodeURIComponent(feed.feedUrl)}" class="feed-card">
   <div class="feed-icon-container">
     {#if typeof feed.favicon === 'string' && feed.favicon && !faviconError}
-      <img
-        src={feed.favicon}
-        alt=""
-        class="feed-icon"
-        onerror={() => faviconError = true}
-      />
+      <img src={feed.favicon} alt="" class="feed-icon" onerror={() => (faviconError = true)} />
     {:else}
       <svg class="feed-icon-fallback" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M6.18 15.64a2.18 2.18 0 0 1 2.18 2.18C8.36 19 7.38 20 6.18 20C5 20 4 19 4 17.82a2.18 2.18 0 0 1 2.18-2.18M4 4.44A15.56 15.56 0 0 1 19.56 20h-2.83A12.73 12.73 0 0 0 4 7.27V4.44m0 5.66a9.9 9.9 0 0 1 9.9 9.9h-2.83A7.07 7.07 0 0 0 4 12.93V10.1Z"/>
+        <path
+          d="M6.18 15.64a2.18 2.18 0 0 1 2.18 2.18C8.36 19 7.38 20 6.18 20C5 20 4 19 4 17.82a2.18 2.18 0 0 1 2.18-2.18M4 4.44A15.56 15.56 0 0 1 19.56 20h-2.83A12.73 12.73 0 0 0 4 7.27V4.44m0 5.66a9.9 9.9 0 0 1 9.9 9.9h-2.83A7.07 7.07 0 0 0 4 12.93V10.1Z"
+        />
       </svg>
     {/if}
   </div>
@@ -54,7 +51,9 @@ $effect(() => {
     border-radius: 8px;
     text-decoration: none;
     color: var(--color);
-    transition: background-color 0.15s ease, border-color 0.15s ease;
+    transition:
+      background-color 0.15s ease,
+      border-color 0.15s ease;
   }
 
   .feed-card:hover {

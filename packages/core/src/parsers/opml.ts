@@ -30,7 +30,7 @@ function parseOPMLToFeeds(xml: string): OPMLFeed[] {
   const outlineRegex = /<outline[^>]*>/gi
   let match: RegExpExecArray | null
 
-  // biome-ignore lint/suspicious/noAssignInExpressions: the exec-loop idiom
+  // The exec-loop idiom.
   while ((match = outlineRegex.exec(xml)) !== null) {
     const outline = match[0]
 

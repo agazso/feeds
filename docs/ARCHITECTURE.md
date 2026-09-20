@@ -31,6 +31,7 @@ Three stages. Entry points live in the top-level helper files; the parsers and
 providers do the work.
 
 ### Stage A — Discover a feed from a URL
+
 `fetchFeedsFromUrl(url)` — `feed-helpers.ts` — is the single discovery entry point.
 It routes by provider, else falls back to generic content sniffing:
 
@@ -48,6 +49,7 @@ fetchFeedsFromUrl(url)                         feed-helpers.ts
 ```
 
 ### Stage B — Fetch the feed's items
+
 - `fetchFeed(feedUrl)` → `loadRSSFeed(url, xml)` — `parsers/rss.ts` — fetch + parse
   RSS 2.0 / RSS 1.0 / Atom / JSON Feed into `RSSFeedWithMetrics`.
 - `loadPosts(feeds)` / `convertRSSFeedtoPosts(...)` — `parsers/rss-post.ts` —
@@ -56,6 +58,7 @@ fetchFeedsFromUrl(url)                         feed-helpers.ts
   not go through `createPost`.
 
 ### Stage C — Enrich a single link into a Post
+
 This is the share/discover path (fetch the article page for richer metadata):
 
 ```
@@ -78,6 +81,7 @@ enrich path**: it computes the author identity (`shouldUseFeedName`,
 `formatAuthorName`), the text, and the image.
 
 ### High-level discovery wrappers (`discover-feed.ts`)
+
 - `discoverFeedFromUrl(url)` — quick feed info (name/url/feedUrl/favicon), no items.
 - `discoverAndEnrichFeed(url)` — full preview: discover the feed, fetch its items,
   and `createEnrichedPost` **each** item (parallel, with per-item timeout), then
@@ -85,6 +89,7 @@ enrich path**: it computes the author identity (`shouldUseFeedName`,
   and the RSS thumbnail onto every post.
 
 ### Cross-cutting layers
+
 - **Networking** — `safeFetch` (`utils/fetch.ts`, throws on non-2xx) and
   `getHeadersForUrl` + `HEADERS_WITH_*` (`utils/headers.ts`) select the user-agent
   (Reddit → FELFELE, default → Discordbot).
@@ -100,19 +105,21 @@ enrich path**: it computes the author identity (`shouldUseFeedName`,
 ## 3. The app side
 
 ### Endpoint → core function
-| Endpoint / loader | Core functions used |
-|---|---|
-| `POST /api/preview` | `normalizeUrl`, `createEnrichedPost`, `discoverFeedFromUrl`, `transformPostImages` |
-| `POST /api/myfeed` (url-mode) | `createEnrichedPost`, `discoverFeedFromUrl`, `getFaviconForUrl` |
-| `POST /api/myfeed` (post-mode) | reuses `previewPost`; `discoverFeedFromUrl`, `getFaviconForUrl` |
-| `POST /api/discover` | `discoverAndEnrichFeed` |
-| `POST /api/feeds` (add) | `resolveYoutubeChannelUrl` + `loadConfig`/`saveConfig` |
-| `PATCH /api/feeds/[...url]` (tags) | `loadConfig`/`saveConfig` (match by `feedUrl` then `url`) |
-| `GET /api/tags` | `loadPosts`, `buildFeedUrlToPageUrl`, tag helpers (`$lib/tags.ts`) |
-| `/feeds/[...url]` page | `loadPosts([feed])` (match by `feedUrl` then `url`) |
-| `/share/[...url]` loader | `fetchFeedsFromUrl` (discover feed for tag auto-select) |
+
+| Endpoint / loader                  | Core functions used                                                                |
+| ---------------------------------- | ---------------------------------------------------------------------------------- |
+| `POST /api/preview`                | `normalizeUrl`, `createEnrichedPost`, `discoverFeedFromUrl`, `transformPostImages` |
+| `POST /api/myfeed` (url-mode)      | `createEnrichedPost`, `discoverFeedFromUrl`, `getFaviconForUrl`                    |
+| `POST /api/myfeed` (post-mode)     | reuses `previewPost`; `discoverFeedFromUrl`, `getFaviconForUrl`                    |
+| `POST /api/discover`               | `discoverAndEnrichFeed`                                                            |
+| `POST /api/feeds` (add)            | `resolveYoutubeChannelUrl` + `loadConfig`/`saveConfig`                             |
+| `PATCH /api/feeds/[...url]` (tags) | `loadConfig`/`saveConfig` (match by `feedUrl` then `url`)                          |
+| `GET /api/tags`                    | `loadPosts`, `buildFeedUrlToPageUrl`, tag helpers (`$lib/tags.ts`)                 |
+| `/feeds/[...url]` page             | `loadPosts([feed])` (match by `feedUrl` then `url`)                                |
+| `/share/[...url]` loader           | `fetchFeedsFromUrl` (discover feed for tag auto-select)                            |
 
 ### Save-a-post flow
+
 1. Share page `routes/share/[...url]/+page.svelte` → `POST /api/preview` → enriched
    `previewPost` (also cached in `sessionStorage`).
 2. `routes/share/[...url]/+page.server.ts` resolves the `feedUrl` context + auto-selected
@@ -121,10 +128,11 @@ enrich path**: it computes the author identity (`shouldUseFeedName`,
    - **post-mode** (default): reuse `previewPost` (no re-enrich) — see the
      "enrich only once" history.
    - **url-mode** (fallback): `createEnrichedPost(url)`.
-   Both attach `feedUrl` + `tags`, run `processImage`/`processFavicon`, then prepend
-   to `static/myposts.json`.
+     Both attach `feedUrl` + `tags`, run `processImage`/`processFavicon`, then prepend
+     to `static/myposts.json`.
 
 ### Link aggregators (`feed.enrich`)
+
 A feed whose items mostly link off-site (Hacker News, Two Stop Bits) renders identically
 on the plain path — `convertRSSFeedtoPosts` stamps the feed's own name and icon on every
 post. `looksLikeLinkAggregator` (`discover-feed.ts`) detects that at discover time and
@@ -133,7 +141,7 @@ CACHED_HOSTS, but for cost rather than rate limits) and refreshes them via
 `loadEnrichedFeedPosts`, whose per-item loop (`enrichRssItems`) is shared with
 `discoverAndEnrichFeed`. Enriched posts carry `Post.via` (the aggregator's name, its page
 for that item — `rssItem.comments` — and icon) because enrichment replaces the author — and `applyDiscoveredFeedDefaults` only
-backfills `feedUrl` when empty, so a post can end up holding the *source site's* feed url
+backfills `feedUrl` when empty, so a post can end up holding the _source site's_ feed url
 instead of the aggregator's. `via` is the only reliable link back.
 A cache entry records `POSTS_VERSION`, and neither serves nor reuses posts built by an
 older one — without it, reuse pins an item to the shape it had when first enriched.
@@ -142,6 +150,7 @@ the flag invalidates it at once; `MAX_ENRICH_REFRESH` bounds how many aggregator
 page load may refresh.
 
 ### Multi-user scoping
+
 A path may start with `/@name`. `reroute` (`src/hooks.ts`) strips the prefix so a single
 route tree serves both modes; `handle` (`hooks.server.ts`) reads the name back off the
 untouched `event.url`, 404s unknown users, and puts it in `locals.user` — lowercased,
@@ -151,11 +160,12 @@ call takes that `user` and resolves against `dataDir(user)` / `cacheDir(user)`
 On the client, `prefix()` (`$lib/prefix.ts`) supplies the same prefix for links and
 `fetch`. Write auth is per scope, keyed by a `users.json` **beside** DATA_DIR
 (`$lib/server/auth.ts`; `FEEDS_KEYFILE` overrides), read per request so a hand-edited key
-needs no restart. It must never live *inside* DATA_DIR — that defaults to `static/`, which
+needs no restart. It must never live _inside_ DATA_DIR — that defaults to `static/`, which
 is served publicly and copied into `build/client/`. `/invite` is the only page whose **reads**
 are gated (`requireRootScope`): it displays keys.
 
 ### Persistence & caching
+
 - `loadConfig`/`saveConfig` (`$lib/config.ts`) ⇄ `static/feeds.json`
   (`{ feeds, maxPosts }`); `loadMyfeedPosts` (`$lib/myfeed.ts`) ⇄ `static/myposts.json`.
 - `$lib/server/imageProcessing.ts`: `processImage` (blurhash + WebP), `processFavicon`
@@ -163,6 +173,7 @@ are gated (`requireRootScope`): it displays keys.
   `deleteCachedImage` on post delete; served by `/cache/[...path]`.
 
 ### Key UI contract
+
 `PostCard.svelte` shows the **RSS icon iff `post.feedUrl` is set**, the author avatar
 (hidden on load error via `avatarError`), and a menu that picks **View feed**
 (followed) vs **Discover Feed** (not) using `buildFeedUrlToPageUrl` membership
@@ -218,11 +229,11 @@ are gated (`requireRootScope`): it displays keys.
   `fetch` that means reading or writing the wrong user's data.
 - **Every persistence call must be passed `locals.user`.** Omitting it is not a type error
   (the param is optional, for single-user mode) — it just reads/writes the root scope.
-- **`feed.enrich` costs one page fetch per *new* item, and is only affordable because it
+- **`feed.enrich` costs one page fetch per _new_ item, and is only affordable because it
   is cached.** Everything renders through `loadPostsCached`; never call
   `loadEnrichedFeedPosts` straight from a route. The refresh passes the previous entry's
   posts as `reuse`, so unchanged items are not refetched — drop that and every refresh
-  becomes 30 outbound fetches again. Only *well-enriched* posts are reusable: a page that
+  becomes 30 outbound fetches again. Only _well-enriched_ posts are reusable: a page that
   was slow or blocked still yields a post, wearing the feed's icon with no body, and
   reusing those would pin a transient bad window in place for as long as the item stays
   in the feed.

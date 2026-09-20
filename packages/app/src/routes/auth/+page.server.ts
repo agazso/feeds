@@ -1,6 +1,6 @@
+import { fail, redirect } from '@sveltejs/kit'
 import { AUTH_COOKIE, AUTH_COOKIE_MAX_AGE, isValidKey, keyForUser } from '$lib/server/auth'
 import { userPrefix } from '$lib/user'
-import { fail, redirect } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
 function setAuthCookie(cookies: import('@sveltejs/kit').Cookies, key: string) {

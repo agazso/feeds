@@ -1,90 +1,90 @@
 <script lang="ts">
-import type { PageData } from './$types'
-import SearchBar from '$lib/components/SearchBar.svelte'
-import PostList from '$lib/components/PostList.svelte'
-import FeedHeader from '$lib/components/FeedHeader.svelte'
-import FeedLinks from '$lib/components/FeedLinks.svelte'
-import TagSelector from '$lib/components/TagSelector.svelte'
-import { searchPosts } from '$lib/search'
-import { buildTagCooccurrence, getSuggestedTags } from '$lib/tags'
-import { auth } from '$lib/stores/auth.svelte'
-import { prefix } from '$lib/prefix'
-import { invalidateAll } from '$app/navigation'
-import { page } from '$app/state'
+  import { invalidateAll } from '$app/navigation'
+  import { page } from '$app/state'
+  import FeedHeader from '$lib/components/FeedHeader.svelte'
+  import FeedLinks from '$lib/components/FeedLinks.svelte'
+  import PostList from '$lib/components/PostList.svelte'
+  import SearchBar from '$lib/components/SearchBar.svelte'
+  import TagSelector from '$lib/components/TagSelector.svelte'
+  import { prefix } from '$lib/prefix'
+  import { searchPosts } from '$lib/search'
+  import { auth } from '$lib/stores/auth.svelte'
+  import { buildTagCooccurrence, getSuggestedTags } from '$lib/tags'
+  import type { PageData } from './$types'
 
-let { data }: { data: PageData } = $props()
+  const { data }: { data: PageData } = $props()
 
-// This page is /feeds/<url>; its feeds are /feeds.rss/<url> and /feeds.json/<url>.
-const feedFormatUrl = (format: 'rss' | 'json') =>
-  page.url.pathname.replace('/feeds/', `/feeds.${format}/`)
+  // This page is /feeds/<url>; its feeds are /feeds.rss/<url> and /feeds.json/<url>.
+  const feedFormatUrl = (format: 'rss' | 'json') =>
+    page.url.pathname.replace('/feeds/', `/feeds.${format}/`)
 
-let searchQuery = $state('')
-let isEditingTags = $state(false)
-let editedTags = $state<string[]>([])
-let isSaving = $state(false)
-let isTogglingEnrich = $state(false)
+  let searchQuery = $state('')
+  let isEditingTags = $state(false)
+  let editedTags = $state<string[]>([])
+  let isSaving = $state(false)
+  let isTogglingEnrich = $state(false)
 
-const cooccurrence = $derived(buildTagCooccurrence(data.feeds, data.myfeedPosts))
-const suggestedTags = $derived(getSuggestedTags(editedTags, cooccurrence))
+  const cooccurrence = $derived(buildTagCooccurrence(data.feeds, data.myfeedPosts))
+  const suggestedTags = $derived(getSuggestedTags(editedTags, cooccurrence))
 
-const filteredPosts = $derived(searchQuery ? searchPosts(data.posts, searchQuery) : data.posts)
+  const filteredPosts = $derived(searchQuery ? searchPosts(data.posts, searchQuery) : data.posts)
 
-function handleSearch(query: string) {
-  searchQuery = query
-}
-
-function handleFilter(term: string) {
-  searchQuery = term
-  window.scrollTo({ top: 0, behavior: 'smooth' })
-}
-
-function startEditingTags() {
-  editedTags = [...(data.feed.tags || [])]
-  isEditingTags = true
-}
-
-function cancelEditingTags() {
-  isEditingTags = false
-  editedTags = []
-}
-
-async function patchFeed(body: Record<string, unknown>): Promise<boolean> {
-  const response = await fetch(`${prefix()}/api/feeds/${encodeURIComponent(data.feed.feedUrl)}`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  })
-  if (response.ok) return true
-  const error = await response.json().catch(() => ({}))
-  alert(`Failed to save: ${error.error ?? response.status}`)
-  return false
-}
-
-// The posts themselves are built server-side, so reload to see the change.
-async function toggleEnrich() {
-  isTogglingEnrich = true
-  try {
-    if (await patchFeed({ enrich: !data.feed.enrich })) {
-      await invalidateAll()
-    }
-  } finally {
-    isTogglingEnrich = false
+  function handleSearch(query: string) {
+    searchQuery = query
   }
-}
 
-async function saveTags() {
-  isSaving = true
-  try {
-    if (await patchFeed({ tags: editedTags })) {
-      data.feed.tags = editedTags
-      isEditingTags = false
-    }
-  } catch {
-    alert('Failed to save tags')
-  } finally {
-    isSaving = false
+  function handleFilter(term: string) {
+    searchQuery = term
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
-}
+
+  function startEditingTags() {
+    editedTags = [...(data.feed.tags || [])]
+    isEditingTags = true
+  }
+
+  function cancelEditingTags() {
+    isEditingTags = false
+    editedTags = []
+  }
+
+  async function patchFeed(body: Record<string, unknown>): Promise<boolean> {
+    const response = await fetch(`${prefix()}/api/feeds/${encodeURIComponent(data.feed.feedUrl)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    if (response.ok) return true
+    const error = await response.json().catch(() => ({}))
+    alert(`Failed to save: ${error.error ?? response.status}`)
+    return false
+  }
+
+  // The posts themselves are built server-side, so reload to see the change.
+  async function toggleEnrich() {
+    isTogglingEnrich = true
+    try {
+      if (await patchFeed({ enrich: !data.feed.enrich })) {
+        await invalidateAll()
+      }
+    } finally {
+      isTogglingEnrich = false
+    }
+  }
+
+  async function saveTags() {
+    isSaving = true
+    try {
+      if (await patchFeed({ tags: editedTags })) {
+        data.feed.tags = editedTags
+        isEditingTags = false
+      }
+    } catch {
+      alert('Failed to save tags')
+    } finally {
+      isSaving = false
+    }
+  }
 </script>
 
 <svelte:head>
@@ -97,7 +97,11 @@ async function saveTags() {
 {/if}
 
 <div class="feed-page">
-  <FeedHeader name={data.feed.name} url={data.feed.url} favicon={typeof data.feed.favicon === 'string' ? data.feed.favicon : null} />
+  <FeedHeader
+    name={data.feed.name}
+    url={data.feed.url}
+    favicon={typeof data.feed.favicon === 'string' ? data.feed.favicon : null}
+  />
 
   <div class="tags-section">
     {#if isEditingTags}

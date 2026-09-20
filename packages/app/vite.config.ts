@@ -1,5 +1,5 @@
-import { fileURLToPath } from 'node:url'
 import { sveltekit } from '@sveltejs/kit/vite'
+import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
 
 export default defineConfig(({ command }) => ({

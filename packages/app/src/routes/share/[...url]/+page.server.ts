@@ -1,7 +1,7 @@
+import { fetchFeedsFromUrl, timeout } from '@feeds/core'
 import { loadConfig } from '$lib/config'
 import { loadMyfeedPosts } from '$lib/myfeed'
 import { collectAvailableTags } from '$lib/tags'
-import { fetchFeedsFromUrl, timeout } from '@feeds/core'
 import type { PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ params, url, locals }) => {

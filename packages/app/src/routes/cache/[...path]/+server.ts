@@ -1,7 +1,7 @@
 import { readFile } from 'fs/promises'
 import { join } from 'path'
-import type { RequestHandler } from './$types'
 import { cacheDir } from '$lib/paths'
+import type { RequestHandler } from './$types'
 
 const ALLOWED_EXTENSIONS: Record<string, string> = {
   '.webp': 'image/webp',

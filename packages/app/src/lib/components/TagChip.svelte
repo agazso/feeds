@@ -6,7 +6,7 @@
     onremove?: () => void
   }
 
-  let { tag, onremove }: Props = $props()
+  const { tag, onremove }: Props = $props()
 </script>
 
 <span class="tag-chip">

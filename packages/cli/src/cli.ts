@@ -1,7 +1,5 @@
-import { readFileSync, writeFileSync } from 'node:fs'
 import {
   type Feed,
-  type Post,
   convertOPMLFeed,
   discoverAndEnrichFeed,
   discoverFeedUrlFromWellKnownPaths,
@@ -18,6 +16,7 @@ import {
   tryFetchOPML,
 } from '@feeds/core'
 import { Command } from 'commander'
+import { readFileSync, writeFileSync } from 'node:fs'
 
 const program = new Command()
 
@@ -109,14 +108,19 @@ program
   .option('-t, --timeout <ms>', 'Enrichment timeout per item', '5000')
   .option('-m, --max-items <n>', 'Maximum items to process')
   .option('--skip-enrichment', 'Use RSS data only, skip metadata fetch')
-  .action(async (url: string, options: { timeout: string; maxItems?: string; skipEnrichment?: boolean }) => {
-    const result = await discoverAndEnrichFeed(url, {
-      enrichmentTimeout: parseInt(options.timeout),
-      maxItems: options.maxItems ? parseInt(options.maxItems) : undefined,
-      skipEnrichment: options.skipEnrichment,
-    })
-    console.log(JSON.stringify(result, null, 2))
-  })
+  .action(
+    async (
+      url: string,
+      options: { timeout: string; maxItems?: string; skipEnrichment?: boolean },
+    ) => {
+      const result = await discoverAndEnrichFeed(url, {
+        enrichmentTimeout: parseInt(options.timeout),
+        maxItems: options.maxItems ? parseInt(options.maxItems) : undefined,
+        skipEnrichment: options.skipEnrichment,
+      })
+      console.log(JSON.stringify(result, null, 2))
+    },
+  )
 
 // OPML command
 program

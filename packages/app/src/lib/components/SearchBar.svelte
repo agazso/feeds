@@ -1,35 +1,35 @@
 <script lang="ts">
-import { debounce } from '$lib/search'
-import Tooltip from './Tooltip.svelte'
+  import { debounce } from '$lib/search'
+  import Tooltip from './Tooltip.svelte'
 
-interface Props {
-  value?: string
-  onchange?: (value: string) => void
-}
+  interface Props {
+    value?: string
+    onchange?: (value: string) => void
+  }
 
-let { value = $bindable(''), onchange }: Props = $props()
+  let { value = $bindable(''), onchange }: Props = $props()
 
-let inputRef: HTMLInputElement
+  let inputRef: HTMLInputElement
 
-const debouncedChange = debounce((val: string) => {
-  onchange?.(val)
-}, 300)
+  const debouncedChange = debounce((val: string) => {
+    onchange?.(val)
+  }, 300)
 
-function handleInput(e: Event) {
-  const target = e.target as HTMLInputElement
-  value = target.value
-  debouncedChange(value)
-}
+  function handleInput(e: Event) {
+    const target = e.target as HTMLInputElement
+    value = target.value
+    debouncedChange(value)
+  }
 
-function handleReset() {
-  value = ''
-  onchange?.('')
-}
+  function handleReset() {
+    value = ''
+    onchange?.('')
+  }
 
-function handleSubmit(e: Event) {
-  e.preventDefault()
-  inputRef?.blur()
-}
+  function handleSubmit(e: Event) {
+    e.preventDefault()
+    inputRef?.blur()
+  }
 </script>
 
 <form class="search-form" onsubmit={handleSubmit}>
@@ -42,14 +42,18 @@ function handleSubmit(e: Event) {
     oninput={handleInput}
   />
   {#if value}
-    <button type="button" class="search-reset" onclick={handleReset} aria-label="Clear search">&times;</button>
+    <button type="button" class="search-reset" onclick={handleReset} aria-label="Clear search"
+      >&times;</button
+    >
   {:else}
     <Tooltip label="Search help">
       Search or filter posts by keyword, author, or #tag.
       <ul>
         <li>Space-separate words to narrow results</li>
         <li><code>#tag</code> — match a tag</li>
-        <li><code>-word</code> — exclude posts containing <em>word</em> (e.g. <code>-query</code>)</li>
+        <li>
+          <code>-word</code> — exclude posts containing <em>word</em> (e.g. <code>-query</code>)
+        </li>
       </ul>
     </Tooltip>
   {/if}

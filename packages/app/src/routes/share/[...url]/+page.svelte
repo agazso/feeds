@@ -1,162 +1,161 @@
 <script lang="ts">
-import type { Post, Feed } from '@feeds/core'
-import PostCard from '$lib/components/PostCard.svelte'
-import TagSelector from '$lib/components/TagSelector.svelte'
-import { buildTagCooccurrence, getSuggestedTags, getContentBasedTags } from '$lib/tags'
-import { auth } from '$lib/stores/auth.svelte'
-import { prefix } from '$lib/prefix'
+  import type { Feed, Post } from '@feeds/core'
+  import PostCard from '$lib/components/PostCard.svelte'
+  import TagSelector from '$lib/components/TagSelector.svelte'
+  import { prefix } from '$lib/prefix'
+  import { auth } from '$lib/stores/auth.svelte'
+  import { getContentBasedTags } from '$lib/tags'
 
-interface Props {
-  data: {
-    url: string
-    availableTags: string[]
-    feeds: Feed[]
-    myfeedPosts: Post[]
-    feedTags: string[]  // Tags from the specific feed matching this URL (empty if none)
-    feedUrl?: string    // Feed context for the saved post (query param or discovered match)
-  }
-}
-
-let { data }: Props = $props()
-
-let loading = $state(true)
-let saving = $state(false)
-let previewPost = $state<Post | null>(null)
-let error = $state<string | null>(null)
-let success = $state<{ title: string; icon?: string } | null>(null)
-let selectedTags = $state<string[]>([])
-let embeddingTags = $state<string[]>([])
-
-const cooccurrence = $derived(buildTagCooccurrence(data.feeds, data.myfeedPosts))
-
-// Auto-select feed tags when available
-$effect(() => {
-  if (data.feedTags.length > 0 && selectedTags.length === 0) {
-    selectedTags = [...data.feedTags]
-  }
-})
-
-// Combine all text fields for tag matching
-function getPostText(post: Post | null): string {
-  if (!post) return ''
-  return [
-    post.rssItem?.title,
-    post.rssItem?.description,
-    post.text,
-    post.author?.name
-  ].filter(Boolean).join(' ')
-}
-
-// feedTags are now provided by the server (exact feed URL matching)
-
-// Fetch embedding-based tags when preview loads
-$effect(() => {
-  const text = getPostText(previewPost)
-  if (text) {
-    fetch(`${prefix()}/api/suggest-tags`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text })
-    })
-      .then(res => res.json())
-      .then(result => { embeddingTags = result.tags || [] })
-      .catch(() => { embeddingTags = [] })
-  } else {
-    embeddingTags = []
-  }
-})
-
-// Combine feed tags (priority) + embedding + content-based tags, deduplicated
-const suggestedTags = $derived.by(() => {
-  const contentTags = getContentBasedTags(getPostText(previewPost), data.availableTags)
-  const all = [...data.feedTags, ...embeddingTags, ...contentTags]
-  return [...new Set(all)].slice(0, 5)
-})
-
-async function fetchPreview() {
-  if (!data.url) {
-    loading = false
-    error = 'No URL provided'
-    return
+  interface Props {
+    data: {
+      url: string
+      availableTags: string[]
+      feeds: Feed[]
+      myfeedPosts: Post[]
+      feedTags: string[] // Tags from the specific feed matching this URL (empty if none)
+      feedUrl?: string // Feed context for the saved post (query param or discovered match)
+    }
   }
 
-  // Check sessionStorage for cached preview
-  const cacheKey = `share-preview:${data.url}`
-  const cached = sessionStorage.getItem(cacheKey)
-  if (cached) {
-    sessionStorage.removeItem(cacheKey)
-    try {
-      previewPost = JSON.parse(cached)
+  const { data }: Props = $props()
+
+  let loading = $state(true)
+  let saving = $state(false)
+  let previewPost = $state<Post | null>(null)
+  let error = $state<string | null>(null)
+  let success = $state<{ title: string; icon?: string } | null>(null)
+  let selectedTags = $state<string[]>([])
+  let embeddingTags = $state<string[]>([])
+
+  // Auto-select feed tags when available
+  $effect(() => {
+    if (data.feedTags.length > 0 && selectedTags.length === 0) {
+      selectedTags = [...data.feedTags]
+    }
+  })
+
+  // Combine all text fields for tag matching
+  function getPostText(post: Post | null): string {
+    if (!post) return ''
+    return [post.rssItem?.title, post.rssItem?.description, post.text, post.author?.name]
+      .filter(Boolean)
+      .join(' ')
+  }
+
+  // feedTags are now provided by the server (exact feed URL matching)
+
+  // Fetch embedding-based tags when preview loads
+  $effect(() => {
+    const text = getPostText(previewPost)
+    if (text) {
+      fetch(`${prefix()}/api/suggest-tags`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      })
+        .then((res) => res.json())
+        .then((result) => {
+          embeddingTags = result.tags || []
+        })
+        .catch(() => {
+          embeddingTags = []
+        })
+    } else {
+      embeddingTags = []
+    }
+  })
+
+  // Combine feed tags (priority) + embedding + content-based tags, deduplicated
+  const suggestedTags = $derived.by(() => {
+    const contentTags = getContentBasedTags(getPostText(previewPost), data.availableTags)
+    const all = [...data.feedTags, ...embeddingTags, ...contentTags]
+    return [...new Set(all)].slice(0, 5)
+  })
+
+  async function fetchPreview() {
+    if (!data.url) {
       loading = false
+      error = 'No URL provided'
       return
+    }
+
+    // Check sessionStorage for cached preview
+    const cacheKey = `share-preview:${data.url}`
+    const cached = sessionStorage.getItem(cacheKey)
+    if (cached) {
+      sessionStorage.removeItem(cacheKey)
+      try {
+        previewPost = JSON.parse(cached)
+        loading = false
+        return
+      } catch {
+        // Invalid JSON, fall through to fetch
+      }
+    }
+
+    try {
+      const response = await fetch(`${prefix()}/api/preview`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: data.url }),
+      })
+      const result = await response.json()
+      previewPost = result.preview || null
+      if (!previewPost) {
+        error = 'Could not fetch preview for this URL'
+      }
     } catch {
-      // Invalid JSON, fall through to fetch
+      error = 'Failed to fetch preview'
+    } finally {
+      loading = false
     }
   }
 
-  try {
-    const response = await fetch(`${prefix()}/api/preview`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: data.url }),
-    })
-    const result = await response.json()
-    previewPost = result.preview || null
-    if (!previewPost) {
-      error = 'Could not fetch preview for this URL'
+  async function save() {
+    if (saving) return
+
+    saving = true
+    error = null
+
+    try {
+      // Build API URL with feedUrl query parameter if available
+      const apiUrl = data.feedUrl
+        ? `/api/myfeed?feedUrl=${encodeURIComponent(data.feedUrl)}`
+        : '/api/myfeed'
+
+      // Reuse the already-enriched preview post so the server doesn't re-enrich
+      // (re-running metadata + feed discovery is what made Save slow). Fall back to
+      // url-mode only if the preview failed to load.
+      const payload = previewPost
+        ? { post: previewPost, tags: selectedTags.length > 0 ? selectedTags : undefined }
+        : { url: data.url, tags: selectedTags.length > 0 ? selectedTags : undefined }
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const result = await response.json()
+
+      if (!response.ok) {
+        error = result.error || 'Failed to save'
+        return
+      }
+
+      success = {
+        title: result.post?.title || 'Shared link',
+        icon: result.post?.icon,
+      }
+    } catch {
+      error = 'Failed to save'
+    } finally {
+      saving = false
     }
-  } catch {
-    error = 'Failed to fetch preview'
-  } finally {
-    loading = false
   }
-}
 
-async function save() {
-  if (saving) return
-
-  saving = true
-  error = null
-
-  try {
-    // Build API URL with feedUrl query parameter if available
-    const apiUrl = data.feedUrl
-      ? `/api/myfeed?feedUrl=${encodeURIComponent(data.feedUrl)}`
-      : '/api/myfeed'
-
-    // Reuse the already-enriched preview post so the server doesn't re-enrich
-    // (re-running metadata + feed discovery is what made Save slow). Fall back to
-    // url-mode only if the preview failed to load.
-    const payload = previewPost
-      ? { post: previewPost, tags: selectedTags.length > 0 ? selectedTags : undefined }
-      : { url: data.url, tags: selectedTags.length > 0 ? selectedTags : undefined }
-
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    })
-    const result = await response.json()
-
-    if (!response.ok) {
-      error = result.error || 'Failed to save'
-      return
-    }
-
-    success = {
-      title: result.post?.title || 'Shared link',
-      icon: result.post?.icon,
-    }
-  } catch {
-    error = 'Failed to save'
-  } finally {
-    saving = false
-  }
-}
-
-$effect(() => {
-  fetchPreview()
-})
+  $effect(() => {
+    fetchPreview()
+  })
 </script>
 
 <svelte:head>

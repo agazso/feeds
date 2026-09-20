@@ -181,7 +181,7 @@ export async function loadRSSFeed(
     parseAttributeValue: false,
     parseTagValue: false,
     // Return arrays for these elements to match react-native-xml2js behavior
-    isArray: (name, jpath) => {
+    isArray: (name) => {
       const arrayTags = [
         'item',
         'entry',
@@ -228,7 +228,7 @@ export async function loadRSSFeed(
   return feedWithMetrics
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: XML parsing returns dynamic structure
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- XML parsing returns a dynamic structure
 function parseFeed(json: any): RSSFeed | undefined {
   if (json.feed) {
     return parseAtomFeed(json)
@@ -242,13 +242,13 @@ function parseFeed(json: any): RSSFeed | undefined {
   return undefined
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: XML parsing returns dynamic structure
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- XML parsing returns a dynamic structure
 function parseRSSFeed(json: any): RSSFeed {
   const channel = Array.isArray(json.rss.channel) ? json.rss.channel[0] : json.rss.channel
   return parseRSSChannel(channel)
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: XML parsing returns dynamic structure
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- XML parsing returns a dynamic structure
 function parseRDFFeed(json: any): RSSFeed {
   const channel = Array.isArray(json['rdf:RDF'].channel)
     ? json['rdf:RDF'].channel[0]
@@ -257,7 +257,7 @@ function parseRDFFeed(json: any): RSSFeed {
   return parseRSSChannel(channel, items)
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: XML parsing returns dynamic structure
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- XML parsing returns a dynamic structure
 function getItems(channel: any, items?: [] | undefined) {
   if (items) {
     return items
@@ -268,7 +268,7 @@ function getItems(channel: any, items?: [] | undefined) {
   return channel.item
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: XML parsing returns dynamic structure
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- XML parsing returns a dynamic structure
 function parseRSSChannel(channel: any, items?: [] | undefined): RSSFeed {
   const rss: RSSFeed = { title: '', description: '', url: '', items: [] }
 
@@ -286,10 +286,10 @@ function parseRSSChannel(channel: any, items?: [] | undefined): RSSFeed {
 
   const channelItems = getItems(channel, items)
   if (channelItems) {
-    // biome-ignore lint/suspicious/noExplicitAny: XML parsing returns dynamic structure
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- XML parsing returns a dynamic structure
     channelItems.forEach((val: any) => {
       if (!val) return
-      // biome-ignore lint/suspicious/noExplicitAny: Building RSS item
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- building an RSS item
       const obj: any = {}
       obj.title = val.title != null ? (Array.isArray(val.title) ? val.title[0] : val.title) : ''
       obj.description =
@@ -328,7 +328,7 @@ function parseRSSChannel(channel: any, items?: [] | undefined): RSSFeed {
         if (!Array.isArray(enclosures)) {
           enclosures = [enclosures]
         }
-        // biome-ignore lint/suspicious/noExplicitAny: Processing enclosures
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- processing enclosures
         enclosures.forEach((enclosure: any) => {
           const enc: { [index: string]: unknown } = {}
           for (const x in enclosure) {

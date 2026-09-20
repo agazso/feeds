@@ -1,8 +1,8 @@
+import type { Cookies } from '@sveltejs/kit'
+import { error } from '@sveltejs/kit'
 import { randomInt } from 'node:crypto'
 import { readFile, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
-import type { Cookies } from '@sveltejs/kit'
-import { error } from '@sveltejs/kit'
 import { DATA_DIR } from '../paths'
 
 export const AUTH_COOKIE = 'feeds-auth-key'

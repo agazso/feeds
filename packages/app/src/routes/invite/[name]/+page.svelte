@@ -1,8 +1,8 @@
 <script lang="ts">
-import type { PageData } from './$types'
-import CopyLink from '$lib/components/CopyLink.svelte'
+  import CopyLink from '$lib/components/CopyLink.svelte'
+  import type { PageData } from './$types'
 
-let { data }: { data: PageData } = $props()
+  const { data }: { data: PageData } = $props()
 </script>
 
 <svelte:head>
@@ -52,5 +52,4 @@ let { data }: { data: PageData } = $props()
     border-radius: 4px;
     font-size: 0.9em;
   }
-
 </style>

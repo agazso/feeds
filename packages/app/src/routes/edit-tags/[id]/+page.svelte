@@ -1,76 +1,76 @@
 <script lang="ts">
-import type { Post } from '@feeds/core'
-import { goto } from '$app/navigation'
-import Loader from '$lib/components/Loader.svelte'
-import TagSelector from '$lib/components/TagSelector.svelte'
-import { auth } from '$lib/stores/auth.svelte'
-import { prefix } from '$lib/prefix'
+  import type { Post } from '@feeds/core'
+  import { goto } from '$app/navigation'
+  import Loader from '$lib/components/Loader.svelte'
+  import TagSelector from '$lib/components/TagSelector.svelte'
+  import { prefix } from '$lib/prefix'
+  import { auth } from '$lib/stores/auth.svelte'
 
-interface Props {
-  data: { postId: string }
-}
-
-let { data }: Props = $props()
-
-let loading = $state(true)
-let saving = $state(false)
-let post = $state<Post | null>(null)
-let availableTags = $state<string[]>([])
-let selectedTags = $state<string[]>([])
-let error = $state<string | null>(null)
-
-async function fetchPostData() {
-  try {
-    const response = await fetch(`${prefix()}/api/myfeed/${encodeURIComponent(data.postId)}`)
-    if (!response.ok) {
-      error = 'Post not found'
-      return
-    }
-    const result = await response.json()
-    post = result.post
-    availableTags = result.availableTags
-    selectedTags = post?.tags ? [...post.tags] : []
-  } catch {
-    error = 'Failed to load post'
-  } finally {
-    loading = false
+  interface Props {
+    data: { postId: string }
   }
-}
 
-async function save() {
-  if (saving) return
+  const { data }: Props = $props()
 
-  saving = true
-  error = null
+  let loading = $state(true)
+  let saving = $state(false)
+  let post = $state<Post | null>(null)
+  let availableTags = $state<string[]>([])
+  let selectedTags = $state<string[]>([])
+  let error = $state<string | null>(null)
 
-  try {
-    const response = await fetch(`${prefix()}/api/myfeed`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: data.postId, tags: selectedTags }),
-    })
-
-    if (!response.ok) {
+  async function fetchPostData() {
+    try {
+      const response = await fetch(`${prefix()}/api/myfeed/${encodeURIComponent(data.postId)}`)
+      if (!response.ok) {
+        error = 'Post not found'
+        return
+      }
       const result = await response.json()
-      error = result.error || 'Failed to save'
-      return
+      post = result.post
+      availableTags = result.availableTags
+      selectedTags = post?.tags ? [...post.tags] : []
+    } catch {
+      error = 'Failed to load post'
+    } finally {
+      loading = false
     }
-
-    goto(`${prefix()}/myfeed`)
-  } catch {
-    error = 'Failed to save'
-  } finally {
-    saving = false
   }
-}
 
-function cancel() {
-  history.back()
-}
+  async function save() {
+    if (saving) return
 
-$effect(() => {
-  fetchPostData()
-})
+    saving = true
+    error = null
+
+    try {
+      const response = await fetch(`${prefix()}/api/myfeed`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: data.postId, tags: selectedTags }),
+      })
+
+      if (!response.ok) {
+        const result = await response.json()
+        error = result.error || 'Failed to save'
+        return
+      }
+
+      goto(`${prefix()}/myfeed`)
+    } catch {
+      error = 'Failed to save'
+    } finally {
+      saving = false
+    }
+  }
+
+  function cancel() {
+    history.back()
+  }
+
+  $effect(() => {
+    fetchPostData()
+  })
 </script>
 
 <svelte:head>
@@ -101,9 +101,7 @@ $effect(() => {
       {/if}
 
       <div class="buttons">
-        <button class="cancel-button" onclick={cancel} disabled={saving}>
-          Cancel
-        </button>
+        <button class="cancel-button" onclick={cancel} disabled={saving}> Cancel </button>
         {#if auth.canWrite}
           <button class="save-button" onclick={save} disabled={saving}>
             {saving ? 'Saving...' : 'Save'}

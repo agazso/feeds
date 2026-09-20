@@ -1,8 +1,8 @@
+import { fail, redirect } from '@sveltejs/kit'
 import { mkdir } from 'node:fs/promises'
 import { dataDir, userExists } from '$lib/paths'
 import { createKey, requireRootScope } from '$lib/server/auth'
 import { isValidUserName } from '$lib/user'
-import { fail, redirect } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ locals }) => {

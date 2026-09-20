@@ -11,7 +11,15 @@
     onload?: (e: Event) => void
   }
 
-  let { src, fallbackSrc, blurhash, aspectRatio, alt = '', class: className, onload }: Props = $props()
+  const {
+    src,
+    fallbackSrc,
+    blurhash,
+    aspectRatio,
+    alt = '',
+    class: className,
+    onload,
+  }: Props = $props()
   let loadedSrc = $state<string | undefined>()
   let failedSrc = $state<string | undefined>()
   let canvas: HTMLCanvasElement | undefined = $state()

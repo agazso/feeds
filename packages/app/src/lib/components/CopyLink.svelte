@@ -1,17 +1,17 @@
 <script lang="ts">
-let { url }: { url: string } = $props()
+  const { url }: { url: string } = $props()
 
-let copied = $state(false)
+  let copied = $state(false)
 
-async function copy() {
-  try {
-    await navigator.clipboard.writeText(url)
-    copied = true
-    setTimeout(() => (copied = false), 2000)
-  } catch {
-    // Clipboard blocked (insecure origin, denied permission) — the link is on screen.
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(url)
+      copied = true
+      setTimeout(() => (copied = false), 2000)
+    } catch {
+      // Clipboard blocked (insecure origin, denied permission) — the link is on screen.
+    }
   }
-}
 </script>
 
 <div class="link-row">

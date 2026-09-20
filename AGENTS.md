@@ -18,7 +18,9 @@ This project uses **pnpm** (not npm or yarn). Always use `pnpm` commands:
 ## Design Principles
 
 ### No Counts or Numbers
+
 The UI should not display counts or numerical indicators such as:
+
 - Unread item counts
 - Total item counts
 - List lengths
@@ -34,7 +36,7 @@ These metrics are intentionally omitted to create a calmer, less anxiety-inducin
 
 - Conventional commits, lowercase, imperative: `fix: show share URL input on iOS Safari`.
 - One commit per change — squash, don't stack fixups.
-- Subject only. Add a body just when the *why* isn't obvious from the diff, and keep
+- Subject only. Add a body just when the _why_ isn't obvious from the diff, and keep
   it to a few wrapped lines.
 - No `Co-Authored-By`, no `Generated with Claude Code`, no session links, no emoji.
 

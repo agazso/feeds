@@ -1,5 +1,5 @@
-import type { Post } from '@feeds/core'
 import { SvelteMap } from 'svelte/reactivity'
+import type { Post } from '@feeds/core'
 
 export interface DiscoveredFeed {
   name: string

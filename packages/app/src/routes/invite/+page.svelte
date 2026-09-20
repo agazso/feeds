@@ -1,7 +1,7 @@
 <script lang="ts">
-import type { ActionData } from './$types'
+  import type { ActionData } from './$types'
 
-let { form }: { form: ActionData } = $props()
+  const { form }: { form: ActionData } = $props()
 </script>
 
 <svelte:head>
@@ -11,8 +11,7 @@ let { form }: { form: ActionData } = $props()
 <div class="invite-page">
   <h2>Invite a user</h2>
   <p class="explanation">
-    Creates <code>/@name</code> with its own feeds and posts, and gives you a link to
-    share with them.
+    Creates <code>/@name</code> with its own feeds and posts, and gives you a link to share with them.
   </p>
 
   <form method="POST" class="invite-form">

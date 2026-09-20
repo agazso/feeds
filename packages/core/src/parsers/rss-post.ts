@@ -189,7 +189,9 @@ async function tryFetchFeedFromAltLocations(baseUrl: string, feed: Feed): Promis
           ...feed,
           name: rssFeed.feed.title === '' ? feed.name : rssFeed.feed.title,
         }
-      } catch {}
+      } catch {
+        // alt location did not parse - try the next one
+      }
     }
   }
   return null
@@ -369,7 +371,7 @@ export function extractTextAndImagesFromMarkdown(
   baseUri: string,
 ): [string, ImageData[]] {
   const images: ImageData[] = []
-  const text = markdown.replace(/(\!\[\]\(.*?\))/gi, (uri) => {
+  const text = markdown.replace(/(!\[\]\(.*?\))/gi, (uri) => {
     const image: ImageData = {
       uri:
         baseUri +

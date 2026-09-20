@@ -16,22 +16,34 @@
     <link rel="icon" href="%sveltekit.assets%/favicon.png" />
     <link rel="manifest" href="%sveltekit.assets%/manifest.webmanifest" />
     <link rel="apple-touch-icon" sizes="180x180" href="%sveltekit.assets%/apple-touch-icon.png" />
-    <link rel="apple-touch-icon" sizes="167x167" href="%sveltekit.assets%/apple-touch-icon-167.png" />
-    <link rel="apple-touch-icon" sizes="152x152" href="%sveltekit.assets%/apple-touch-icon-152.png" />
-    <link rel="apple-touch-icon" sizes="120x120" href="%sveltekit.assets%/apple-touch-icon-120.png" />
+    <link
+      rel="apple-touch-icon"
+      sizes="167x167"
+      href="%sveltekit.assets%/apple-touch-icon-167.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="152x152"
+      href="%sveltekit.assets%/apple-touch-icon-152.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="120x120"
+      href="%sveltekit.assets%/apple-touch-icon-120.png"
+    />
     <script>
       // Early masonry detection - runs before first paint
-      (function() {
-        var needsJS = !CSS.supports('grid-template-rows', 'masonry');
+      ;(function () {
+        var needsJS = !CSS.supports('grid-template-rows', 'masonry')
         if (needsJS) {
           // Add class to hide masonry content until Colcade is ready
-          document.documentElement.classList.add('js-masonry-loading');
+          document.documentElement.classList.add('js-masonry-loading')
           // Inject hiding CSS immediately
-          var style = document.createElement('style');
-          style.textContent = '.js-masonry-loading .post-list.three-column { opacity: 0; }';
-          document.head.appendChild(style);
+          var style = document.createElement('style')
+          style.textContent = '.js-masonry-loading .post-list.three-column { opacity: 0; }'
+          document.head.appendChild(style)
         }
-      })();
+      })()
     </script>
     %sveltekit.head%
   </head>

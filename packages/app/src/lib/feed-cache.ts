@@ -1,7 +1,7 @@
-import { readFile, writeFile } from 'node:fs/promises'
-import { join } from 'node:path'
 import type { Feed, Post } from '@feeds/core'
 import { fetchFeedPosts, getHumanHostname, loadEnrichedFeedPosts, loadPosts } from '@feeds/core'
+import { readFile, writeFile } from 'node:fs/promises'
+import { join } from 'node:path'
 import { dataDir } from './paths'
 
 // Hosts whose feeds are cached instead of fetched live, because they rate-limit

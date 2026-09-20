@@ -1,7 +1,7 @@
+import { json } from '@sveltejs/kit'
 import { loadConfig } from '$lib/config'
 import { loadMyfeedPosts } from '$lib/myfeed'
 import { getAllTags, getTagsFromPosts } from '$lib/tags'
-import { json } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
 
 export const GET: RequestHandler = async ({ params, locals }) => {

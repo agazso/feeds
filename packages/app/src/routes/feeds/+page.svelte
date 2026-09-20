@@ -1,53 +1,53 @@
 <script lang="ts">
-import type { PageData } from './$types'
-import type { Feed } from '@feeds/core'
-import SearchBar from '$lib/components/SearchBar.svelte'
-import FeedCard from '$lib/components/FeedCard.svelte'
-import FeedLinks from '$lib/components/FeedLinks.svelte'
+  import type { Feed } from '@feeds/core'
+  import FeedCard from '$lib/components/FeedCard.svelte'
+  import FeedLinks from '$lib/components/FeedLinks.svelte'
+  import SearchBar from '$lib/components/SearchBar.svelte'
+  import type { PageData } from './$types'
 
-let { data }: { data: PageData } = $props()
+  const { data }: { data: PageData } = $props()
 
-let searchQuery = $state('')
-let sortBy = $state<'name' | 'tag'>('name')
+  let searchQuery = $state('')
+  let sortBy = $state<'name' | 'tag'>('name')
 
-function matchesFeed(feed: Feed, query: string): boolean {
-  const lowerQuery = query.toLowerCase()
-  if (feed.name.toLowerCase().includes(lowerQuery)) return true
-  if (feed.url.toLowerCase().includes(lowerQuery)) return true
-  if (feed.feedUrl.toLowerCase().includes(lowerQuery)) return true
-  if (feed.tags?.some(tag => tag.toLowerCase().includes(lowerQuery))) return true
-  return false
-}
-
-function sortFeeds(feeds: Feed[], by: 'name' | 'tag'): Feed[] {
-  return [...feeds].sort((a, b) => {
-    if (by === 'name') {
-      return a.name.localeCompare(b.name)
-    } else {
-      const tagA = a.tags?.[0] ?? ''
-      const tagB = b.tags?.[0] ?? ''
-      const tagCompare = tagA.localeCompare(tagB)
-      if (tagCompare !== 0) return tagCompare
-      return a.name.localeCompare(b.name)
-    }
-  })
-}
-
-const filteredFeeds = $derived.by(() => {
-  let feeds = data.feeds
-  if (searchQuery) {
-    feeds = feeds.filter(feed => matchesFeed(feed, searchQuery))
+  function matchesFeed(feed: Feed, query: string): boolean {
+    const lowerQuery = query.toLowerCase()
+    if (feed.name.toLowerCase().includes(lowerQuery)) return true
+    if (feed.url.toLowerCase().includes(lowerQuery)) return true
+    if (feed.feedUrl.toLowerCase().includes(lowerQuery)) return true
+    if (feed.tags?.some((tag) => tag.toLowerCase().includes(lowerQuery))) return true
+    return false
   }
-  return sortFeeds(feeds, sortBy)
-})
 
-function handleSearch(query: string) {
-  searchQuery = query
-}
+  function sortFeeds(feeds: Feed[], by: 'name' | 'tag'): Feed[] {
+    return [...feeds].sort((a, b) => {
+      if (by === 'name') {
+        return a.name.localeCompare(b.name)
+      } else {
+        const tagA = a.tags?.[0] ?? ''
+        const tagB = b.tags?.[0] ?? ''
+        const tagCompare = tagA.localeCompare(tagB)
+        if (tagCompare !== 0) return tagCompare
+        return a.name.localeCompare(b.name)
+      }
+    })
+  }
 
-function toggleSort() {
-  sortBy = sortBy === 'name' ? 'tag' : 'name'
-}
+  const filteredFeeds = $derived.by(() => {
+    let feeds = data.feeds
+    if (searchQuery) {
+      feeds = feeds.filter((feed) => matchesFeed(feed, searchQuery))
+    }
+    return sortFeeds(feeds, sortBy)
+  })
+
+  function handleSearch(query: string) {
+    searchQuery = query
+  }
+
+  function toggleSort() {
+    sortBy = sortBy === 'name' ? 'tag' : 'name'
+  }
 </script>
 
 <svelte:head>
@@ -62,8 +62,8 @@ function toggleSort() {
     <button class="sort-button" onclick={toggleSort}>
       Sort: {sortBy === 'name' ? 'Name' : 'Tag'}
       <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
-        <path d="M3 5L6 2L9 5H3Z"/>
-        <path d="M3 7L6 10L9 7H3Z"/>
+        <path d="M3 5L6 2L9 5H3Z" />
+        <path d="M3 7L6 10L9 7H3Z" />
       </svg>
     </button>
   </div>

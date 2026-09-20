@@ -1,169 +1,184 @@
 <script lang="ts">
-import type { Post } from '@feeds/core'
-import { getHumanHostname } from '@feeds/core'
-import { postTitle, postText, commentLink, formatTimestamp, thumbnailSrc, resolvedImageSrc } from '$lib/text'
-import PostCardMenu, { type MenuItem } from './PostCardMenu.svelte'
-import BlurhashImage from './BlurhashImage.svelte'
-import { preloadOnScroll } from '$lib/actions/preloadOnScroll'
-import { auth } from '$lib/stores/auth.svelte'
-import { prefix } from '$lib/prefix'
+  import type { Post } from '@feeds/core'
+  import { getHumanHostname } from '@feeds/core'
+  import { preloadOnScroll } from '$lib/actions/preloadOnScroll'
+  import { prefix } from '$lib/prefix'
+  import { auth } from '$lib/stores/auth.svelte'
+  import {
+    commentLink,
+    formatTimestamp,
+    postText,
+    postTitle,
+    resolvedImageSrc,
+    thumbnailSrc,
+  } from '$lib/text'
+  import BlurhashImage from './BlurhashImage.svelte'
+  import PostCardMenu, { type MenuItem } from './PostCardMenu.svelte'
 
-interface Props {
-  post: Post
-  onfilter?: (term: string) => void
-  onremove?: (postId: string) => void
-  feedUrlToPageUrl?: Record<string, string>
-}
-
-let { post, onfilter, onremove, feedUrlToPageUrl }: Props = $props()
-
-const title = $derived(postTitle(post))
-const text = $derived(postText(post))
-const comment = $derived(commentLink(post))
-const timestamp = $derived(post.updatedAt || post.createdAt)
-const printableTime = $derived(timestamp ? formatTimestamp(timestamp) : '')
-const hostname = $derived(post.link ? getHumanHostname(post.link) : '')
-const thumbnail = $derived(thumbnailSrc(post))
-// Only set when the image is actually in our cache; otherwise fall back to the remote url.
-const cachedThumbnail = $derived(
-  post.images?.[0]?.cacheHash ? resolvedImageSrc(post.images[0], prefix()) : undefined,
-)
-const thumbnailBlurhash = $derived(post.images?.[0]?.blurhash)
-const thumbnailAspectRatio = $derived(post.images?.[0]?.aspectRatio)
-const postLink = $derived(post.link || '')
-const authorImage = $derived(post.author?.image ? resolvedImageSrc(post.author.image, prefix()) : undefined)
-let avatarError = $state(false)
-let viaIconError = $state(false)
-
-async function removeFromMyFeed() {
-  const postId = post._id
-  if (!postId) return
-
-  try {
-    const response = await fetch(`${prefix()}/api/myfeed`, {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: postId }),
-    })
-    if (response.ok) {
-      onremove?.(String(postId))
-    } else {
-      console.error('Failed to remove from my feed')
-    }
-  } catch (e) {
-    console.error('Failed to remove from my feed:', e)
+  interface Props {
+    post: Post
+    onfilter?: (term: string) => void
+    onremove?: (postId: string) => void
+    feedUrlToPageUrl?: Record<string, string>
   }
-}
 
-const menuItems = $derived.by(() => {
-  const items: MenuItem[] = []
+  const { post, onfilter, onremove, feedUrlToPageUrl }: Props = $props()
 
-  // Share button (when Web Share API is available)
-  if (typeof navigator !== 'undefined' && navigator.share && post.link) {
+  const title = $derived(postTitle(post))
+  const text = $derived(postText(post))
+  const comment = $derived(commentLink(post))
+  const timestamp = $derived(post.updatedAt || post.createdAt)
+  const printableTime = $derived(timestamp ? formatTimestamp(timestamp) : '')
+  const hostname = $derived(post.link ? getHumanHostname(post.link) : '')
+  const thumbnail = $derived(thumbnailSrc(post))
+  // Only set when the image is actually in our cache; otherwise fall back to the remote url.
+  const cachedThumbnail = $derived(
+    post.images?.[0]?.cacheHash ? resolvedImageSrc(post.images[0], prefix()) : undefined,
+  )
+  const thumbnailBlurhash = $derived(post.images?.[0]?.blurhash)
+  const thumbnailAspectRatio = $derived(post.images?.[0]?.aspectRatio)
+  const postLink = $derived(post.link || '')
+  const authorImage = $derived(
+    post.author?.image ? resolvedImageSrc(post.author.image, prefix()) : undefined,
+  )
+  let avatarError = $state(false)
+  let viaIconError = $state(false)
+
+  async function removeFromMyFeed() {
+    const postId = post._id
+    if (!postId) return
+
+    try {
+      const response = await fetch(`${prefix()}/api/myfeed`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: postId }),
+      })
+      if (response.ok) {
+        onremove?.(String(postId))
+      } else {
+        console.error('Failed to remove from my feed')
+      }
+    } catch (e) {
+      console.error('Failed to remove from my feed:', e)
+    }
+  }
+
+  const menuItems = $derived.by(() => {
+    const items: MenuItem[] = []
+
+    // Share button (when Web Share API is available)
+    if (typeof navigator !== 'undefined' && navigator.share && post.link) {
+      items.push({
+        label: 'Share',
+        onclick: async () => {
+          try {
+            await navigator.share({
+              title: postTitle(post),
+              url: post.link!,
+            })
+          } catch {
+            // User cancelled or share failed - ignore
+          }
+        },
+      })
+    }
+
+    // Copy Link (serves as fallback when Share unavailable)
     items.push({
-      label: 'Share',
-      onclick: async () => {
-        try {
-          await navigator.share({
-            title: postTitle(post),
-            url: post.link!,
-          })
-        } catch (e) {
-          // User cancelled or share failed - ignore
+      label: 'Copy Link',
+      onclick: () => {
+        if (post.link) {
+          navigator.clipboard.writeText(post.link)
         }
       },
     })
-  }
 
-  // Copy Link (serves as fallback when Share unavailable)
-  items.push({
-    label: 'Copy Link',
-    onclick: () => {
-      if (post.link) {
-        navigator.clipboard.writeText(post.link)
+    // Edit Tags (only when in "my feed" context)
+    if (auth.canWrite && onremove && post._id) {
+      items.push({
+        label: 'Edit Tags',
+        href: `${prefix()}/edit-tags/${encodeURIComponent(post._id)}`,
+      })
+    }
+
+    // Add to my feed (when not in "my feed" context)
+    if (auth.canWrite && !onremove && post.link) {
+      const shareUrl = post.feedUrl
+        ? `${prefix()}/share/${encodeURIComponent(post.link)}?feedUrl=${encodeURIComponent(post.feedUrl)}`
+        : `${prefix()}/share/${encodeURIComponent(post.link)}`
+      items.push({
+        label: 'Add to my feed',
+        href: shareUrl,
+      })
+    }
+
+    // Feed-related items
+    if (post.feedUrl) {
+      const isFollowed = !!feedUrlToPageUrl && post.feedUrl in feedUrlToPageUrl
+      if (isFollowed) {
+        // Feed is already followed - show "View feed" only.
+        // Route by feedUrl (unique) — url collides across YouTube channels.
+        items.push({
+          label: 'View feed',
+          href: `${prefix()}/feeds/${encodeURIComponent(post.feedUrl)}`,
+        })
+      } else if (auth.canWrite) {
+        // Feed is not followed - show "Discover Feed" only (entry to the add-feed flow)
+        items.push({
+          label: 'Discover Feed',
+          href: `${prefix()}/discover/${encodeURIComponent(post.feedUrl)}`,
+        })
       }
-    },
+    }
+
+    // Remove (always last, only in "my feed" context)
+    if (auth.canWrite && onremove) {
+      items.push({
+        label: 'Remove',
+        onclick: removeFromMyFeed,
+      })
+    }
+
+    return items
   })
 
-  // Edit Tags (only when in "my feed" context)
-  if (auth.canWrite && onremove && post._id) {
-    items.push({
-      label: 'Edit Tags',
-      href: `${prefix()}/edit-tags/${encodeURIComponent(post._id)}`,
-    })
-  }
-
-  // Add to my feed (when not in "my feed" context)
-  if (auth.canWrite && !onremove && post.link) {
-    const shareUrl = post.feedUrl
-      ? `${prefix()}/share/${encodeURIComponent(post.link)}?feedUrl=${encodeURIComponent(post.feedUrl)}`
-      : `${prefix()}/share/${encodeURIComponent(post.link)}`
-    items.push({
-      label: 'Add to my feed',
-      href: shareUrl,
-    })
-  }
-
-  // Feed-related items
-  if (post.feedUrl) {
-    const isFollowed = !!feedUrlToPageUrl && post.feedUrl in feedUrlToPageUrl
-    if (isFollowed) {
-      // Feed is already followed - show "View feed" only.
-      // Route by feedUrl (unique) — url collides across YouTube channels.
-      items.push({
-        label: 'View feed',
-        href: `${prefix()}/feeds/${encodeURIComponent(post.feedUrl)}`,
-      })
-    } else if (auth.canWrite) {
-      // Feed is not followed - show "Discover Feed" only (entry to the add-feed flow)
-      items.push({
-        label: 'Discover Feed',
-        href: `${prefix()}/discover/${encodeURIComponent(post.feedUrl)}`,
-      })
+  function handleCardClick(e: MouseEvent) {
+    const target = e.target as HTMLElement
+    // Don't trigger if clicking on interactive elements
+    if (target.closest('a, button, .tag, .avatar, .menu-container')) {
+      return
+    }
+    // Don't trigger if text is selected
+    if (window.getSelection()?.toString()) {
+      return
+    }
+    if (postLink) {
+      window.open(postLink, '_blank', 'noopener,noreferrer')
     }
   }
 
-  // Remove (always last, only in "my feed" context)
-  if (auth.canWrite && onremove) {
-    items.push({
-      label: 'Remove',
-      onclick: removeFromMyFeed,
-    })
+  function handleFilterClick(e: MouseEvent, term: string) {
+    e.stopPropagation()
+    onfilter?.(term)
   }
 
-  return items
-})
-
-function handleCardClick(e: MouseEvent) {
-  const target = e.target as HTMLElement
-  // Don't trigger if clicking on interactive elements
-  if (target.closest('a, button, .tag, .avatar, .menu-container')) {
-    return
+  function handleImageLoad(e: Event) {
+    const img = e.target as HTMLImageElement
+    // Fix YouTube thumbnail fallback - YouTube returns a 120x90 placeholder for missing thumbnails
+    if (img.src.includes('ytimg.com') && img.naturalWidth === 120 && img.naturalHeight === 90) {
+      img.src = img.src.replace(/\/\w+.jpg$/, '/mqdefault.jpg')
+    }
   }
-  // Don't trigger if text is selected
-  if (window.getSelection()?.toString()) {
-    return
-  }
-  if (postLink) {
-    window.open(postLink, '_blank', 'noopener,noreferrer')
-  }
-}
-
-function handleFilterClick(e: MouseEvent, term: string) {
-  e.stopPropagation()
-  onfilter?.(term)
-}
-
-function handleImageLoad(e: Event) {
-  const img = e.target as HTMLImageElement
-  // Fix YouTube thumbnail fallback - YouTube returns a 120x90 placeholder for missing thumbnails
-  if (img.src.includes('ytimg.com') && img.naturalWidth === 120 && img.naturalHeight === 90) {
-    img.src = img.src.replace(/\/\w+.jpg$/, '/mqdefault.jpg')
-  }
-}
 </script>
 
-<div class="card-parent" onclick={handleCardClick} onkeydown={(e) => e.key === 'Enter' && handleCardClick(e as unknown as MouseEvent)} role="button" tabindex="0">
+<div
+  class="card-parent"
+  onclick={handleCardClick}
+  onkeydown={(e) => e.key === 'Enter' && handleCardClick(e as unknown as MouseEvent)}
+  role="button"
+  tabindex="0"
+>
   <div class="card-header">
     <button
       class="avatar"
@@ -171,7 +186,7 @@ function handleImageLoad(e: Event) {
       aria-label="Filter by author"
     >
       {#if authorImage && !avatarError}
-        <img src={authorImage} alt="" loading="lazy" onerror={() => avatarError = true} />
+        <img src={authorImage} alt="" loading="lazy" onerror={() => (avatarError = true)} />
       {:else}
         <div class="avatar-placeholder"></div>
       {/if}
@@ -180,9 +195,18 @@ function handleImageLoad(e: Event) {
       <div class="author-name">
         {post.author?.name || ''}
         {#if post.feedUrl}
-          <svg class="rss-icon" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-label="Feed available">
-            <circle cx="6.18" cy="17.82" r="2.18"/>
-            <path d="M4 4.44v2.83c7.03 0 12.73 5.7 12.73 12.73h2.83c0-8.59-6.97-15.56-15.56-15.56zm0 5.66v2.83c3.9 0 7.07 3.17 7.07 7.07h2.83c0-5.47-4.43-9.9-9.9-9.9z"/>
+          <svg
+            class="rss-icon"
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            aria-label="Feed available"
+          >
+            <circle cx="6.18" cy="17.82" r="2.18" />
+            <path
+              d="M4 4.44v2.83c7.03 0 12.73 5.7 12.73 12.73h2.83c0-8.59-6.97-15.56-15.56-15.56zm0 5.66v2.83c3.9 0 7.07 3.17 7.07 7.07h2.83c0-5.47-4.43-9.9-9.9-9.9z"
+            />
           </svg>
         {/if}
       </div>

@@ -1,82 +1,82 @@
 <script lang="ts">
-import { normalizeUrl, type Post } from '@feeds/core'
-import { goto } from '$app/navigation'
-import { debounce } from '$lib/search'
-import PostCard from '$lib/components/PostCard.svelte'
-import { prefix } from '$lib/prefix'
+  import { type Post, normalizeUrl } from '@feeds/core'
+  import { goto } from '$app/navigation'
+  import PostCard from '$lib/components/PostCard.svelte'
+  import { prefix } from '$lib/prefix'
+  import { debounce } from '$lib/search'
 
-interface DiscoveredFeed {
-  name: string
-  url: string
-  feedUrl: string
-  favicon: string
-}
-
-let url = $state('')
-let previewPost = $state<Post | null>(null)
-let previewLoading = $state(false)
-let discoveredFeed = $state<DiscoveredFeed | null>(null)
-let faviconError = $state(false)
-
-async function fetchPreview(urlValue: string) {
-  const normalizedUrl = normalizeUrl(urlValue)
-  if (!normalizedUrl) {
-    previewPost = null
-    discoveredFeed = null
-    faviconError = false
-    return
+  interface DiscoveredFeed {
+    name: string
+    url: string
+    feedUrl: string
+    favicon: string
   }
 
-  previewLoading = true
-  try {
-    const response = await fetch(`${prefix()}/api/preview`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: urlValue }),
-    })
-    const result = await response.json()
-    previewPost = result.preview || null
-    discoveredFeed = result.feed || null
-    faviconError = false
+  let url = $state('')
+  let previewPost = $state<Post | null>(null)
+  let previewLoading = $state(false)
+  let discoveredFeed = $state<DiscoveredFeed | null>(null)
+  let faviconError = $state(false)
 
-    // Use feed favicon as fallback if page favicon is missing
-    if (previewPost && !previewPost.author?.image?.uri && discoveredFeed?.favicon) {
-      previewPost = {
-        ...previewPost,
-        author: {
-          ...previewPost.author,
-          name: previewPost.author?.name || '',
-          uri: previewPost.author?.uri || '',
-          image: { uri: discoveredFeed.favicon }
+  async function fetchPreview(urlValue: string) {
+    const normalizedUrl = normalizeUrl(urlValue)
+    if (!normalizedUrl) {
+      previewPost = null
+      discoveredFeed = null
+      faviconError = false
+      return
+    }
+
+    previewLoading = true
+    try {
+      const response = await fetch(`${prefix()}/api/preview`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: urlValue }),
+      })
+      const result = await response.json()
+      previewPost = result.preview || null
+      discoveredFeed = result.feed || null
+      faviconError = false
+
+      // Use feed favicon as fallback if page favicon is missing
+      if (previewPost && !previewPost.author?.image?.uri && discoveredFeed?.favicon) {
+        previewPost = {
+          ...previewPost,
+          author: {
+            ...previewPost.author,
+            name: previewPost.author?.name || '',
+            uri: previewPost.author?.uri || '',
+            image: { uri: discoveredFeed.favicon },
+          },
         }
       }
+    } catch {
+      previewPost = null
+      discoveredFeed = null
+      faviconError = false
+    } finally {
+      previewLoading = false
     }
-  } catch {
-    previewPost = null
-    discoveredFeed = null
-    faviconError = false
-  } finally {
-    previewLoading = false
-  }
-}
-
-const debouncedFetchPreview = debounce(fetchPreview, 500)
-
-function handleUrlInput() {
-  debouncedFetchPreview(url)
-}
-
-function handleSubmit(e: SubmitEvent) {
-  e.preventDefault()
-  if (!url.trim()) return
-
-  // Store preview in sessionStorage before navigating
-  if (previewPost) {
-    sessionStorage.setItem(`share-preview:${url.trim()}`, JSON.stringify(previewPost))
   }
 
-  goto(`${prefix()}/share/${encodeURIComponent(url.trim())}`)
-}
+  const debouncedFetchPreview = debounce(fetchPreview, 500)
+
+  function handleUrlInput() {
+    debouncedFetchPreview(url)
+  }
+
+  function handleSubmit(e: SubmitEvent) {
+    e.preventDefault()
+    if (!url.trim()) return
+
+    // Store preview in sessionStorage before navigating
+    if (previewPost) {
+      sessionStorage.setItem(`share-preview:${url.trim()}`, JSON.stringify(previewPost))
+    }
+
+    goto(`${prefix()}/share/${encodeURIComponent(url.trim())}`)
+  }
 </script>
 
 <svelte:head>
@@ -94,43 +94,41 @@ function handleSubmit(e: SubmitEvent) {
       oninput={handleUrlInput}
       required
     />
-    <button type="submit" class="submit-button" disabled={!url}>
-      Continue
-    </button>
+    <button type="submit" class="submit-button" disabled={!url}> Continue </button>
   </form>
 
-    {#if discoveredFeed}
-      <div class="feed-header">
-        {#if discoveredFeed.favicon && !faviconError}
-          <img
-            src={discoveredFeed.favicon}
-            alt=""
-            class="feed-icon"
-            onerror={() => faviconError = true}
-          />
-        {/if}
-        <div class="feed-info">
-          <span class="feed-name">{discoveredFeed.name}</span>
-          <span class="feed-url">{discoveredFeed.feedUrl}</span>
-        </div>
-        <a href="{prefix()}/discover/{encodeURIComponent(discoveredFeed.url)}" class="view-feed-link">
-          View Feed
-        </a>
+  {#if discoveredFeed}
+    <div class="feed-header">
+      {#if discoveredFeed.favicon && !faviconError}
+        <img
+          src={discoveredFeed.favicon}
+          alt=""
+          class="feed-icon"
+          onerror={() => (faviconError = true)}
+        />
+      {/if}
+      <div class="feed-info">
+        <span class="feed-name">{discoveredFeed.name}</span>
+        <span class="feed-url">{discoveredFeed.feedUrl}</span>
       </div>
-    {/if}
+      <a href="{prefix()}/discover/{encodeURIComponent(discoveredFeed.url)}" class="view-feed-link">
+        View Feed
+      </a>
+    </div>
+  {/if}
 
-    {#if previewLoading}
-      <div class="preview-section">
-        <p class="preview-label">Loading preview...</p>
+  {#if previewLoading}
+    <div class="preview-section">
+      <p class="preview-label">Loading preview...</p>
+    </div>
+  {:else if previewPost}
+    <div class="preview-section">
+      <p class="preview-label">Preview</p>
+      <div class="preview-card">
+        <PostCard post={previewPost} />
       </div>
-    {:else if previewPost}
-      <div class="preview-section">
-        <p class="preview-label">Preview</p>
-        <div class="preview-card">
-          <PostCard post={previewPost} />
-        </div>
-      </div>
-    {/if}
+    </div>
+  {/if}
 </div>
 
 <style>

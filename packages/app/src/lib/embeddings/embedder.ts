@@ -1,10 +1,10 @@
-import { MODELS_DIR } from '$lib/paths'
 import {
   type FeatureExtractionPipeline,
   type PipelineType,
   env,
   pipeline,
 } from '@huggingface/transformers'
+import { MODELS_DIR } from '$lib/paths'
 
 const MODEL_NAME = 'Xenova/all-MiniLM-L6-v2'
 

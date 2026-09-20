@@ -1,6 +1,6 @@
+import type { Feed, Post } from '@feeds/core'
 import fs from 'node:fs'
 import path from 'node:path'
-import type { Feed, Post } from '@feeds/core'
 import { dataDir } from '../paths'
 import { normalizeText } from '../text'
 import { embed, embedBatch } from './embedder'

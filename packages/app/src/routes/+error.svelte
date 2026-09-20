@@ -1,19 +1,19 @@
 <script lang="ts">
-import { page } from '$app/state'
-import { prefix } from '$lib/prefix'
+  import { page } from '$app/state'
+  import { prefix } from '$lib/prefix'
 
-// Only the statuses this app actually raises; anything else falls back to "Error".
-const REASONS: Record<number, string> = {
-  400: 'Bad Request',
-  401: 'Unauthorized',
-  403: 'Forbidden',
-  404: 'Not Found',
-  409: 'Conflict',
-  500: 'Internal Error',
-}
+  // Only the statuses this app actually raises; anything else falls back to "Error".
+  const REASONS: Record<number, string> = {
+    400: 'Bad Request',
+    401: 'Unauthorized',
+    403: 'Forbidden',
+    404: 'Not Found',
+    409: 'Conflict',
+    500: 'Internal Error',
+  }
 
-const reason = $derived(REASONS[page.status])
-const heading = $derived(reason ? `Error ${page.status} (${reason})` : `Error ${page.status}`)
+  const reason = $derived(REASONS[page.status])
+  const heading = $derived(reason ? `Error ${page.status} (${reason})` : `Error ${page.status}`)
 </script>
 
 <svelte:head>

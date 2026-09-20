@@ -1,4 +1,3 @@
-import { processFavicon, processImage } from '$lib/server/imageProcessing'
 import {
   createEnrichedPost,
   discoverFeedFromUrl,
@@ -7,6 +6,7 @@ import {
   transformPostImages,
 } from '@feeds/core'
 import { json } from '@sveltejs/kit'
+import { processFavicon, processImage } from '$lib/server/imageProcessing'
 import type { RequestHandler } from './$types'
 
 export const POST: RequestHandler = async ({ request, locals }) => {

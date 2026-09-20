@@ -1,25 +1,25 @@
 <script lang="ts">
-import '../app.css'
-import type { LayoutData } from './$types'
-import { preferences } from '$lib/stores/preferences.svelte'
-import { auth } from '$lib/stores/auth.svelte'
-import { onMount, untrack } from 'svelte'
-import { navigating } from '$app/stores'
-import Topbar from '$lib/components/Topbar.svelte'
-import Loader from '$lib/components/Loader.svelte'
+  import { onMount, untrack } from 'svelte'
+  import { navigating } from '$app/stores'
+  import Loader from '$lib/components/Loader.svelte'
+  import Topbar from '$lib/components/Topbar.svelte'
+  import { auth } from '$lib/stores/auth.svelte'
+  import { preferences } from '$lib/stores/preferences.svelte'
+  import '../app.css'
+  import type { LayoutData } from './$types'
 
-let { data, children }: { data: LayoutData; children: any } = $props()
+  const { data, children }: { data: LayoutData; children: any } = $props()
 
-// Initialize preferences from server-side cookies (one-time, not reactive)
-untrack(() => preferences.init(data.theme, data.layout))
-// Initialize auth state from server (hydrated during SSR, no flash)
-untrack(() => auth.init(data.authEnabled, data.authenticated))
+  // Initialize preferences from server-side cookies (one-time, not reactive)
+  untrack(() => preferences.init(data.theme, data.layout))
+  // Initialize auth state from server (hydrated during SSR, no flash)
+  untrack(() => auth.init(data.authEnabled, data.authenticated))
 
-onMount(() => {
-  // Apply theme and layout to document on mount
-  document.documentElement.dataset.theme = preferences.theme
-  document.documentElement.dataset.layout = preferences.layout
-})
+  onMount(() => {
+    // Apply theme and layout to document on mount
+    document.documentElement.dataset.theme = preferences.theme
+    document.documentElement.dataset.layout = preferences.layout
+  })
 </script>
 
 <Topbar />

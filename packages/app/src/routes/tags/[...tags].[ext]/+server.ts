@@ -1,10 +1,10 @@
+import { error } from '@sveltejs/kit'
 import { loadConfig } from '$lib/config'
 import { loadPostsCached } from '$lib/feed-cache'
 import { loadMyfeedPosts } from '$lib/myfeed'
 import { feedUrls, isSyndicationFormat, syndicate } from '$lib/server/syndication'
 import { tagShorts } from '$lib/shorts'
 import { filterFeedsByTags, filterPostsByTags, parseTagsFromPath } from '$lib/tags'
-import { error } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
 
 export const GET: RequestHandler = async ({ params, url, locals }) => {

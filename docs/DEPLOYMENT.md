@@ -62,8 +62,9 @@ SvelteKit's server-only guard rejects a `$lib/server/*` import in that graph):
 
 ```ts
 import { join } from 'node:path'
-export const DATA_DIR   = process.env.FEEDS_DATA_DIR   ?? join(process.cwd(), 'static')
-export const CACHE_DIR  = process.env.FEEDS_CACHE_DIR  ?? join(process.cwd(), 'cache')
+
+export const DATA_DIR = process.env.FEEDS_DATA_DIR ?? join(process.cwd(), 'static')
+export const CACHE_DIR = process.env.FEEDS_CACHE_DIR ?? join(process.cwd(), 'cache')
 export const MODELS_DIR = process.env.FEEDS_MODELS_DIR ?? join(process.cwd(), 'models')
 ```
 
@@ -86,8 +87,9 @@ Then:
   model downloads into `/data`, not the image:
 
   ```ts
-  import { pipeline, env, /* ... */ } from '@huggingface/transformers'
-  env.cacheDir = MODELS_DIR   // from paths.ts
+  import { env /* ... */, pipeline } from '@huggingface/transformers'
+
+  env.cacheDir = MODELS_DIR // from paths.ts
   ```
 
 Defaults preserve current local/dev behavior exactly; the container sets the three env
@@ -192,10 +194,10 @@ services:
   app:
     image: ghcr.io/agazso/feeds:latest
     restart: unless-stopped
-    userns_mode: "keep-id"
+    userns_mode: 'keep-id'
     env_file: .env
     ports:
-      - "127.0.0.1:3000:3000"     # only host nginx reaches it
+      - '127.0.0.1:3000:3000' # only host nginx reaches it
     volumes:
       - /srv/feeds/data:/data
 ```
@@ -320,6 +322,7 @@ location / {
    Open <http://localhost:3000> → timeline renders; images proxy via `/cache/...`; hitting
    tag-suggest downloads MiniLM once into `/tmp/fd/models`; adding a feed writes
    `/tmp/fd/feeds/feeds.json`.
+
 2. **Refactor sanity:** `pnpm --filter @feeds/app build` succeeds; `preview` with no env
    vars still uses `static/` + `cache/` (defaults unchanged).
 3. **Rootless persistence:** stack `down`/`up` (and a reboot, thanks to linger) keeps

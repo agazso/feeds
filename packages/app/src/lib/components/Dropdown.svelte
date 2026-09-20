@@ -7,7 +7,7 @@
     align?: 'left' | 'right'
   }
 
-  let { trigger, children, align = 'right' }: Props = $props()
+  const { trigger, children, align = 'right' }: Props = $props()
 
   const menuId = Math.random().toString(36).substring(2)
   let open = $state(false)
@@ -51,7 +51,8 @@
       }
     }
     window.addEventListener('close-dropdowns', handleCloseDropdowns as EventListener)
-    return () => window.removeEventListener('close-dropdowns', handleCloseDropdowns as EventListener)
+    return () =>
+      window.removeEventListener('close-dropdowns', handleCloseDropdowns as EventListener)
   })
 
   // Handle click outside (desktop only)
@@ -83,12 +84,32 @@
   {#if open}
     {#if isMobile}
       <!-- svelte-ignore a11y_no_static_element_interactions -->
-      <div class="drawer-overlay" onclick={(e) => { e.stopPropagation(); closeDrawer(); }} onkeydown={(e) => e.key === 'Escape' && closeDrawer()}></div>
-      <div class="drawer-content" onclick={closeDrawer} onkeydown={(e) => e.key === 'Escape' && closeDrawer()} role="menu" tabindex="-1">
+      <div
+        class="drawer-overlay"
+        onclick={(e) => {
+          e.stopPropagation()
+          closeDrawer()
+        }}
+        onkeydown={(e) => e.key === 'Escape' && closeDrawer()}
+      ></div>
+      <div
+        class="drawer-content"
+        onclick={closeDrawer}
+        onkeydown={(e) => e.key === 'Escape' && closeDrawer()}
+        role="menu"
+        tabindex="-1"
+      >
         {@render children()}
       </div>
     {:else}
-      <div class="dropdown-content" class:align-left={align === 'left'} onclick={() => (open = false)} onkeydown={(e) => e.key === 'Escape' && (open = false)} role="menu" tabindex="-1">
+      <div
+        class="dropdown-content"
+        class:align-left={align === 'left'}
+        onclick={() => (open = false)}
+        onkeydown={(e) => e.key === 'Escape' && (open = false)}
+        role="menu"
+        tabindex="-1"
+      >
         {@render children()}
       </div>
     {/if}
@@ -163,7 +184,11 @@
   }
 
   @keyframes slide-up {
-    from { transform: translateY(100%); }
-    to { transform: translateY(0); }
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
   }
 </style>

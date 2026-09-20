@@ -161,7 +161,7 @@ function decodeHtmlEntities(text: string): string {
     .replace(/&amp;/g, '&') // Must be last
 }
 
-// biome-ignore lint/complexity/noStaticOnlyClass: a namespace, used as `HtmlUtils.x` throughout
+// A namespace, used as `HtmlUtils.x` throughout.
 export class HtmlUtils {
   public static parse(html: string): ParsedNode {
     return parseHtml(html)
