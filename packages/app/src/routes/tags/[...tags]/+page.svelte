@@ -111,7 +111,7 @@
 
 <div class="tags-header">
   <div class="selected-tags">
-    {#each selectedTags as tag}
+    {#each selectedTags as tag (tag)}
       <TagChip {tag} onremove={() => handleRemoveTag(tag)} />
     {/each}
   </div>
@@ -145,7 +145,7 @@
   <div class="tag-panel" transition:slide={{ duration: 150 }}>
     <div class="panel-header">{openPanel === 'add' ? 'Add tag' : 'Switch tag'}</div>
     <div class="tags-list">
-      {#each addableTags as tag}
+      {#each addableTags as tag (tag)}
         <button
           class="tag-option"
           onclick={() => (openPanel === 'add' ? handleAddTag(tag) : handleReplaceTag(tag))}

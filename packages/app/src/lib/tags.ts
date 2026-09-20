@@ -117,12 +117,13 @@ export function buildTagCooccurrence(
   ]
 
   for (const item of taggedItems) {
-    const tags = item.tags!
+    const tags = item.tags ?? []
     for (const tag of tags) {
-      if (!cooccurrence.has(tag)) {
-        cooccurrence.set(tag, new Map())
+      let tagMap = cooccurrence.get(tag)
+      if (!tagMap) {
+        tagMap = new Map()
+        cooccurrence.set(tag, tagMap)
       }
-      const tagMap = cooccurrence.get(tag)!
       for (const otherTag of tags) {
         if (otherTag !== tag) {
           tagMap.set(otherTag, (tagMap.get(otherTag) || 0) + 1)

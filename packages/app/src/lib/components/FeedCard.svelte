@@ -9,10 +9,6 @@
   const { feed }: Props = $props()
 
   let faviconError = $state(false)
-
-  $effect(() => {
-    faviconError = false
-  })
 </script>
 
 <a href="{prefix()}/feeds/{encodeURIComponent(feed.feedUrl)}" class="feed-card">
@@ -32,7 +28,7 @@
     <div class="feed-url">{feed.url}</div>
     {#if feed.tags && feed.tags.length > 0}
       <div class="feed-tags">
-        {#each feed.tags as tag}
+        {#each feed.tags as tag (tag)}
           <span class="tag-chip">#{tag}</span>
         {/each}
       </div>

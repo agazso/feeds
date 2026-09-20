@@ -73,10 +73,12 @@ export async function processImage(
     let cacheHash: string | undefined
     let cacheExt: string | undefined
     try {
-      const isAnimated =
+      const animatedFormat =
         (metadata.pages ?? 1) > 1 && (metadata.format === 'gif' || metadata.format === 'png')
-      if (isAnimated) {
-        const result = await cacheAnimatedImage(imageBuffer, metadata.format!, user)
+          ? metadata.format
+          : undefined
+      if (animatedFormat) {
+        const result = await cacheAnimatedImage(imageBuffer, animatedFormat, user)
         cacheHash = result?.hash
         cacheExt = result?.ext
       } else {

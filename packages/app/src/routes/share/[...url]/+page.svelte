@@ -176,7 +176,7 @@
       <p class="post-title">{success.title}</p>
       {#if selectedTags.length > 0}
         <div class="saved-tags">
-          {#each selectedTags as tag}
+          {#each selectedTags as tag (tag)}
             <span class="tag">#{tag}</span>
           {/each}
         </div>

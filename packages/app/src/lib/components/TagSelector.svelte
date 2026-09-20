@@ -46,7 +46,7 @@
     <div class="suggested-section">
       <span class="suggested-label">Suggested:</span>
       <div class="suggested-tags">
-        {#each filteredSuggestions as tag}
+        {#each filteredSuggestions as tag (tag)}
           <button type="button" class="tag-chip suggested" onclick={() => toggleTag(tag)}>
             #{tag}
           </button>
@@ -56,7 +56,7 @@
   {/if}
 
   <div class="tags-list">
-    {#each allTags as tag}
+    {#each allTags as tag (tag)}
       <button
         type="button"
         class="tag-chip"

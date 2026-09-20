@@ -8,7 +8,7 @@
     <p class="empty">No users yet. Create a <code>@name</code> folder in the data directory.</p>
   {:else}
     <ul>
-      {#each data.users as user}
+      {#each data.users as user (user)}
         <li><a href="/@{user}">@{user}</a></li>
       {/each}
     </ul>

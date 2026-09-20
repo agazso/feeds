@@ -11,7 +11,11 @@ export function preloadImage(src: string): void {
 function processQueue(): void {
   if (isPreloading || preloadQueue.length === 0) return
   isPreloading = true
-  const src = preloadQueue.shift()!
+  const src = preloadQueue.shift()
+  if (src === undefined) {
+    isPreloading = false
+    return
+  }
   const img = new Image()
   img.onload = img.onerror = () => {
     preloadedImages.add(src)

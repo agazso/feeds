@@ -44,11 +44,6 @@ export default typescriptEslint.config(
       // see the "every in-app link must go through prefix()" invariant in
       // docs/ARCHITECTURE.md §5. Enforcing resolve() would contradict it.
       'svelte/no-navigation-without-resolve': 'off',
-      // Advisory: keying an each block changes DOM reuse, and dropping a $state
-      // wrapper changes reactivity. Both deserve their own change, not a lint sweep.
-      'svelte/require-each-key': 'warn',
-      'svelte/prefer-writable-derived': 'warn',
-      'svelte/no-unnecessary-state-wrap': 'warn',
     },
   },
   {

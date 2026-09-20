@@ -121,7 +121,7 @@
     {:else}
       <div class="feed-tags">
         {#if data.feed.tags && data.feed.tags.length > 0}
-          {#each data.feed.tags as tag}
+          {#each data.feed.tags as tag (tag)}
             <a href="{prefix()}/tags/{tag}" class="tag-chip">#{tag}</a>
           {/each}
         {/if}

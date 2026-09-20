@@ -68,14 +68,15 @@
     const items: MenuItem[] = []
 
     // Share button (when Web Share API is available)
-    if (typeof navigator !== 'undefined' && navigator.share && post.link) {
+    const shareUrl = post.link
+    if (typeof navigator !== 'undefined' && navigator.share && shareUrl) {
       items.push({
         label: 'Share',
         onclick: async () => {
           try {
             await navigator.share({
               title: postTitle(post),
-              url: post.link!,
+              url: shareUrl,
             })
           } catch {
             // User cancelled or share failed - ignore
@@ -267,7 +268,7 @@
 
   {#if post.tags && post.tags.length > 0}
     <div class="tags">
-      {#each post.tags as tag}
+      {#each post.tags as tag (tag)}
         <a href="{prefix()}/tags/{tag}" class="tag" onclick={(e) => e.stopPropagation()}>#{tag}</a>
       {/each}
     </div>

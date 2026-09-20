@@ -25,7 +25,7 @@
     {/snippet}
 
     <div class="menu-dropdown">
-      {#each items as item}
+      {#each items as item (item.label)}
         {#if item.href}
           <a href={item.href} class="menu-item" onclick={(e) => e.stopPropagation()}>
             {item.label}

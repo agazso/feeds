@@ -41,7 +41,9 @@ describe('isValidUserName', () => {
 
   test('accepts every name userFromPath produces', () => {
     for (const path of ['/@bob', '/@Bob/feeds', '/@B_2/tags/music']) {
-      expect(isValidUserName(userFromPath(path)!)).toBe(true)
+      const user = userFromPath(path)
+      expect(user).toBeDefined()
+      expect(isValidUserName(user ?? '')).toBe(true)
     }
   })
 })

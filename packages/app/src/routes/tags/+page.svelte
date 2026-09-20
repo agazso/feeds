@@ -13,7 +13,7 @@
   <h1>Browse by Tag</h1>
   {#if data.tags.length > 0}
     <div class="tags-list">
-      {#each data.tags as tag}
+      {#each data.tags as tag (tag)}
         <a href="{prefix()}/tags/{tag}" class="tag">#{tag}</a>
       {/each}
     </div>

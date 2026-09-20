@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount, untrack } from 'svelte'
+  import type { Snippet } from 'svelte'
   import { navigating } from '$app/stores'
   import Loader from '$lib/components/Loader.svelte'
   import Topbar from '$lib/components/Topbar.svelte'
@@ -8,7 +9,7 @@
   import '../app.css'
   import type { LayoutData } from './$types'
 
-  const { data, children }: { data: LayoutData; children: any } = $props()
+  const { data, children }: { data: LayoutData; children: Snippet } = $props()
 
   // Initialize preferences from server-side cookies (one-time, not reactive)
   untrack(() => preferences.init(data.theme, data.layout))
