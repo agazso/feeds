@@ -141,6 +141,11 @@ imports: `/feeds.opml` is everything you follow, and `/tags/music.opml` is only 
 feeds tagged that way. Both download as a file, and the tags are written as categories
 so they survive the import.
 
+The `/feeds` page carries the same list as microformats2, one `h-card` per feed with its
+name, site, icon, feed URL and tags. Nothing replaced OPML as an exchange format, but a
+marked-up blogroll is what the IndieWeb settled on for publishing one, and it costs a
+few class attributes on a page that already exists.
+
 ### Library and CLI
 
 `@feeds/core` is an ESM library you can use on its own. It does discovery, parsing,

@@ -11,10 +11,22 @@
   let faviconError = $state(false)
 </script>
 
-<a href="{prefix()}/feeds/{encodeURIComponent(feed.feedUrl)}" class="feed-card">
+<!--
+  h-card per entry is what blogroll publishers settled on; there is no agreed markup
+  beyond it. The card links to our own feed page, so the site and the feed are given
+  explicitly — an explicit u-url also stops the parser implying one from this href.
+-->
+<a href="{prefix()}/feeds/{encodeURIComponent(feed.feedUrl)}" class="feed-card h-card">
+  <data class="u-url" value={feed.url}></data>
+  <link class="u-feed" href={feed.feedUrl} />
   <div class="feed-icon-container">
     {#if typeof feed.favicon === 'string' && feed.favicon && !faviconError}
-      <img src={feed.favicon} alt="" class="feed-icon" onerror={() => (faviconError = true)} />
+      <img
+        src={feed.favicon}
+        alt=""
+        class="feed-icon u-photo"
+        onerror={() => (faviconError = true)}
+      />
     {:else}
       <svg class="feed-icon-fallback" viewBox="0 0 24 24" fill="currentColor">
         <path
@@ -24,12 +36,12 @@
     {/if}
   </div>
   <div class="feed-info">
-    <div class="feed-name">{feed.name}</div>
+    <div class="feed-name p-name">{feed.name}</div>
     <div class="feed-url">{feed.url}</div>
     {#if feed.tags && feed.tags.length > 0}
       <div class="feed-tags">
         {#each feed.tags as tag (tag)}
-          <span class="tag-chip">#{tag}</span>
+          <data class="tag-chip p-category" value={tag}>#{tag}</data>
         {/each}
       </div>
     {/if}
@@ -50,6 +62,12 @@
     transition:
       background-color 0.15s ease,
       border-color 0.15s ease;
+  }
+
+  /* Machine-readable only: without this they are flex items and each opens a gap. */
+  .feed-card > data,
+  .feed-card > link {
+    display: none;
   }
 
   .feed-card:hover {
@@ -111,6 +129,7 @@
   }
 
   .tag-chip {
+    display: inline-block;
     padding: 2px 8px;
     font-size: 12px;
     border-radius: 12px;
