@@ -14,11 +14,11 @@ async function fetchResponse(
   headers: RequestInit,
 ): Promise<{ response: Response; feedUrl: string }> {
   if (fetchUrl.startsWith('http://')) {
+    const httpsUrl = fetchUrl.replace('http://', 'https://')
     try {
-      fetchUrl = fetchUrl.replace('http://', 'https://')
       return {
-        response: await timeout(FEED_FETCH_TIMEOUT, safeFetch(fetchUrl, headers)),
-        feedUrl: fetchUrl,
+        response: await timeout(FEED_FETCH_TIMEOUT, safeFetch(httpsUrl, headers)),
+        feedUrl: httpsUrl,
       }
     } catch {
       // Fall through to try original URL
