@@ -3,6 +3,7 @@ import type { PageData } from './$types'
 import type { Feed } from '@feeds/core'
 import SearchBar from '$lib/components/SearchBar.svelte'
 import FeedCard from '$lib/components/FeedCard.svelte'
+import FeedLinks from '$lib/components/FeedLinks.svelte'
 
 let { data }: { data: PageData } = $props()
 
@@ -52,6 +53,8 @@ function toggleSort() {
 <svelte:head>
   <title>Feeds</title>
 </svelte:head>
+<!-- Every followed feed, so this page works as the directory a reader subscribes from. -->
+<FeedLinks feeds={data.feeds} />
 
 <div class="feeds-page">
   <div class="page-header">

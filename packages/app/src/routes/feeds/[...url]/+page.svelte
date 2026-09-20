@@ -3,6 +3,7 @@ import type { PageData } from './$types'
 import SearchBar from '$lib/components/SearchBar.svelte'
 import PostList from '$lib/components/PostList.svelte'
 import FeedHeader from '$lib/components/FeedHeader.svelte'
+import FeedLinks from '$lib/components/FeedLinks.svelte'
 import TagSelector from '$lib/components/TagSelector.svelte'
 import { searchPosts } from '$lib/search'
 import { buildTagCooccurrence, getSuggestedTags } from '$lib/tags'
@@ -84,6 +85,7 @@ async function saveTags() {
 <svelte:head>
   <title>{data.feed.name}</title>
 </svelte:head>
+<FeedLinks feeds={[data.feed]} />
 
 <div class="feed-page">
   <FeedHeader name={data.feed.name} url={data.feed.url} favicon={typeof data.feed.favicon === 'string' ? data.feed.favicon : null} />
