@@ -5,6 +5,10 @@ channels, subreddits and some other sites that do not publish a feed of their ow
 from every feed you follow appear in one list, newest first. The interface shows no
 unread counts and does not reorder anything.
 
+A running instance is public to read. What you follow, what you save and how you tag it
+is a page other people can visit, and every one of those pages is also an RSS or JSON
+feed they can subscribe to.
+
 The repository is a TypeScript monorepo with three packages: a SvelteKit web app, the
 core library it is built on, and a command-line tool that uses the same library.
 
@@ -30,6 +34,22 @@ opened without browser chrome, and the status bar picks up the colour of the hea
 post's menu offers the system share sheet where the browser provides one.
 
 <img src="docs/images/mobile.webp" alt="Scrolling the timeline on a phone" width="300">
+
+### Publishing what you read
+
+Writing is what needs a key. Reading never does, so once an instance is online,
+everything in it is published: `/myfeed` is your saved posts, `/tags/music` is one slice
+of them, `/all-posts` is everything your feeds carry. Send someone the address and they
+see the page.
+
+Each of those pages is also a feed, so people can follow you the same way you follow
+anyone else, in their own reader. Under a user prefix the whole thing scopes, which
+makes `/@bob/tags/music.rss` one person's music reading, subscribable on its own.
+`/users` lists everyone on the instance, and `/invite` mints a link that gives someone
+their own `/@name` space, so an instance can be one person's log or a small shared one.
+
+The exception is `/invite` itself, which displays write keys and is the only page that
+is not public.
 
 ### Feed discovery and enrichment
 
@@ -94,10 +114,10 @@ changes.
 
 A path can start with `/@name`, for example `/@bob/myfeed` or `/@bob/tags/music`. That
 gives the user their own feeds, saved posts and caches in a separate directory. Without
-the prefix the app runs as a single-user install. Anyone can read a user's pages, but
-writing needs that user's key. See [Multi-user](#multi-user) for setup.
+the prefix the app runs as a single-user install. See [Multi-user](#multi-user) for
+setup.
 
-### RSS and JSON output
+### Every page is a feed
 
 Every page that lists posts can be subscribed to. Add `.rss` or `.json` to its address
 to get an RSS feed or a JSON Feed:
