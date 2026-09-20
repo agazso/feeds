@@ -29,7 +29,7 @@ ships a web manifest and the icons for it, so it can be installed to the home sc
 opened without browser chrome, and the status bar picks up the colour of the header. A
 post's menu offers the system share sheet where the browser provides one.
 
-<img src="docs/images/mobile.gif" alt="Scrolling the timeline on a phone" width="300">
+<img src="docs/images/mobile.webp" alt="Scrolling the timeline on a phone" width="300">
 
 ### Feed discovery and enrichment
 
@@ -53,7 +53,7 @@ most of the work happens the first time you open a feed.
 Discovering Hacker News, which is a link aggregator, so every item is enriched with the
 title, image and description of the page it links to:
 
-![Entering a site address, then the discovered feed with enriched posts](docs/images/discover.gif)
+![Entering a site address, then the discovered feed with enriched posts](docs/images/discover.webp)
 
 ### Formats and providers
 
