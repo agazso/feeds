@@ -282,4 +282,4 @@ Safari`. One commit per change, subject only unless the _why_ isn't obvious from
 
 ## License
 
-MIT.
+MIT — see [LICENSE](LICENSE).
