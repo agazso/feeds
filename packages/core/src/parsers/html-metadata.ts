@@ -314,6 +314,12 @@ function getTwitterSite(document: ParsedNode): string {
   return ''
 }
 
+// Blogger and other CMSs name their feed links after the format, not the site:
+// "Indie Retro News - Atom", "Some Blog (RSS Feed)". Drop that tail so the site is
+// left. Only a separator or a bracket introduces it, so "Atom Bomb News" is safe.
+const FEED_TITLE_SUFFIX =
+  /\s*[-–—»|:·]\s*\(?(rss|atom|xml|json)( feed)?\)?$|\s*\(\s*(rss|atom|xml|json)?\s*feed\s*\)$/i
+
 function getRssFeedTitle(document: ParsedNode): string {
   const genericTitles = ['rss', 'atom', 'feed', 'rss feed', 'atom feed']
   const links = HtmlUtils.findPath(document, ['html', 'head', 'link'])
@@ -321,7 +327,9 @@ function getRssFeedTitle(document: ParsedNode): string {
     if (HtmlUtils.matchAttributes(link, [{ name: 'rel', value: 'alternate' }])) {
       const type = HtmlUtils.getAttribute(link, 'type') || ''
       if (type.includes('rss') || type.includes('atom') || type.includes('xml')) {
-        const title = HtmlUtils.getAttribute(link, 'title')
+        const title = (HtmlUtils.getAttribute(link, 'title') || '')
+          .replace(FEED_TITLE_SUFFIX, '')
+          .trim()
         if (title && !genericTitles.includes(title.toLowerCase())) {
           return title
         }

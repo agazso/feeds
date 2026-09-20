@@ -175,3 +175,29 @@ describe('parseHtmlMetaData YouTube watch pages', () => {
     expect(result.name).toBe('Ruby Ranger')
   })
 })
+
+describe('feed-link titles naming the format', () => {
+  const page = (title: string) =>
+    parseHtmlMetaData(
+      'https://example.com/post/',
+      `<!doctype html><html><head><link rel="alternate" type="application/atom+xml" href="/feed" title="${title}"></head><body></body></html>`,
+    ).siteName
+
+  it('drops a format suffix introduced by a separator or bracket', () => {
+    expect(page('Indie Retro News - Atom')).toBe('Indie Retro News')
+    expect(page('Indie Retro News - RSS')).toBe('Indie Retro News')
+    expect(page('Some Blog » RSS Feed')).toBe('Some Blog')
+    expect(page('Some Blog (Feed)')).toBe('Some Blog')
+  })
+
+  it('leaves a site name that merely contains a format word', () => {
+    expect(page('Atom Bomb News')).toBe('Atom Bomb News')
+    expect(page("Isaac Freund's Blog")).toBe("Isaac Freund's Blog")
+    expect(page('JSON - The Magazine')).toBe('JSON - The Magazine')
+  })
+
+  it('still rejects a title that is only the format', () => {
+    expect(page('Atom')).toBe('')
+    expect(page('RSS Feed')).toBe('')
+  })
+})
