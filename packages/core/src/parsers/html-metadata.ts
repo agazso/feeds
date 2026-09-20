@@ -1,9 +1,9 @@
 import type { Feed } from '../models/feed'
-import { parseFaviconFromHtml, DEFAULT_FAVICON } from '../utils/favicon'
+import { DEFAULT_FAVICON, parseFaviconFromHtml } from '../utils/favicon'
+import { getHeadersForUrl } from '../utils/headers'
 import { HtmlUtils, type ParsedNode } from '../utils/html'
 import { type OpenGraphData, getHtmlOpenGraphData } from '../utils/opengraph'
 import { createUrlFromUrn, isYoutubeUrl } from '../utils/url'
-import { getHeadersForUrl } from '../utils/headers'
 import { allFeedMimeTypes } from './mime'
 
 export interface FeedLink {
@@ -105,7 +105,12 @@ export function parseHtmlMetaData(url: string, html: string, feed?: Feed | null)
   const openGraphData = getHtmlOpenGraphData(document, url)
   const feedName = feed ? feed.name : ''
   const youtube = getYoutubeWatchInfo(url, html)
-  const name = getFirstNonEmpty([youtube?.name ?? '', getMetaName(document), openGraphData.name, feedName])
+  const name = getFirstNonEmpty([
+    youtube?.name ?? '',
+    getMetaName(document),
+    openGraphData.name,
+    feedName,
+  ])
   // Fallback chain: og:site_name → JSON-LD publisher → twitter:site → RSS feed title
   const siteName = getFirstNonEmpty([
     openGraphData.siteName,
@@ -283,7 +288,12 @@ function getPublisherFromJsonLd(document: ParsedNode): string {
       const items = Array.isArray(data['@graph']) ? data['@graph'] : [data]
       for (const item of items) {
         const type = item['@type']
-        if (type === 'Article' || type === 'NewsArticle' || type === 'BlogPosting' || type === 'WebPage') {
+        if (
+          type === 'Article' ||
+          type === 'NewsArticle' ||
+          type === 'BlogPosting' ||
+          type === 'WebPage'
+        ) {
           const publisher = item.publisher
           if (typeof publisher === 'string') return publisher
           if (publisher?.name) return publisher.name

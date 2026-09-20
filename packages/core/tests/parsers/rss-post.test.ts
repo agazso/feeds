@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test, vi } from 'vitest'
-import { augmentFeedWithMetadata } from '../../src/parsers/rss-post'
 import type { RSSFeedWithMetrics } from '../../src/models/rss'
+import { augmentFeedWithMetadata } from '../../src/parsers/rss-post'
 
 afterEach(() => {
   vi.unstubAllGlobals()

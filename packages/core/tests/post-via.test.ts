@@ -50,7 +50,12 @@ describe('post.via (link aggregator attribution)', () => {
   })
 
   test('is not set for a feed that links to itself', async () => {
-    const blog: DiscoveredFeedInfo = { ...feed, name: 'A Blog', url: 'https://blog.example/', feedUrl: 'https://blog.example/feed.xml' }
+    const blog: DiscoveredFeedInfo = {
+      ...feed,
+      name: 'A Blog',
+      url: 'https://blog.example/',
+      feedUrl: 'https://blog.example/feed.xml',
+    }
     const posts = await enrichRssItems([item('https://blog.example/one')], blog, {
       skipEnrichment: true,
     })
@@ -58,9 +63,13 @@ describe('post.via (link aggregator attribution)', () => {
   })
 
   test('omits the icon when the feed has none', async () => {
-    const posts = await enrichRssItems([item('https://elsewhere.example/a')], { ...feed, favicon: '' }, {
-      skipEnrichment: true,
-    })
+    const posts = await enrichRssItems(
+      [item('https://elsewhere.example/a')],
+      { ...feed, favicon: '' },
+      {
+        skipEnrichment: true,
+      },
+    )
     expect(posts[0].via?.icon).toBeUndefined()
     expect(posts[0].via?.name).toBe('Hacker News')
   })

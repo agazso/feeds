@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { formatAuthorName, createPost } from '../src/post-helpers'
+import { createPost, formatAuthorName } from '../src/post-helpers'
 
 describe('formatAuthorName', () => {
   test('combines name and author with separator', () => {

@@ -1,5 +1,5 @@
+import type { ChildNode, Document, Element, Text } from 'domhandler'
 import { parseDocument } from 'htmlparser2'
-import type { Document, Element, Text, ChildNode } from 'domhandler'
 
 export interface HtmlAttrNameValue {
   name: string
@@ -139,8 +139,8 @@ function convertNode(node: ChildNode): ParsedNode {
 
 function decodeHtmlEntities(text: string): string {
   return text
-    .replace(/&#(\d+);/g, (_, num) => String.fromCharCode(parseInt(num, 10)))
-    .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
+    .replace(/&#(\d+);/g, (_, num) => String.fromCharCode(Number.parseInt(num, 10)))
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCharCode(Number.parseInt(hex, 16)))
     .replace(/&quot;/g, '"')
     .replace(/&apos;/g, "'")
     .replace(/&lt;/g, '<')

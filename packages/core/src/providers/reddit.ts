@@ -1,6 +1,6 @@
+import { getFaviconForUrl } from '../favicon-helpers'
 import type { Feed } from '../models/feed'
 import type { RSSFeed, RSSFeedWithMetrics, RSSItem, RSSThumbnail } from '../models/rss'
-import { getFaviconForUrl } from '../favicon-helpers'
 import { fetchFaviconUrl } from '../utils/favicon'
 import { safeFetch } from '../utils/fetch'
 import { HEADERS_WITH_FELFELE } from '../utils/headers'
@@ -314,7 +314,9 @@ export function isRedditPostUrl(url: string): boolean {
  * Fetch rich metadata from a Reddit post or comment URL.
  * Uses Reddit's JSON API by appending .json to the URL.
  */
-export async function fetchRedditPostMetadata(url: string): Promise<RedditPostMetadata | undefined> {
+export async function fetchRedditPostMetadata(
+  url: string,
+): Promise<RedditPostMetadata | undefined> {
   if (!isRedditPostUrl(url)) {
     return undefined
   }
@@ -346,7 +348,7 @@ export async function fetchRedditPostMetadata(url: string): Promise<RedditPostMe
     const isCommentUrl = url.includes('/comment/')
     const commentData = commentListing?.data?.children?.[0]?.data as RedditCommentData | undefined
 
-    let title = postData.title
+    const title = postData.title
     let description = ''
     let author = postData.author || ''
     const subreddit = postData.subreddit || ''

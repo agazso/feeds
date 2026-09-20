@@ -10,7 +10,7 @@ import { HEADERS_WITH_CURL, HEADERS_WITH_FELFELE, HEADERS_WITH_WHATSAPP } from '
 import { HtmlUtils, type ParsedNode } from '../utils/html'
 import * as urlUtils from '../utils/url'
 import { parseHtmlMetaData } from './html-metadata'
-import { allFeedMimeTypes, isRssMimeType, isFeedMimeType } from './mime'
+import { allFeedMimeTypes, isFeedMimeType, isRssMimeType } from './mime'
 import { fetchFeed, loadRSSFeed } from './rss'
 
 export interface ContentWithMimeType {
@@ -152,7 +152,6 @@ export function getFeedFromHtml(baseUrl: string, html: string): Feed {
   feed.url = baseUrl
   return feed
 }
-
 
 export async function fetchRSSFeedUrlFromUrl(url: string): Promise<ContentWithMimeType | null> {
   const contentWithMimeType = await fetchContentWithMimeType(url)

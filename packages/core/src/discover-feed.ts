@@ -1,12 +1,12 @@
+import { fetchFeedsFromUrl } from './feed-helpers'
 import type { Feed } from './models/feed'
 import type { Post } from './models/post'
 import type { RSSFeed, RSSItem } from './models/rss'
-import { fetchFeedsFromUrl } from './feed-helpers'
 import { fetchFeed } from './parsers/rss'
-import { createEnrichedPost, createPost } from './post-helpers'
 import { htmlToMarkdown } from './parsers/rss-post'
-import { getHumanHostname, normalizeUrl } from './utils/url'
+import { createEnrichedPost, createPost } from './post-helpers'
 import { timeout } from './utils/timeout'
+import { getHumanHostname, normalizeUrl } from './utils/url'
 
 export interface DiscoveredFeedInfo {
   name: string

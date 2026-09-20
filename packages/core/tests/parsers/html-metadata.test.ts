@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { parseHtmlMetaData, parseAllFeedLinksFromHtml } from '../../src/parsers/html-metadata'
+import { describe, expect, it } from 'vitest'
+import { parseAllFeedLinksFromHtml, parseHtmlMetaData } from '../../src/parsers/html-metadata'
 
 describe('parseHtmlMetaData', () => {
   describe('pages without <head> tag', () => {
@@ -71,27 +71,42 @@ describe('parseHtmlMetaData', () => {
     const isaacHtml = `<!doctype html><html lang=en><meta name=viewport content="width=device-width,initial-scale=1"><title>Separating the Wayland Compositor and Window Manager</title><link rel=icon href=/if.png><link rel=stylesheet href=/style.css><link rel=alternate href=/blog/feed.xml type=application/atom+xml title="Isaac Freund's Blog"><link rel=alternate href=/poetry/feed.xml type=application/atom+xml title="Isaac Freund's Poetry"><link rel=me href=https://hachyderm.io/@ifreund><header><nav>...</nav></header>`
 
     it('should extract title', () => {
-      const result = parseHtmlMetaData('https://isaacfreund.com/blog/river-window-management/', isaacHtml)
+      const result = parseHtmlMetaData(
+        'https://isaacfreund.com/blog/river-window-management/',
+        isaacHtml,
+      )
       expect(result.title).toBe('Separating the Wayland Compositor and Window Manager')
     })
 
     it('should extract favicon', () => {
-      const result = parseHtmlMetaData('https://isaacfreund.com/blog/river-window-management/', isaacHtml)
+      const result = parseHtmlMetaData(
+        'https://isaacfreund.com/blog/river-window-management/',
+        isaacHtml,
+      )
       expect(result.icon).toBe('https://isaacfreund.com/if.png')
     })
 
     it('should extract author from Mastodon link', () => {
-      const result = parseHtmlMetaData('https://isaacfreund.com/blog/river-window-management/', isaacHtml)
+      const result = parseHtmlMetaData(
+        'https://isaacfreund.com/blog/river-window-management/',
+        isaacHtml,
+      )
       expect(result.author).toBe('ifreund')
     })
 
     it('should extract siteName from first RSS feed', () => {
-      const result = parseHtmlMetaData('https://isaacfreund.com/blog/river-window-management/', isaacHtml)
+      const result = parseHtmlMetaData(
+        'https://isaacfreund.com/blog/river-window-management/',
+        isaacHtml,
+      )
       expect(result.siteName).toBe("Isaac Freund's Blog")
     })
 
     it('should extract all feed links', () => {
-      const result = parseHtmlMetaData('https://isaacfreund.com/blog/river-window-management/', isaacHtml)
+      const result = parseHtmlMetaData(
+        'https://isaacfreund.com/blog/river-window-management/',
+        isaacHtml,
+      )
       expect(result.feedLinks).toHaveLength(2)
       expect(result.feedLinks[0]).toEqual({
         url: 'https://isaacfreund.com/blog/feed.xml',
@@ -116,8 +131,16 @@ describe('parseAllFeedLinksFromHtml', () => {
 
     const result = parseAllFeedLinksFromHtml(html, 'https://example.com')
     expect(result).toHaveLength(2)
-    expect(result[0]).toEqual({ url: 'https://example.com/blog/feed.xml', title: 'Blog Feed', type: 'atom' })
-    expect(result[1]).toEqual({ url: 'https://example.com/poetry/feed.xml', title: 'Poetry Feed', type: 'atom' })
+    expect(result[0]).toEqual({
+      url: 'https://example.com/blog/feed.xml',
+      title: 'Blog Feed',
+      type: 'atom',
+    })
+    expect(result[1]).toEqual({
+      url: 'https://example.com/poetry/feed.xml',
+      title: 'Poetry Feed',
+      type: 'atom',
+    })
   })
 
   it('should detect RSS feed type', () => {

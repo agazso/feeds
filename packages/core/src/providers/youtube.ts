@@ -1,7 +1,7 @@
 import type { Feed } from '../models/feed'
 import { type ContentResult, fetchContentResult, fetchFeedFromUrl } from '../parsers/rss-post'
-import * as urlUtils from '../utils/url'
 import { timeout } from '../utils/timeout'
+import * as urlUtils from '../utils/url'
 
 /**
  * Resolve a YouTube channel feed (…/videos.xml?channel_id=UC…) to its channel page URL.

@@ -1,20 +1,20 @@
+import { fetchFeedsFromUrl } from './feed-helpers'
 import type { Author } from './models/author'
 import type { Post } from './models/post'
 import type { RSSItem } from './models/rss'
-import { fetchFeedsFromUrl } from './feed-helpers'
 import { type HtmlMetaData, fetchHtmlMetaDataOnly } from './parsers/html-metadata'
-import {
-  isRedditPostUrl,
-  fetchRedditPostMetadata,
-  makeCanonicalRedditLink,
-  toOldRedditUrl,
-  stripRedditPostChrome,
-} from './providers/reddit'
-import { isYoutubeLink } from './providers/youtube'
-import { SHAZAM_FAVICON, fetchShazamSongMetadata } from './providers/shazam'
-import { createUrlFromUrn, isImageUrl } from './utils/url'
-import { HEADERS_WITH_BOT } from './utils/headers'
 import { htmlToMarkdown } from './parsers/rss-post'
+import {
+  fetchRedditPostMetadata,
+  isRedditPostUrl,
+  makeCanonicalRedditLink,
+  stripRedditPostChrome,
+  toOldRedditUrl,
+} from './providers/reddit'
+import { SHAZAM_FAVICON, fetchShazamSongMetadata } from './providers/shazam'
+import { isYoutubeLink } from './providers/youtube'
+import { HEADERS_WITH_BOT } from './utils/headers'
+import { createUrlFromUrn, isImageUrl } from './utils/url'
 
 /**
  * Extract author-specific path for multi-author sites.
@@ -128,15 +128,15 @@ export function createPost(params: CreatePostParams): { post: Post; title: strin
 
   // Prefer RSS item title when metadata has generic/missing title (e.g., Reddit)
   const useRssItemData = isGenericTitle(metadata.title) && rssItem?.title
-  let title = useRssItemData ? htmlToMarkdown(rssItem.title || '') : (metadata.title?.trim() || '')
+  let title = useRssItemData ? htmlToMarkdown(rssItem.title || '') : metadata.title?.trim() || ''
   // The RSS description is HTML; the post text is markdown. Converting it is what the
   // feed path (convertRSSFeedtoPosts) does, and skipping it here leaked raw `<a href=…>`
   // into posts whose page yielded no description of its own — a PDF link, say.
   let description = useRssItemData
     ? htmlToMarkdown(rssItem.description || '')
-    : (metadata.description?.trim() || '')
+    : metadata.description?.trim() || ''
   // For Reddit: prefer RSS item image (from media.thumbnail), fall back to metadata
-  let image = useRssItemData ? (extractRssItemImage(rssItem) || metadata.image) : metadata.image
+  let image = useRssItemData ? extractRssItemImage(rssItem) || metadata.image : metadata.image
 
   if (isImageUrl(url)) {
     image = url
@@ -170,9 +170,13 @@ export function createPost(params: CreatePostParams): { post: Post; title: strin
     images: image ? [{ uri: image }] : [],
     link: url,
     author: {
-      name: formatAuthorName(authorIdentity, metadata.author, formatHostname(new URL(url).hostname)),
+      name: formatAuthorName(
+        authorIdentity,
+        metadata.author,
+        formatHostname(new URL(url).hostname),
+      ),
       uri: originUrl,
-      image: { uri: useRssItemData ? (feedIcon || metadata.icon) : (metadata.icon || feedIcon) },
+      image: { uri: useRssItemData ? feedIcon || metadata.icon : metadata.icon || feedIcon },
     },
     rssItem,
     feedUrl,
@@ -181,10 +185,7 @@ export function createPost(params: CreatePostParams): { post: Post; title: strin
   return { post, title }
 }
 
-export function mergeHtmlMetadata(
-  urlMeta: HtmlMetaData,
-  originMeta: HtmlMetaData,
-): HtmlMetaData {
+export function mergeHtmlMetadata(urlMeta: HtmlMetaData, originMeta: HtmlMetaData): HtmlMetaData {
   return {
     ...urlMeta,
     // Only use explicit identity fields, NOT title (title is not identity)
