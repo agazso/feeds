@@ -78,8 +78,7 @@ title, image and description of the page it links to:
 ### Formats and providers
 
 The parsers handle **RSS 2.0**, **RSS 1.0 (RDF)**, **Atom** and **JSON Feed**. **OPML**
-files can be imported and exported, so you can move subscriptions in from another
-reader.
+moves subscriptions in and out, so you can arrive from another reader and leave for one.
 
 Some sites need more than a parser, so they have their own handling:
 
@@ -136,6 +135,11 @@ the discussion is kept in `<comments>` for RSS and `external_url` for JSON Feed.
 Each page also lists its feeds in a `<link rel="alternate">` tag, so a reader can find
 them by itself. Feeds under a user prefix are scoped as well, which makes an address
 like `/@bob/tags/music.rss` a way to share part of what you read.
+
+The subscriptions themselves come out as OPML, which is what every other reader
+imports: `/feeds.opml` is everything you follow, and `/tags/music.opml` is only the
+feeds tagged that way. Both download as a file, and the tags are written as categories
+so they survive the import.
 
 ### Library and CLI
 

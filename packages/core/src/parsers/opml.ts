@@ -104,3 +104,45 @@ export async function convertOPMLFeed(opmlFeed: OPMLFeed): Promise<Feed | undefi
 export async function convertOPMLFeeds(opmlFeeds: OPMLFeed[]): Promise<(Feed | undefined)[]> {
   return Promise.all(opmlFeeds.map((opmlFeed) => convertOPMLFeed(opmlFeed)))
 }
+
+function escapeXmlAttribute(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+function outline(feed: Feed): string {
+  // `text` is the attribute the spec requires; `title` is what most readers show.
+  const attrs: Array<[string, string]> = [
+    ['type', 'rss'],
+    ['text', feed.name || feed.feedUrl],
+    ['title', feed.name || feed.feedUrl],
+    ['xmlUrl', feed.feedUrl],
+  ]
+  if (feed.url) attrs.push(['htmlUrl', feed.url])
+  // Comma-separated categories survive a round trip through most readers, so the
+  // tags an export was filtered by are not lost on import.
+  if (feed.tags?.length) attrs.push(['category', feed.tags.join(',')])
+  const rendered = attrs.map(([k, v]) => `${k}="${escapeXmlAttribute(v)}"`).join(' ')
+  return `    <outline ${rendered} />`
+}
+
+/**
+ * Serialize feeds as an OPML 2.0 subscription list, the format every reader imports.
+ * `parseOPML` reads the same shape back.
+ */
+export function buildOPML(feeds: Feed[], title: string, dateCreated = new Date()): string {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head>
+    <title>${escapeXmlAttribute(title)}</title>
+    <dateCreated>${dateCreated.toUTCString()}</dateCreated>
+  </head>
+  <body>
+${feeds.map(outline).join('\n')}
+  </body>
+</opml>
+`
+}
