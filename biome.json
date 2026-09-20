@@ -32,6 +32,18 @@
     }
   },
   "files": {
-    "ignore": ["**/node_modules/**", "**/dist/**", "**/.git/**"]
+    "ignore": [
+      "**/node_modules/**",
+      "**/.git/**",
+      "**/dist/**",
+      "**/.svelte-kit/**",
+      "**/build/**",
+      "**/deploy-out/**",
+      "**/cache/**",
+      "**/static/**",
+      "**/models/**",
+      "**/users.json",
+      "**/*.svelte"
+    ]
   }
 }
