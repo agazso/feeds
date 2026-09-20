@@ -22,6 +22,15 @@ The theme is dark by default and can be switched to light. Posts are laid out in
 masonry grid or a single column. Both settings are stored in a cookie, so the server
 renders the right one on first load.
 
+### On a phone
+
+Below 500px the grid drops to a single column, whatever the layout setting says. The app
+ships a web manifest and the icons for it, so it can be installed to the home screen and
+opened without browser chrome, and the status bar picks up the colour of the header. A
+post's menu offers the system share sheet where the browser provides one.
+
+<img src="docs/images/mobile.gif" alt="Scrolling the timeline on a phone" width="300">
+
 ### Feed discovery and enrichment
 
 You give it the address of a site, such as `https://example.com`, rather than the
