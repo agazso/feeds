@@ -1,81 +1,88 @@
 # Feeds
 
-A self-hostable feed reader that stays quiet. It follows RSS, Atom and JSON feeds —
-plus YouTube channels, subreddits and a few other sites that never published one —
-pulls each item up to a readable post, and shows them as a single chronological
-timeline. No counts, no badges, no algorithm.
+Feeds is a self-hosted feed reader. It follows RSS, Atom and JSON feeds, plus YouTube
+channels, subreddits and some other sites that do not publish a feed of their own. Items
+from every feed you follow appear in one list, newest first. The interface shows no
+unread counts and does not reorder anything.
 
-The whole thing is a TypeScript monorepo: a SvelteKit web app, the engine it runs on as
-a reusable library, and a CLI over the same engine.
+The repository is a TypeScript monorepo with three packages: a SvelteKit web app, the
+core library it is built on, and a command-line tool that uses the same library.
 
 ## Features
 
-### A UI that doesn't keep score
+### Minimal interface
 
-There are no unread counts, no item totals, no list lengths, no badges. That is a
-deliberate design rule, not an oversight — the point is to make reading feel finishable
-rather than owed. What's left is the posts: a chronological timeline, a search box, and
-a tag filter. Dark by default with a light toggle, and a masonry or single-column
-layout — both remembered in a cookie, so a fresh device renders right on the server.
+The UI shows no unread counts, no item totals, no list lengths and no badges. This is a
+design rule for the project. The reader is a list of posts with a search box and a tag
+filter above it.
 
-### Discovery, and enrichment for link aggregators
+The theme is dark by default and can be switched to light. Posts are laid out in a
+masonry grid or a single column. Both settings are stored in a cookie, so the server
+renders the right one on first load.
 
-Point it at a site's ordinary homepage — `https://example.com`, not the feed URL. It
-fetches the page, reads `<link rel="alternate">`, falls back to sniffing well-known
-locations (`/feed`, `/rss.xml`, `/index.xml`, …), and works out the feed's name and
-icon along the way. You see a preview of the real posts before deciding to follow it.
+### Feed discovery and enrichment
 
-Feeds like Hacker News or Two Stop Bits are a different problem: their items point at
-_other_ sites, so the feed itself only carries the aggregator's name and icon and every
-post looks identical. Discovery detects that — a clear majority of items linking
-off-site — and pre-ticks **Show enriched posts**. The feed page then fetches each linked
-page for its own title, author and image, while keeping a link back to the discussion
-thread. Enriched posts are cached per feed and appear everywhere the plain ones do; a
-refresh only fetches pages for items it hasn't seen, so the cost lands on a feed's first
-load rather than on every read.
+You give it the address of a site, such as `https://example.com`, rather than the
+address of the feed. It fetches the page, looks for a `<link rel="alternate">` tag, and
+if there is none, tries common locations like `/feed`, `/rss.xml` and `/index.xml`. It
+also reads the site's name and icon. Before you follow the feed, you see a preview of
+its actual posts.
+
+Link aggregators such as Hacker News or Two Stop Bits need extra work. Their items link
+to other sites, but the feed only contains the aggregator's own name and icon, so every
+post looks the same in a reader. Discovery notices this when most items link off-site,
+and switches on **Show enriched posts** for the feed. The feed page then fetches each
+linked page and uses its title, author and image for the post, while keeping a link to
+the discussion thread. You can turn the setting on or off later from the feed page.
+
+Enriched posts are cached per feed and appear on the feed page, in `/all-posts` and
+under `/tags`. A refresh only fetches pages for items that are new since last time, so
+most of the work happens the first time you open a feed.
 
 ### Formats and providers
 
-Parsers for **RSS 2.0**, **RSS 1.0 (RDF)**, **Atom** and **JSON Feed**, with **OPML**
-for bulk import and export.
+The parsers handle **RSS 2.0**, **RSS 1.0 (RDF)**, **Atom** and **JSON Feed**. **OPML**
+files can be imported and exported, so you can move subscriptions in from another
+reader.
 
-Several sites need more than a parser, so they get dedicated handling:
+Some sites need more than a parser, so they have their own handling:
 
-| Provider        | What it does                                                                                                                                                       |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **YouTube**     | Channel, user, `@handle` and watch URLs resolve to the channel feed. A watch page yields the channel name and id from a single fetch, because YouTube rate-limits. |
-| **Reddit**      | Subreddit and post URLs read the public `.rss` feed (the unauthenticated JSON API is gone), with image previews pulled out of the entry content.                   |
-| **X / Twitter** | Routed through a nitter instance.                                                                                                                                  |
-| **Shazam**      | Song links resolve to track metadata and cover art.                                                                                                                |
+| Provider        | Handling                                                                                                                                                                           |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **YouTube**     | Channel, user, `@handle` and watch URLs are resolved to the channel feed. A watch page gives the channel name and id in one request, since YouTube limits how often you can fetch. |
+| **Reddit**      | Subreddits and posts are read from the public `.rss` feed, because the unauthenticated JSON API was shut down. Image previews are taken from the entry content.                    |
+| **X / Twitter** | Requests go through a nitter instance.                                                                                                                                             |
+| **Shazam**      | Song links are resolved to track metadata and cover art.                                                                                                                           |
 
-### Tagging and filtering
+### Tags and filtering
 
-Tags live on feeds and on individual saved posts. `/tags/music` shows one,
-`/tags/music+guitar` intersects several, and the tag editor suggests tags two ways: from
-which tags you already use together, and from the post's own text via a local sentence
-embedding model (`all-MiniLM-L6-v2`, run in-process — nothing is sent anywhere). Search
-is a word-prefix match across a post's text, tags, author and URL, with `-word` to
-exclude.
+Feeds can be tagged, and so can individual saved posts. `/tags/music` lists everything
+with that tag and `/tags/music+guitar` lists what has both. When you edit tags, the app
+suggests some: tags you often use together with the ones already chosen, and tags that
+match the text of the post. The text matching uses a sentence embedding model
+(`all-MiniLM-L6-v2`) that runs inside the app, so no data leaves the server. Search
+matches the start of words in the post text, tags, author and URL, and `-word` excludes
+a term.
 
 ### Saving posts to My Feed
 
-Share or paste any link and it becomes a post of your own: the page is fetched for its
-title, author, image and publication date, and you can tag it before saving. Saved
-posts' images and avatars are re-encoded to WebP, given a blurhash placeholder, and
-stored in a content-addressed local cache, so a saved post keeps working after the
-original page changes.
+Any link can be saved as your own post. The app fetches the page for its title, author,
+image and date, and you can add tags before saving. Images and avatars of saved posts
+are converted to WebP and given a blurhash placeholder. They are stored in a local
+cache under their content hash, so a saved post still works if the original page
+changes.
 
 ### Multiple users
 
-Any path may be prefixed with `/@name` — `/@bob/myfeed`, `/@bob/tags/music` — scoping
-feeds, saved posts and caches to that person's own directory. Without a prefix the app
-behaves as a single-user install. Reading is public; writing takes that scope's key.
-See [Multi-user](#multi-user).
+A path can start with `/@name`, for example `/@bob/myfeed` or `/@bob/tags/music`. That
+gives the user their own feeds, saved posts and caches in a separate directory. Without
+the prefix the app runs as a single-user install. Anyone can read a user's pages, but
+writing needs that user's key. See [Multi-user](#multi-user) for setup.
 
-### Your feeds, back out as feeds
+### RSS and JSON output
 
-Every page that lists posts is itself subscribable — append `.rss` or `.json` (JSON
-Feed) to its URL:
+Every page that lists posts can be subscribed to. Add `.rss` or `.json` to its address
+to get an RSS feed or a JSON Feed:
 
 | Page           | Feed                                    |
 | -------------- | --------------------------------------- |
@@ -84,32 +91,34 @@ Feed) to its URL:
 | `/tags/music`  | `/tags/music.rss`, `/tags/music.json`   |
 | `/feeds/<url>` | `/feeds.rss/<url>`, `/feeds.json/<url>` |
 
-The last one is the interesting one: for an enriched feed it hands you the version the
-source can't — each item carrying the linked article's own title, author and image, with
-the aggregator's discussion link in `<comments>` / `external_url`. Every page advertises
-its feeds with `<link rel="alternate">`, so a reader finds them on its own. Under a user
-prefix the feeds are scoped too, which makes `/@bob/tags/music.rss` a shareable slice of
-someone's reading.
+For an enriched feed, the last one gives you something the original feed does not have:
+every item carries the title, author and image of the linked article, and the link to
+the discussion is kept in `<comments>` for RSS and `external_url` for JSON Feed.
 
-### A CLI and a library
+Each page also lists its feeds in a `<link rel="alternate">` tag, so a reader can find
+them by itself. Feeds under a user prefix are scoped as well, which makes an address
+like `/@bob/tags/music.rss` a way to share part of what you read.
 
-The same engine ships three ways. `@feeds/core` is a plain ESM library you can import —
-discovery, parsing, enrichment, OPML, metadata extraction, no disk access and no
-framework. `@feeds/cli` puts it on the command line for scripting and one-off
-inspection. The web app adds only persistence, caching, auth and UI on top.
+### Library and CLI
 
-### Feed content is never trusted
+`@feeds/core` is an ESM library you can use on its own. It does discovery, parsing,
+enrichment, OPML handling and metadata extraction. It uses `fetch` for network access
+and does not touch the disk or depend on a framework. `@feeds/cli` exposes the same
+functions on the command line, which is useful for scripts and for checking what a site
+returns. The web app only adds storage, caching, authentication and the UI.
 
-Feed descriptions arrive as arbitrary HTML from sites you don't control. It is converted
-to Markdown — tags stripped, links and images kept as Markdown — and rendered as text;
-the app uses no raw-HTML rendering anywhere, so a feed cannot inject markup or script
-into a page. Generated feeds escape their output, cached images are stored under a
-content hash rather than any name the remote supplied, and a `/@name` scope is
-restricted to `[a-z0-9_]` so a path can never escape the data directory.
+### Content sanitizing
+
+Feed descriptions are HTML written by sites you do not control. The app converts that
+HTML to Markdown, dropping the tags and keeping links and images, and renders the result
+as text. No part of the app renders raw HTML, so a feed cannot insert markup or scripts
+into a page. Generated feeds escape their output. Cached images are stored under a
+content hash instead of a name taken from the remote server. A `/@name` scope may only
+contain `[a-z0-9_]`, so a path cannot reach outside the data directory.
 
 ## Installation
 
-Requirements: **Node.js >= 20** and **pnpm 9.15** or later.
+You need **Node.js 20 or newer** and **pnpm 9.15 or newer**.
 
 ```bash
 git clone <repository-url>
@@ -118,78 +127,79 @@ pnpm install
 pnpm build
 ```
 
-Run the reader in development, on http://localhost:1337:
+Start the app in development mode on http://localhost:1337:
 
 ```bash
 pnpm --filter @feeds/app dev
 ```
 
-Or build and run it for real. The app uses `@sveltejs/adapter-node`, so the production
-build is a plain Node server listening on `PORT` (default 3000):
+For production, build it and run the result. The app uses `@sveltejs/adapter-node`, so
+the build is a Node server that listens on `PORT`, by default 3000:
 
 ```bash
 pnpm --filter @feeds/app build
 node packages/app/build/index.js
 ```
 
-Feeds and saved posts are written to `packages/app/static/` as JSON, and cached images
-to `packages/app/cache/` — back those up and you have backed up everything. See
-[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for a server deployment.
+Feeds and saved posts are stored as JSON in `packages/app/static/`, and cached images in
+`packages/app/cache/`. Those two directories hold all your data. See
+[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for deploying to a server.
 
 ### Configuration
 
-| Variable         | Purpose                                                                                                                                 |
-| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `PORT`           | Port for the production server (default `3000`).                                                                                        |
-| `FEEDS_DATA_DIR` | Where feeds, posts and per-user directories live (default `static/`).                                                                   |
-| `FEEDS_KEYFILE`  | Path to the write-key file (default `users.json` beside the data dir). It must stay **outside** the data dir, which is served publicly. |
-| `FEEDS_CONFIG`   | Inline JSON feed configuration.                                                                                                         |
-| `FEEDS_CHANNEL`  | Path to a feed configuration file.                                                                                                      |
+| Variable         | Purpose                                                                                                                              |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `PORT`           | Port for the production server, by default `3000`.                                                                                   |
+| `FEEDS_DATA_DIR` | Where feeds, posts and per-user directories are stored, by default `static/`.                                                        |
+| `FEEDS_KEYFILE`  | Path to the write-key file, by default `users.json` next to the data directory. Keep it outside the data directory, which is public. |
+| `FEEDS_CONFIG`   | Feed configuration as inline JSON.                                                                                                   |
+| `FEEDS_CHANNEL`  | Path to a feed configuration file.                                                                                                   |
 
 ### Authentication
 
-Optional and **off by default**: with no key file, anyone can read and write. Enabling it
-gates every write (adding, editing and removing feeds and posts) while reading stays
-public.
+Authentication is optional and off by default. Without a key file, anyone can read and
+write. When it is on, reading stays public and every write needs a key. Writes are
+adding, editing and removing feeds and posts.
 
-Create `users.json` **next to** the data dir (`packages/app/users.json` by default, or
-`FEEDS_KEYFILE`), mapping each scope to the key that may write in it. The entry named
-`""` is single-user mode; a `"bob"` entry covers `/@bob`:
+To turn it on, create `users.json` next to the data directory (`packages/app/users.json`
+by default, or wherever `FEEDS_KEYFILE` points). It maps each scope to the key allowed
+to write in it. The entry named `""` is the single-user scope, and a `"bob"` entry
+covers `/@bob`:
 
 ```json
 { "": "my-secret-key", "bob": "bob-secret-key" }
 ```
 
-Enforcement is server-side in `src/hooks.server.ts` — `POST`/`PATCH`/`DELETE` return
-`401` when the caller isn't authenticated, and the write controls are hidden in the UI
-as well. To sign in, visit `/auth` and enter a key, or open `/auth?key=YOUR_KEY`; a valid
-key is stored in an httpOnly cookie. A key authenticates one scope, so sign in again
-under `/@bob/auth` to write there.
+The check runs on the server in `src/hooks.server.ts`. `POST`, `PATCH` and `DELETE`
+return `401` when the caller is not authenticated, and the UI hides the write controls.
+To sign in, open `/auth` and enter a key, or open `/auth?key=YOUR_KEY`. The key is kept
+in an httpOnly cookie. A key works for one scope only, so sign in again at `/@bob/auth`
+to write there.
 
 ### Multi-user
 
-- **Creating a user:** open `/invite`, enter a name, and you get a shareable link that
-  signs that person in on their device — it creates the `@name` directory and mints
-  their key. You can also make the directory by hand (`static/@bob/`) and add a key to
-  `users.json` yourself. Nothing else creates a user; an unknown `/@name` returns `404`.
-  Names are lowercase latin letters, digits and underscore. A URL may capitalize
-  (`/@Bob`) but resolves to the lowercase folder, so a directory named `@Bob` is not a
-  user.
-- **Inviting:** `/invite` and `/invite/<name>` display write keys, so unlike every other
-  page they are **not** public — they need the root key, in the root scope, and refuse
-  outright until `users.json` has a root (`""`) entry. `/invite/<name>` shows an existing
-  user's link again so you can resend one, and mints a key for a directory you made by
-  hand.
-- **Where it lives:** a user's `feeds.json`, `myposts.json` and caches sit under their
-  own directory, images under `cache/@bob/`.
-- **Listing:** `/users` lists the existing users.
+- **Creating a user:** open `/invite` and enter a name. You get a link that signs that
+  person in on their device. This creates the `@name` directory and their key. You can
+  also create the directory yourself (`static/@bob/`) and add a key to `users.json` by
+  hand. Nothing else creates a user, and an unknown `/@name` returns `404`. Names may
+  contain lowercase latin letters, digits and underscore. An address may use capitals
+  (`/@Bob`) and still resolve to the lowercase directory, so a directory named `@Bob` is
+  not a user.
+- **Inviting:** `/invite` and `/invite/<name>` show write keys, so they are the only
+  pages that are not public. They need the root key in the root scope, and refuse to
+  work until `users.json` has a root (`""`) entry. `/invite/<name>` shows an existing
+  user's link again if you need to send it once more, and creates a key for a directory
+  you made by hand.
+- **Storage:** each user has their own `feeds.json`, `myposts.json` and caches in their
+  directory, and their images in `cache/@bob/`.
+- **Listing:** `/users` lists the users that exist.
 
 ## Packages
 
 ### `@feeds/core`
 
-The engine: discovery, parsing, enrichment and post building. Pure logic — network via
-`fetch`, no disk access. Depends only on `fast-xml-parser` and `he`.
+Discovery, parsing, enrichment and post building. It contains no disk access and reaches
+the network through `fetch`. Its only dependencies are `fast-xml-parser` and `he`.
 
 ```typescript
 import { fetchFeedsFromUrl, fetchOpenGraphData, loadPosts } from '@feeds/core'
@@ -199,7 +209,7 @@ const posts = await loadPosts(feeds)
 const og = await fetchOpenGraphData('https://example.com/article')
 ```
 
-Key exports: `fetchFeedsFromUrl`, `fetchFeed`, `loadPosts`, `discoverFeedFromUrl`,
+Main exports: `fetchFeedsFromUrl`, `fetchFeed`, `loadPosts`, `discoverFeedFromUrl`,
 `discoverAndEnrichFeed`, `createEnrichedPost`, `parseOPML`, `fetchOpenGraphData`,
 `fetchHtmlMetaDataOnly`.
 
@@ -208,7 +218,7 @@ Key exports: `fetchFeedsFromUrl`, `fetchFeed`, `loadPosts`, `discoverFeedFromUrl
 ```bash
 pnpm feeds add <url>                      # discover a feed from any URL
 pnpm feeds rss <url>                      # fetch feed info
-pnpm feeds discover <url>                 # metadata incl. well-known path search
+pnpm feeds discover <url>                 # metadata, including well-known path search
 pnpm feeds discover-feed <url>            # discover, then enrich every item
 pnpm feeds fetch-feed <feed-url>          # posts from one feed
 pnpm feeds fetch <feeds-file> [-m <n>]    # posts from a feeds file
@@ -222,8 +232,9 @@ pnpm feeds --help
 
 ### `@feeds/app`
 
-The SvelteKit reader: routes, API endpoints, persistence, image processing and auth. It
-never re-implements parsing or discovery — it calls core.
+The SvelteKit reader: pages, API endpoints, storage, image processing and
+authentication. It calls the core library for parsing and discovery instead of
+implementing them again.
 
 ## Project structure
 
@@ -244,19 +255,20 @@ feeds/
 │           └── routes/     # Pages, API endpoints and generated feeds
 ├── docs/               # Architecture, deployment, cleanup notes
 ├── pnpm-workspace.yaml
-├── .prettierrc         # Formatting, incl. .svelte markup
-├── eslint.config.mjs   # Lint rules, incl. eslint-plugin-svelte
+├── .prettierrc         # Formatting, including .svelte markup
+├── eslint.config.mjs   # Lint rules, including eslint-plugin-svelte
 ├── tsconfig.base.json
 └── vitest.workspace.ts
 ```
 
 ## Contributing
 
-Read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) before changing feed discovery,
-parsing or post enrichment. It maps the pipeline and lists the invariants in §5 that
-have each already caused a regression once — the `getCanonicalUrl` / `normalizeUrl`
-split, why a feed's key is its `feedUrl`, why per-item fetches to one host must stay
-rare. [AGENTS.md](AGENTS.md) carries the same conventions for coding agents.
+Read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) before you change feed discovery,
+parsing or post enrichment. It describes the pipeline and lists the rules in §5 that
+each caused a regression when they were broken: the difference between
+`getCanonicalUrl` and `normalizeUrl`, why a feed is identified by its `feedUrl`, and why
+per-item requests to one host have to stay rare. [AGENTS.md](AGENTS.md) has the same
+conventions for coding agents.
 
 ```bash
 pnpm build                 # all packages
@@ -269,17 +281,16 @@ pnpm lint:fix              # fix both
 pnpm --filter @feeds/app check   # svelte-check
 ```
 
-A few house rules:
+Conventions:
 
-- Anything non-trivial in the pipeline gets a test. Both packages use Vitest; look at
-  `packages/core/tests/` for the shape.
-- The UI shows no counts, totals or badges. That is a product decision — see
-  [Features](#a-ui-that-doesnt-keep-score).
-- ESM `import` everywhere, in source, scripts and one-off checks. Prefer `const`.
-- Conventional commits, lowercase and imperative: `fix: show share URL input on iOS
-Safari`. One commit per change, subject only unless the _why_ isn't obvious from the
-  diff.
+- Non-trivial pipeline code needs a test. Both packages use Vitest, and
+  `packages/core/tests/` shows the usual shape.
+- The UI shows no counts, totals or badges. See [Minimal interface](#minimal-interface).
+- Use ESM `import` in source, scripts and one-off checks. Prefer `const` over `let`.
+- Conventional commits, lowercase and imperative, for example
+  `fix: show share URL input on iOS Safari`. One commit per change, and a subject line
+  only unless the reason is not clear from the diff.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT, see [LICENSE](LICENSE).
