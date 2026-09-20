@@ -1,8 +1,8 @@
-import type { PageServerLoad } from './$types'
 import { loadConfig } from '$lib/config'
 import { loadMyfeedPosts } from '$lib/myfeed'
 import { collectAvailableTags } from '$lib/tags'
 import { fetchFeedsFromUrl, timeout } from '@feeds/core'
+import type { PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ params, url, locals }) => {
   const postUrl = params.url || ''
@@ -14,14 +14,14 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
   // Get feedUrl from query parameters if available
   const searchParams = new URL(url).searchParams
   const feedUrlFromQuery = searchParams.get('feedUrl')
-  
+
   let feedTags: string[] = []
   // The feed context to record on the saved post (exact-matched against followed feeds)
   let resolvedFeedUrl = feedUrlFromQuery ? decodeURIComponent(feedUrlFromQuery) : undefined
 
   if (resolvedFeedUrl) {
     // Use feedUrl for exact feed matching (most accurate)
-    const matchingFeed = config.feeds.find(feed => feed.feedUrl === resolvedFeedUrl)
+    const matchingFeed = config.feeds.find((feed) => feed.feedUrl === resolvedFeedUrl)
     if (matchingFeed?.tags) {
       feedTags = [...matchingFeed.tags]
     }
@@ -34,10 +34,14 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
     const decodedPostUrl = decodeURIComponent(postUrl)
     try {
       const discovered = await timeout(5000, fetchFeedsFromUrl(decodedPostUrl))
-      const discoveredFeeds = Array.isArray(discovered) ? discovered : discovered ? [discovered] : []
+      const discoveredFeeds = Array.isArray(discovered)
+        ? discovered
+        : discovered
+          ? [discovered]
+          : []
       const discoveredFeedUrl = discoveredFeeds[0]?.feedUrl
       if (discoveredFeedUrl) {
-        const matchingFeed = config.feeds.find(feed => feed.feedUrl === discoveredFeedUrl)
+        const matchingFeed = config.feeds.find((feed) => feed.feedUrl === discoveredFeedUrl)
         if (matchingFeed?.tags) {
           feedTags = [...matchingFeed.tags]
           resolvedFeedUrl = matchingFeed.feedUrl
@@ -53,7 +57,7 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
     availableTags,
     feeds: config.feeds,
     myfeedPosts,
-    feedTags,  // Tags from the specific matching feed (empty if no feed matches)
-    feedUrl: resolvedFeedUrl  // Feed context for the saved post (query param or discovered match)
+    feedTags, // Tags from the specific matching feed (empty if no feed matches)
+    feedUrl: resolvedFeedUrl, // Feed context for the saved post (query param or discovered match)
   }
 }

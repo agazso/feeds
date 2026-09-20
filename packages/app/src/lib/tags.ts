@@ -104,13 +104,16 @@ export function filterPostsByTags(posts: Post[], tags: string[]): Post[] {
 /**
  * Build co-occurrence map: for each tag, count how often other tags appear with it
  */
-export function buildTagCooccurrence(feeds: Feed[], posts: Post[] = []): Map<string, Map<string, number>> {
+export function buildTagCooccurrence(
+  feeds: Feed[],
+  posts: Post[] = [],
+): Map<string, Map<string, number>> {
   const cooccurrence = new Map<string, Map<string, number>>()
 
   // Process all items with tags
   const taggedItems = [
-    ...feeds.filter(f => f.tags?.length),
-    ...posts.filter(p => p.tags?.length)
+    ...feeds.filter((f) => f.tags?.length),
+    ...posts.filter((p) => p.tags?.length),
   ]
 
   for (const item of taggedItems) {
@@ -137,7 +140,7 @@ export function buildTagCooccurrence(feeds: Feed[], posts: Post[] = []): Map<str
 export function getSuggestedTags(
   selectedTags: string[],
   cooccurrence: Map<string, Map<string, number>>,
-  limit: number = 5
+  limit = 5,
 ): string[] {
   if (selectedTags.length === 0) return []
 
@@ -166,17 +169,14 @@ export function getSuggestedTags(
  * Get suggested tags by matching available tags against text content
  * Matches whole words only, case-insensitive
  */
-export function getContentBasedTags(
-  text: string,
-  availableTags: string[],
-  limit: number = 5
-): string[] {
+export function getContentBasedTags(text: string, availableTags: string[], limit = 5): string[] {
   if (!text || availableTags.length === 0) return []
 
-  const words = text.toLowerCase().split(/\W+/).filter(w => w.length > 0)
+  const words = text
+    .toLowerCase()
+    .split(/\W+/)
+    .filter((w) => w.length > 0)
   const wordSet = new Set(words)
 
-  return availableTags
-    .filter(tag => wordSet.has(tag.toLowerCase()))
-    .slice(0, limit)
+  return availableTags.filter((tag) => wordSet.has(tag.toLowerCase())).slice(0, limit)
 }

@@ -1,8 +1,8 @@
+import { userExists } from '$lib/paths'
+import { getAuthState } from '$lib/server/auth'
+import { stripUser, userFromPath } from '$lib/user'
 import type { Handle } from '@sveltejs/kit'
 import { error } from '@sveltejs/kit'
-import { getAuthState } from '$lib/server/auth'
-import { userExists } from '$lib/paths'
-import { stripUser, userFromPath } from '$lib/user'
 
 const WRITE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
 

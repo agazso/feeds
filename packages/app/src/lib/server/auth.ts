@@ -1,8 +1,8 @@
-import type { Cookies } from '@sveltejs/kit'
-import { error } from '@sveltejs/kit'
 import { randomInt } from 'node:crypto'
 import { readFile, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
+import type { Cookies } from '@sveltejs/kit'
+import { error } from '@sveltejs/kit'
 import { DATA_DIR } from '../paths'
 
 export const AUTH_COOKIE = 'feeds-auth-key'
@@ -49,7 +49,10 @@ const KEY_LENGTH = 23 // 23 × log2(58) ≈ 135 bits
  */
 export function generateKey(): string {
   // randomInt rejection-samples; `randomBytes()[i] % 58` would bias the first 24 letters.
-  return Array.from({ length: KEY_LENGTH }, () => KEY_ALPHABET[randomInt(KEY_ALPHABET.length)]).join('')
+  return Array.from(
+    { length: KEY_LENGTH },
+    () => KEY_ALPHABET[randomInt(KEY_ALPHABET.length)],
+  ).join('')
 }
 
 /** Mint and persist a write key for `user`. Overwrites any key they already had. */

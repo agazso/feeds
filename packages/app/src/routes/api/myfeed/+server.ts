@@ -1,10 +1,10 @@
-import type { RequestHandler } from './$types'
+import { loadMyfeedPosts, myPostsPath } from '$lib/myfeed'
+import { deleteCachedImage, processFavicon, processImage } from '$lib/server/imageProcessing'
 import type { Post } from '@feeds/core'
 import { createEnrichedPost, discoverFeedFromUrl, getFaviconForUrl, timeout } from '@feeds/core'
-import { processImage, processFavicon, deleteCachedImage } from '$lib/server/imageProcessing'
-import { writeFile } from 'fs/promises'
 import { json } from '@sveltejs/kit'
-import { loadMyfeedPosts, myPostsPath } from '$lib/myfeed'
+import { writeFile } from 'fs/promises'
+import type { RequestHandler } from './$types'
 
 async function savePost(post: Post, user?: string): Promise<void> {
   const posts = await loadMyfeedPosts(user)
@@ -97,7 +97,7 @@ export const POST: RequestHandler = async ({ request, url, locals }) => {
   if (body.url && typeof body.url === 'string') {
     const postUrl = body.url.trim()
     const tags = Array.isArray(body.tags) ? body.tags : undefined
-    
+
     // Get feedUrl from query parameters if provided (preserves feed context)
     const searchParams = new URL(url).searchParams
     const providedFeedUrl = searchParams.get('feedUrl')
@@ -129,7 +129,7 @@ export const POST: RequestHandler = async ({ request, url, locals }) => {
           ...post.author,
           name: post.author?.name || '',
           uri: post.author?.uri || '',
-          image: { uri: hardcodedFavicon }
+          image: { uri: hardcodedFavicon },
         }
       } else if (!post.author?.image?.uri) {
         const feedInfo = await discoverFeedFromUrl(postUrl)
@@ -138,7 +138,7 @@ export const POST: RequestHandler = async ({ request, url, locals }) => {
             ...post.author,
             name: post.author?.name || '',
             uri: post.author?.uri || '',
-            image: { uri: feedInfo.favicon }
+            image: { uri: feedInfo.favicon },
           }
         }
       }
@@ -151,13 +151,15 @@ export const POST: RequestHandler = async ({ request, url, locals }) => {
       if (post.images?.[0]?.uri && !post.images[0].blurhash) {
         const result = await processImage(post.images[0].uri, locals.user)
         if (result) {
-          post.images = [{
-            ...post.images[0],
-            blurhash: result.blurhash,
-            aspectRatio: result.aspectRatio,
-            cacheHash: result.cacheHash,
-            cacheExt: result.cacheExt,
-          }]
+          post.images = [
+            {
+              ...post.images[0],
+              blurhash: result.blurhash,
+              aspectRatio: result.aspectRatio,
+              cacheHash: result.cacheHash,
+              cacheExt: result.cacheExt,
+            },
+          ]
         }
       }
 
@@ -217,13 +219,15 @@ export const POST: RequestHandler = async ({ request, url, locals }) => {
         try {
           const result = await timeout(8000, processImage(post.images[0].uri, locals.user))
           if (result) {
-            post.images = [{
-              ...post.images[0],
-              blurhash: result.blurhash,
-              aspectRatio: result.aspectRatio,
-              cacheHash: result.cacheHash,
-              cacheExt: result.cacheExt,
-            }]
+            post.images = [
+              {
+                ...post.images[0],
+                blurhash: result.blurhash,
+                aspectRatio: result.aspectRatio,
+                cacheHash: result.cacheHash,
+                cacheExt: result.cacheExt,
+              },
+            ]
           }
         } catch {
           // Image processing timed out or failed - keep the original image.uri

@@ -16,7 +16,7 @@ interface FeedCacheItem {
 }
 
 function createFeedCache() {
-  let cache = $state<SvelteMap<string, FeedCacheItem>>(new SvelteMap())
+  const cache = $state<SvelteMap<string, FeedCacheItem>>(new SvelteMap())
 
   return {
     getFeedCache(url: string) {

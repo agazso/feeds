@@ -1,8 +1,8 @@
-import { encode } from 'blurhash'
-import sharp from 'sharp'
 import { createHash } from 'crypto'
-import { mkdir, writeFile, unlink } from 'fs/promises'
 import { join } from 'path'
+import { encode } from 'blurhash'
+import { mkdir, unlink, writeFile } from 'fs/promises'
+import sharp from 'sharp'
 import { cacheDir } from '../paths'
 
 const BLURHASH_WIDTH = 32
@@ -73,7 +73,8 @@ export async function processImage(
     let cacheHash: string | undefined
     let cacheExt: string | undefined
     try {
-      const isAnimated = (metadata.pages ?? 1) > 1 && (metadata.format === 'gif' || metadata.format === 'png')
+      const isAnimated =
+        (metadata.pages ?? 1) > 1 && (metadata.format === 'gif' || metadata.format === 'png')
       if (isAnimated) {
         const result = await cacheAnimatedImage(imageBuffer, metadata.format!, user)
         cacheHash = result?.hash
@@ -160,7 +161,7 @@ async function cacheAnimatedImage(
  */
 export async function deleteCachedImage(
   cacheHash: string,
-  cacheExt: string = 'webp',
+  cacheExt = 'webp',
   user?: string,
 ): Promise<void> {
   const cachePath = join(cacheDir(user), cacheHash[0], cacheHash[1], `${cacheHash}.${cacheExt}`)

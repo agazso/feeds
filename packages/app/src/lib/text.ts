@@ -1,4 +1,4 @@
-import type { Post, ImageData } from '@feeds/core'
+import type { ImageData, Post } from '@feeds/core'
 
 /**
  * Normalize text for comparison/search: removes accents, special characters,
@@ -8,14 +8,16 @@ export function normalizeText(s: string | undefined): string {
   if (!s) {
     return ''
   }
-  return s
-    .normalize('NFD')
-    // Remove diacritical marks (accents) from characters
-    .replace(/\p{Diacritic}/gu, '')
-    // Keep only letters, digits, spaces, and hyphens (for negative search)
-    // Note: hyphen must be at start of character class to be treated literally
-    .replace(/[^-\p{Letter}0-9 ]/gu, '')
-    .toLowerCase()
+  return (
+    s
+      .normalize('NFD')
+      // Remove diacritical marks (accents) from characters
+      .replace(/\p{Diacritic}/gu, '')
+      // Keep only letters, digits, spaces, and hyphens (for negative search)
+      // Note: hyphen must be at start of character class to be treated literally
+      .replace(/[^-\p{Letter}0-9 ]/gu, '')
+      .toLowerCase()
+  )
 }
 
 export function postTitle(post: Post): string | undefined {

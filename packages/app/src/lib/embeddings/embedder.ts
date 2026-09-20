@@ -1,5 +1,10 @@
-import { pipeline, env, type FeatureExtractionPipeline, type PipelineType } from '@huggingface/transformers'
 import { MODELS_DIR } from '$lib/paths'
+import {
+  type FeatureExtractionPipeline,
+  type PipelineType,
+  env,
+  pipeline,
+} from '@huggingface/transformers'
 
 const MODEL_NAME = 'Xenova/all-MiniLM-L6-v2'
 
@@ -42,7 +47,7 @@ export async function embed(text: string): Promise<number[]> {
 
   const output = await embedder(truncated, {
     pooling: 'mean',
-    normalize: true
+    normalize: true,
   })
 
   // Convert to plain array
@@ -62,7 +67,7 @@ export async function embedBatch(texts: string[]): Promise<number[][]> {
 
   const output = await embedder(truncated, {
     pooling: 'mean',
-    normalize: true
+    normalize: true,
   })
 
   // Convert batched output to array of vectors

@@ -1,7 +1,7 @@
-import type { PageServerLoad, Actions } from './$types'
-import { redirect, fail } from '@sveltejs/kit'
 import { AUTH_COOKIE, AUTH_COOKIE_MAX_AGE, isValidKey, keyForUser } from '$lib/server/auth'
 import { userPrefix } from '$lib/user'
+import { fail, redirect } from '@sveltejs/kit'
+import type { Actions, PageServerLoad } from './$types'
 
 function setAuthCookie(cookies: import('@sveltejs/kit').Cookies, key: string) {
   cookies.set(AUTH_COOKIE, key, {
@@ -25,7 +25,8 @@ export const load: PageServerLoad = async ({ url, cookies, locals }) => {
   // The key for this scope, for the "sign in on another device" link. Only ever sent
   // to someone already holding it — they authenticated with it to get here.
   const prefix = userPrefix(url.pathname)
-  const key = locals.authEnabled && locals.authenticated ? await keyForUser(locals.user ?? '') : undefined
+  const key =
+    locals.authEnabled && locals.authenticated ? await keyForUser(locals.user ?? '') : undefined
 
   return {
     authEnabled: locals.authEnabled,

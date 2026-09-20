@@ -1,7 +1,7 @@
-import type { PageServerLoad } from './$types'
 import { loadConfig } from '$lib/config'
 import { loadPostsCached } from '$lib/feed-cache'
 import { tagShorts } from '$lib/shorts'
+import type { PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ locals }) => {
   const config = await loadConfig(locals.user)

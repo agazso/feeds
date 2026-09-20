@@ -1,8 +1,8 @@
-import { json } from '@sveltejs/kit'
-import type { RequestHandler } from './$types'
+import { loadConfig, saveConfig } from '$lib/config'
 import type { Feed } from '@feeds/core'
 import { resolveYoutubeChannelUrl } from '@feeds/core'
-import { loadConfig, saveConfig } from '$lib/config'
+import { json } from '@sveltejs/kit'
+import type { RequestHandler } from './$types'
 
 export const POST: RequestHandler = async ({ request, locals }) => {
   const body = await request.json()
@@ -16,7 +16,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     const config = await loadConfig(locals.user)
 
     // Check if feed already exists
-    const existingFeed = config.feeds.find(f => f.feedUrl === feed.feedUrl)
+    const existingFeed = config.feeds.find((f) => f.feedUrl === feed.feedUrl)
     if (existingFeed) {
       return json({ error: 'Feed already exists' }, { status: 409 })
     }

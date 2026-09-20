@@ -27,12 +27,12 @@ export interface ScoredItem<T> {
 export function rankBySimilarity<T>(
   queryVector: number[],
   candidates: Array<{ item: T; vector: number[] }>,
-  topK: number = 5,
-  minScore: number = 0.15
+  topK = 5,
+  minScore = 0.15,
 ): ScoredItem<T>[] {
   const scored = candidates.map(({ item, vector }) => ({
     item,
-    score: cosineSimilarity(queryVector, vector)
+    score: cosineSimilarity(queryVector, vector),
   }))
 
   return scored

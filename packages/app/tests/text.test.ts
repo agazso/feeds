@@ -1,6 +1,6 @@
-import { describe, expect, test } from 'vitest'
-import { postTitle, postText } from '../src/lib/text'
 import type { Post } from '@feeds/core'
+import { describe, expect, test } from 'vitest'
+import { postText, postTitle } from '../src/lib/text'
 
 function makePost(text: string): Post {
   return { _id: 'test', text, images: [], createdAt: Date.now() }

@@ -1,6 +1,6 @@
-import { describe, expect, test } from 'vitest'
-import { isShortLink, tagShorts, SHORT_TAG } from '../src/lib/shorts'
 import type { Post } from '@feeds/core'
+import { describe, expect, test } from 'vitest'
+import { SHORT_TAG, isShortLink, tagShorts } from '../src/lib/shorts'
 
 function makePost(link: string | undefined, tags?: string[]): Post {
   return { _id: link ?? 'x', text: '', images: [], createdAt: 0, link, tags }

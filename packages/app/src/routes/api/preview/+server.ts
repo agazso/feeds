@@ -1,7 +1,13 @@
+import { processFavicon, processImage } from '$lib/server/imageProcessing'
+import {
+  createEnrichedPost,
+  discoverFeedFromUrl,
+  normalizeUrl,
+  timeout,
+  transformPostImages,
+} from '@feeds/core'
 import { json } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
-import { createEnrichedPost, normalizeUrl, discoverFeedFromUrl, transformPostImages, timeout } from '@feeds/core'
-import { processImage, processFavicon } from '$lib/server/imageProcessing'
 
 export const POST: RequestHandler = async ({ request, locals }) => {
   const body = await request.json()
@@ -42,13 +48,15 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     ])
 
     if (imageResult) {
-      post.images = [{
-        ...post.images[0],
-        blurhash: imageResult.blurhash,
-        aspectRatio: imageResult.aspectRatio,
-        cacheHash: imageResult.cacheHash,
-        cacheExt: imageResult.cacheExt,
-      }]
+      post.images = [
+        {
+          ...post.images[0],
+          blurhash: imageResult.blurhash,
+          aspectRatio: imageResult.aspectRatio,
+          cacheHash: imageResult.cacheHash,
+          cacheExt: imageResult.cacheExt,
+        },
+      ]
     }
     if (faviconResult && post.author?.image) {
       post.author.image.cacheHash = faviconResult.cacheHash

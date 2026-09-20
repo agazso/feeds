@@ -1,8 +1,8 @@
-import type { PageServerLoad } from './$types'
-import { loadMyfeedPosts } from '$lib/myfeed'
 import { loadConfig } from '$lib/config'
+import { loadMyfeedPosts } from '$lib/myfeed'
 import { buildFeedUrlToPageUrl } from '$lib/tags'
 import { transformPostImages } from '@feeds/core'
+import type { PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ locals }) => {
   const posts = await loadMyfeedPosts(locals.user)

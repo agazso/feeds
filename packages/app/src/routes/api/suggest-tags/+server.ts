@@ -1,9 +1,9 @@
-import { json } from '@sveltejs/kit'
-import type { RequestHandler } from './$types'
 import { loadConfig } from '$lib/config'
+import { getEmbeddingBasedTags } from '$lib/embeddings'
 import { loadMyfeedPosts } from '$lib/myfeed'
 import { collectAvailableTags } from '$lib/tags'
-import { getEmbeddingBasedTags } from '$lib/embeddings'
+import { json } from '@sveltejs/kit'
+import type { RequestHandler } from './$types'
 
 export const POST: RequestHandler = async ({ request, locals }) => {
   const body = await request.json()
@@ -20,7 +20,13 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     const availableTags = collectAvailableTags(config.feeds, myfeedPosts)
 
     // Get embedding-based suggestions
-    const tags = await getEmbeddingBasedTags(text, availableTags, config.feeds, myfeedPosts, locals.user)
+    const tags = await getEmbeddingBasedTags(
+      text,
+      availableTags,
+      config.feeds,
+      myfeedPosts,
+      locals.user,
+    )
 
     return json({ tags })
   } catch (e) {

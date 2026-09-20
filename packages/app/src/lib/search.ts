@@ -54,7 +54,7 @@ function scorePost(post: NormalizedPost, expr: string): number {
   return score
 }
 
-let normalizedPostsCache: WeakMap<Post, NormalizedPost> = new WeakMap()
+const normalizedPostsCache: WeakMap<Post, NormalizedPost> = new WeakMap()
 
 function getNormalizedPost(post: Post): NormalizedPost {
   let normalized = normalizedPostsCache.get(post)

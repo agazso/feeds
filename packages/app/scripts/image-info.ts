@@ -1,6 +1,6 @@
-import sharp from 'sharp'
-import { stat } from 'fs/promises'
 import { basename } from 'path'
+import { stat } from 'fs/promises'
+import sharp from 'sharp'
 
 async function main() {
   const filePath = process.argv[2]
@@ -10,10 +10,7 @@ async function main() {
     process.exit(1)
   }
 
-  const [metadata, stats] = await Promise.all([
-    sharp(filePath).metadata(),
-    stat(filePath)
-  ])
+  const [metadata, stats] = await Promise.all([sharp(filePath).metadata(), stat(filePath)])
 
   console.log(`File: ${basename(filePath)}`)
   console.log(`Path: ${filePath}`)

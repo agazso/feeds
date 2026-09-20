@@ -1,16 +1,16 @@
-import { json } from '@sveltejs/kit'
-import type { RequestHandler } from './$types'
 import { loadConfig } from '$lib/config'
 import { loadPostsCached } from '$lib/feed-cache'
-import {
-  filterFeedsByTags,
-  getAllTags,
-  getTagsFromPosts,
-  filterPostsByTags,
-  buildFeedUrlToPageUrl,
-} from '$lib/tags'
 import { loadMyfeedPosts } from '$lib/myfeed'
 import { tagShorts } from '$lib/shorts'
+import {
+  buildFeedUrlToPageUrl,
+  filterFeedsByTags,
+  filterPostsByTags,
+  getAllTags,
+  getTagsFromPosts,
+} from '$lib/tags'
+import { json } from '@sveltejs/kit'
+import type { RequestHandler } from './$types'
 
 export const GET: RequestHandler = async ({ url, locals }) => {
   const tagsParam = url.searchParams.get('tags') || ''

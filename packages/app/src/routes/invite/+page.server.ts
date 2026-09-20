@@ -1,9 +1,9 @@
-import type { Actions, PageServerLoad } from './$types'
-import { fail, redirect } from '@sveltejs/kit'
 import { mkdir } from 'node:fs/promises'
-import { createKey, requireRootScope } from '$lib/server/auth'
 import { dataDir, userExists } from '$lib/paths'
+import { createKey, requireRootScope } from '$lib/server/auth'
 import { isValidUserName } from '$lib/user'
+import { fail, redirect } from '@sveltejs/kit'
+import type { Actions, PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ locals }) => {
   await requireRootScope(locals)
@@ -20,7 +20,10 @@ export const actions: Actions = {
       .toLowerCase()
 
     if (!isValidUserName(name)) {
-      return fail(400, { message: 'Use lowercase letters, digits and underscore only.', existing: '' })
+      return fail(400, {
+        message: 'Use lowercase letters, digits and underscore only.',
+        existing: '',
+      })
     }
     if (await userExists(name)) {
       return fail(409, { message: `@${name} already exists.`, existing: name })

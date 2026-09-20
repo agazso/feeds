@@ -1,5 +1,5 @@
+import type { Layout, Theme } from '$lib/stores/preferences.svelte'
 import type { LayoutServerLoad } from './$types'
-import type { Theme, Layout } from '$lib/stores/preferences.svelte'
 
 export const load: LayoutServerLoad = async ({ cookies, locals }) => {
   const theme = (cookies.get('feeds-theme') as Theme) || 'dark'

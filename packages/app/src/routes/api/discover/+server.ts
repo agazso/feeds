@@ -1,6 +1,6 @@
+import { discoverAndEnrichFeed } from '@feeds/core'
 import { json } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
-import { discoverAndEnrichFeed } from '@feeds/core'
 
 export const POST: RequestHandler = async ({ request }) => {
   const body = await request.json()

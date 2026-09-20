@@ -1,6 +1,6 @@
+import { findFeedIndexByKey, loadConfig, saveConfig } from '$lib/config'
 import { json } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
-import { loadConfig, saveConfig, findFeedIndexByKey } from '$lib/config'
 
 export const PATCH: RequestHandler = async ({ params, request, locals }) => {
   const feedUrl = params.url || ''

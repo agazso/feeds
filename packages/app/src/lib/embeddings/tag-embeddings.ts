@@ -1,10 +1,10 @@
-import type { Feed, Post } from '@feeds/core'
-import { embed, embedBatch } from './embedder'
-import { rankBySimilarity, type ScoredItem } from './similarity'
-import { normalizeText } from '../text'
 import fs from 'fs'
 import path from 'path'
+import type { Feed, Post } from '@feeds/core'
 import { dataDir } from '../paths'
+import { normalizeText } from '../text'
+import { embed, embedBatch } from './embedder'
+import { type ScoredItem, rankBySimilarity } from './similarity'
 
 export interface TagEmbedding {
   tag: string
@@ -96,7 +96,7 @@ export async function getTagEmbeddings(
   tags: string[],
   feeds: Feed[],
   posts: Post[],
-  user?: string
+  user?: string,
 ): Promise<TagEmbedding[]> {
   if (tags.length === 0) return []
 
@@ -133,16 +133,19 @@ export async function getTagEmbeddings(
       const embedding: TagEmbedding = {
         tag: tagsToEmbed[i].tag,
         vector: vectors[i],
-        context: tagsToEmbed[i].context
+        context: tagsToEmbed[i].context,
       }
       result.push(embedding)
     }
 
     // Update cache with all embeddings
-    saveTagEmbeddings({
-      version: CACHE_VERSION,
-      embeddings: result
-    }, user)
+    saveTagEmbeddings(
+      {
+        version: CACHE_VERSION,
+        embeddings: result,
+      },
+      user,
+    )
   }
 
   return result
@@ -157,8 +160,8 @@ export async function getEmbeddingBasedTags(
   feeds: Feed[],
   posts: Post[],
   user?: string,
-  limit: number = 5,
-  minScore: number = 0.15
+  limit = 5,
+  minScore = 0.15,
 ): Promise<string[]> {
   if (!text || availableTags.length === 0) {
     return []
@@ -175,7 +178,7 @@ export async function getEmbeddingBasedTags(
     // Rank tags by similarity
     const candidates = tagEmbeddings.map((te) => ({
       item: te.tag,
-      vector: te.vector
+      vector: te.vector,
     }))
 
     const ranked: ScoredItem<string>[] = rankBySimilarity(textVector, candidates, limit, minScore)

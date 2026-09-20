@@ -1,7 +1,7 @@
-import type { Feed, Post } from '@feeds/core'
-import { loadPosts, fetchFeedPosts, loadEnrichedFeedPosts, getHumanHostname } from '@feeds/core'
 import { readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import type { Feed, Post } from '@feeds/core'
+import { fetchFeedPosts, getHumanHostname, loadEnrichedFeedPosts, loadPosts } from '@feeds/core'
 import { dataDir } from './paths'
 
 // Hosts whose feeds are cached instead of fetched live, because they rate-limit
@@ -57,7 +57,9 @@ async function refetch(
   if (!feed.enrich) return fetchFeedPosts(feed)
   // Only reuse posts this build would have produced itself.
   const current = previous?.enriched && previous.version === POSTS_VERSION
-  return { posts: await loadEnrichedFeedPosts(feed, { reuse: current ? previous.posts : undefined }) }
+  return {
+    posts: await loadEnrichedFeedPosts(feed, { reuse: current ? previous.posts : undefined }),
+  }
 }
 
 async function loadCache(user?: string): Promise<FeedCache> {
@@ -111,9 +113,7 @@ export async function loadPostsCached(feeds: Feed[], user?: string): Promise<Pos
   // Oldest-first within each budget; whatever misses out keeps serving its last copy
   // and is refreshed on a later load.
   let enrichBudget = MAX_ENRICH_REFRESH
-  const toRefresh = stale
-    .filter((feed) => !feed.enrich || enrichBudget-- > 0)
-    .slice(0, MAX_REFRESH)
+  const toRefresh = stale.filter((feed) => !feed.enrich || enrichBudget-- > 0).slice(0, MAX_REFRESH)
 
   await pool(toRefresh, CONCURRENCY, async (feed) => {
     try {

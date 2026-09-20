@@ -1,6 +1,6 @@
-import type { Feed } from '@feeds/core'
 import { readFile, writeFile } from 'node:fs/promises'
-import { join, isAbsolute } from 'node:path'
+import { isAbsolute, join } from 'node:path'
+import type { Feed } from '@feeds/core'
 import { dataDir } from './paths'
 
 export interface AppConfig {

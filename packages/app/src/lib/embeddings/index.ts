@@ -7,5 +7,5 @@ export {
   loadTagEmbeddings,
   saveTagEmbeddings,
   type TagEmbedding,
-  type TagEmbeddingCache
+  type TagEmbeddingCache,
 } from './tag-embeddings'

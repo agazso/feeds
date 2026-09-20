@@ -1,10 +1,10 @@
-import type { PageServerLoad } from './$types'
-import { loadConfig, findFeedByKey } from '$lib/config'
+import { findFeedByKey, loadConfig } from '$lib/config'
 import { loadPostsCached } from '$lib/feed-cache'
 import { loadMyfeedPosts } from '$lib/myfeed'
-import { collectAvailableTags } from '$lib/tags'
 import { tagShorts } from '$lib/shorts'
+import { collectAvailableTags } from '$lib/tags'
 import { error } from '@sveltejs/kit'
+import type { PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ params, locals }) => {
   const feedUrl = params.url || ''

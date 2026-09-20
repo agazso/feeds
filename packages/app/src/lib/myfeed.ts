@@ -1,6 +1,6 @@
+import { join } from 'path'
 import type { Post } from '@feeds/core'
 import { readFile } from 'fs/promises'
-import { join } from 'path'
 import { dataDir } from './paths'
 
 export function myPostsPath(user?: string): string {
