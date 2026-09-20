@@ -27,7 +27,7 @@ export function filterFeedsByTags(feeds: Feed[], tags: string[]): Feed[] {
     if (!feed.tags || feed.tags.length === 0) {
       return false
     }
-    return tags.every((tag) => feed.tags!.includes(tag))
+    return tags.every((tag) => feed.tags?.includes(tag))
   })
 }
 
@@ -97,7 +97,7 @@ export function filterPostsByTags(posts: Post[], tags: string[]): Post[] {
     if (!post.tags || post.tags.length === 0) {
       return false
     }
-    return tags.every((tag) => post.tags!.includes(tag))
+    return tags.every((tag) => post.tags?.includes(tag))
   })
 }
 

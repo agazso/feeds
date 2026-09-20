@@ -1,6 +1,6 @@
-import { join } from 'path'
+import { readFile, writeFile } from 'node:fs/promises'
+import { join } from 'node:path'
 import type { Post } from '@feeds/core'
-import { readFile, writeFile } from 'fs/promises'
 import { processFavicon } from '../src/lib/server/imageProcessing'
 
 async function main() {

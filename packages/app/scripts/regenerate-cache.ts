@@ -1,7 +1,7 @@
-import { join } from 'path'
+import { readFile, writeFile } from 'node:fs/promises'
+import { join } from 'node:path'
 import type { Feed, Post } from '@feeds/core'
 import { fetchFeedPosts, getHumanHostname } from '@feeds/core'
-import { readFile, writeFile } from 'fs/promises'
 
 // Warm static/feed-cache.json for rate-limited hosts (see feed-cache.ts) by fetching
 // each feed sequentially with a delay, so a cold start never bursts the rate limiter.

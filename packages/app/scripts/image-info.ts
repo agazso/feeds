@@ -1,5 +1,5 @@
-import { basename } from 'path'
-import { stat } from 'fs/promises'
+import { stat } from 'node:fs/promises'
+import { basename } from 'node:path'
 import sharp from 'sharp'
 
 async function main() {

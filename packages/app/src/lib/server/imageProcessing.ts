@@ -1,7 +1,7 @@
-import { createHash } from 'crypto'
-import { join } from 'path'
+import { createHash } from 'node:crypto'
+import { mkdir, unlink, writeFile } from 'node:fs/promises'
+import { join } from 'node:path'
 import { encode } from 'blurhash'
-import { mkdir, unlink, writeFile } from 'fs/promises'
 import sharp from 'sharp'
 import { cacheDir } from '../paths'
 
