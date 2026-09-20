@@ -12,6 +12,7 @@ import { goto } from '$app/navigation'
 import { untrack } from 'svelte'
 import { slide } from 'svelte/transition'
 import { prefix } from '$lib/prefix'
+import FeedLinks from '$lib/components/FeedLinks.svelte'
 
 let { data }: { data: PageData } = $props()
 
@@ -106,6 +107,7 @@ function handleReplaceTag(tag: string) {
 <svelte:head>
   <title>Tags: {selectedTags.join(' + ')}</title>
 </svelte:head>
+<FeedLinks />
 
 <div class="tags-header">
   <div class="selected-tags">

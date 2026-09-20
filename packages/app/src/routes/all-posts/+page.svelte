@@ -4,6 +4,7 @@ import SearchBar from '$lib/components/SearchBar.svelte'
 import PostList from '$lib/components/PostList.svelte'
 import Spinner from '$lib/components/Spinner.svelte'
 import { searchPosts } from '$lib/search'
+import FeedLinks from '$lib/components/FeedLinks.svelte'
 
 let { data }: { data: PageData } = $props()
 
@@ -26,6 +27,7 @@ function handleFilter(term: string) {
 <svelte:head>
   <title>All Posts</title>
 </svelte:head>
+<FeedLinks />
 
 {#if isLoading}
   <div class="loader-container">

@@ -4,6 +4,7 @@ import SearchBar from '$lib/components/SearchBar.svelte'
 import PostList from '$lib/components/PostList.svelte'
 import { searchPosts } from '$lib/search'
 import { untrack } from 'svelte'
+import FeedLinks from '$lib/components/FeedLinks.svelte'
 
 let { data }: { data: PageData } = $props()
 
@@ -29,6 +30,7 @@ function handleRemove(postId: string) {
 <svelte:head>
   <title>My Feed</title>
 </svelte:head>
+<FeedLinks />
 
 <SearchBar value={searchQuery} onchange={handleSearch} />
 {#if filteredPosts.length > 0}
