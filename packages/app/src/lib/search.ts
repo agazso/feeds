@@ -27,10 +27,13 @@ function normalizePost(post: Post): NormalizedPost {
   const textSet = new Set<string>(
     normalizedText.split(' ').filter((word) => ![' ', ''].includes(word)),
   )
-  const index = Array.from(textSet).reduce<Record<string, string>>(
-    (acc, v) => ({ ...acc, [v[0]]: acc[v[0]] ? acc[v[0]] + ' ' + v : ' ' + v }),
-    {},
-  )
+  // Bucket each word under its first letter. Built by mutation: the spread this
+  // replaced copied the whole index once per word, for every post.
+  const index: Record<string, string> = {}
+  for (const word of textSet) {
+    const letter = word[0]
+    index[letter] = index[letter] ? `${index[letter]} ${word}` : ` ${word}`
+  }
 
   return { ...post, index }
 }
@@ -41,7 +44,7 @@ function scorePost(post: NormalizedPost, expr: string): number {
   for (const word of words) {
     const isNegative = word.startsWith('-')
     const searchTerm = isNegative ? word.slice(1) : word
-    const matched = post.index[searchTerm[0]]?.includes(' ' + searchTerm)
+    const matched = post.index[searchTerm[0]]?.includes(` ${searchTerm}`)
     if (matched) {
       if (isNegative) {
         return 0
