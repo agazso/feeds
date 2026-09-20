@@ -60,6 +60,26 @@ describe('syndicate', () => {
     expect(feed.items[0].date_published).toBe('2026-01-02T03:04:05.000Z')
   })
 
+  // Enrichment replaces the author with the linked site's, so an aggregator item
+  // would otherwise carry nothing pointing back at the discussion it came from.
+  test('keeps the aggregator link of an enriched post', async () => {
+    const post = makePost({
+      link: 'https://blog.test/article',
+      via: { name: 'Hacker News', url: 'https://news.ycombinator.com/item?id=1' },
+    })
+    expect(await body('rss', [post])).toContain(
+      '<comments>https://news.ycombinator.com/item?id=1</comments>',
+    )
+    const item = JSON.parse(await body('json', [post])).items[0]
+    expect(item.url).toBe('https://blog.test/article')
+    expect(item.external_url).toBe('https://news.ycombinator.com/item?id=1')
+  })
+
+  test('omits the aggregator link when there is none', async () => {
+    expect(await body('rss', [makePost()])).not.toContain('<comments>')
+    expect(JSON.parse(await body('json', [makePost()])).items[0]).not.toHaveProperty('external_url')
+  })
+
   test('serves an empty feed rather than failing', async () => {
     expect(await body('rss', [])).toContain('<title>Feeds</title>')
     expect(JSON.parse(await body('json', [])).items).toEqual([])
@@ -86,6 +106,15 @@ describe('route helpers', () => {
     expect(feedUrls(new URL('https://x.test/@bob/tags/music.rss'), 'rss')).toEqual({
       link: 'https://x.test/@bob/tags/music',
       self: 'https://x.test/@bob/tags/music.rss',
+    })
+  })
+
+  // A feed page uses `/rss`, not `.rss` — its path is a URL full of dots.
+  test('drops a trailing format segment the same way', () => {
+    const self = 'https://x.test/feeds/https%3A%2F%2Fa.test%2Ffeed.rss/json'
+    expect(feedUrls(new URL(self), 'json')).toEqual({
+      link: 'https://x.test/feeds/https%3A%2F%2Fa.test%2Ffeed.rss',
+      self,
     })
   })
 })

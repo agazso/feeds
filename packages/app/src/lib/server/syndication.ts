@@ -48,6 +48,7 @@ function itemToRss(post: Post, index: number): string {
       <description>${escapeXml(postText(post) ?? '')}</description>
       <pubDate>${new Date(post.createdAt).toUTCString()}</pubDate>
       ${post.author?.name ? `<dc:creator>${escapeXml(post.author.name)}</dc:creator>` : ''}
+      ${post.via ? `<comments>${escapeXml(post.via.url)}</comments>` : ''}
       ${(post.tags ?? []).map((tag) => `<category>${escapeXml(tag)}</category>`).join('')}
       ${image ? `<enclosure url="${escapeXml(image)}" type="image/jpeg" length="0" />` : ''}
     </item>`
@@ -78,6 +79,9 @@ function toJsonFeed(posts: Post[], meta: FeedMeta): string {
       items: posts.map((post, index) => ({
         id: postId(post, index),
         url: post.link || undefined,
+        // Enrichment replaces the author with the linked site's, so `via` is the only
+        // link back to the aggregator's discussion for this item.
+        external_url: post.via?.url,
         title: itemTitle(post) || undefined,
         content_text: postText(post) ?? '',
         image: post.images[0]?.uri,

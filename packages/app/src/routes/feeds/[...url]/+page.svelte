@@ -86,6 +86,10 @@ async function saveTags() {
   <title>{data.feed.name}</title>
 </svelte:head>
 <FeedLinks feeds={[data.feed]} />
+<!-- Only when enriched: otherwise our version is the source feed, already above. -->
+{#if data.feed.enrich}
+  <FeedLinks sep="/" />
+{/if}
 
 <div class="feed-page">
   <FeedHeader name={data.feed.name} url={data.feed.url} favicon={typeof data.feed.favicon === 'string' ? data.feed.favicon : null} />
