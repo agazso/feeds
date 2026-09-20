@@ -8,6 +8,8 @@ unread counts and does not reorder anything.
 The repository is a TypeScript monorepo with three packages: a SvelteKit web app, the
 core library it is built on, and a command-line tool that uses the same library.
 
+![The reading view, with posts from several feeds in a masonry grid](docs/images/reading.webp)
+
 ## Features
 
 ### Minimal interface
@@ -39,6 +41,11 @@ Enriched posts are cached per feed and appear on the feed page, in `/all-posts` 
 under `/tags`. A refresh only fetches pages for items that are new since last time, so
 most of the work happens the first time you open a feed.
 
+Discovering Hacker News, which is a link aggregator, so every item is enriched with the
+title, image and description of the page it links to:
+
+![Entering a site address, then the discovered feed with enriched posts](docs/images/discover.gif)
+
 ### Formats and providers
 
 The parsers handle **RSS 2.0**, **RSS 1.0 (RDF)**, **Atom** and **JSON Feed**. **OPML**
@@ -63,6 +70,8 @@ match the text of the post. The text matching uses a sentence embedding model
 (`all-MiniLM-L6-v2`) that runs inside the app, so no data leaves the server. Search
 matches the start of words in the post text, tags, author and URL, and `-word` excludes
 a term.
+
+![Posts filtered to the music tag, with the tag chip above the list](docs/images/tags.webp)
 
 ### Saving posts to My Feed
 
