@@ -514,7 +514,10 @@
     background: none;
     border: none;
     padding: 0;
-    color: var(--color);
+    /* Inherited, not set: in the hint below the input this keeps the link the same
+       grey as the sentence around it, so it reads as part of the text rather than as
+       the primary action. The underline is what marks it clickable. */
+    color: inherit;
     font-size: 14px;
     cursor: pointer;
     text-decoration: underline;
