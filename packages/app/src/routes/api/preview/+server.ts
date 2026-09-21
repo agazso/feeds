@@ -1,6 +1,7 @@
 import {
   createEnrichedPost,
   discoverFeedFromUrl,
+  isRateLimitError,
   normalizeUrl,
   timeout,
   transformPostImages,
@@ -25,6 +26,14 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     ])
 
     if (postResult.status !== 'fulfilled') {
+      // The page could not be read at all. Say when that was the host throttling us,
+      // so it reads as "try again shortly" rather than "this link cannot be saved".
+      if (isRateLimitError(postResult.reason)) {
+        return json(
+          { preview: null, feed: null, error: postResult.reason.message },
+          { status: 429 },
+        )
+      }
       return json({ preview: null, feed: null })
     }
 

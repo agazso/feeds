@@ -1,6 +1,7 @@
 import type { Feed } from '../models/feed'
 import { fetchHtmlMetaDataOnly } from '../parsers/html-metadata'
 import { type ContentResult, fetchContentResult, fetchFeedFromUrl } from '../parsers/rss-post'
+import { isRateLimitError } from '../utils/errors'
 import { timeout } from '../utils/timeout'
 import * as urlUtils from '../utils/url'
 
@@ -64,7 +65,9 @@ async function fetchYoutubeFeedFromPage(url: string): Promise<Feed | undefined> 
   let feedUrl: string
   try {
     feedUrl = (await fetchHtmlMetaDataOnly(url)).feedUrl
-  } catch {
+  } catch (error) {
+    // Falling through here would report "no feed found" for a page we never read.
+    if (isRateLimitError(error)) throw error
     return undefined
   }
   if (!feedUrl.includes('/feeds/videos.xml')) return undefined

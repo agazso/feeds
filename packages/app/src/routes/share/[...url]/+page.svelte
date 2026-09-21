@@ -102,7 +102,9 @@
       const result = await response.json()
       previewPost = result.preview || null
       if (!previewPost) {
-        error = 'Could not fetch preview for this URL'
+        // The endpoint says when the host is throttling us, which is worth repeating
+        // verbatim: it tells you to wait rather than to give up on the link.
+        error = result.error || 'Could not fetch preview for this URL'
       }
     } catch {
       error = 'Failed to fetch preview'

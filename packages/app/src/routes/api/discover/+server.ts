@@ -1,4 +1,4 @@
-import { discoverUrl, parseOPML } from '@feeds/core'
+import { discoverUrl, isRateLimitError, parseOPML } from '@feeds/core'
 import { json } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
 
@@ -27,6 +27,11 @@ export const POST: RequestHandler = async ({ request }) => {
     const result = await discoverUrl(url)
     return json(result)
   } catch (e) {
+    // Being told to slow down is not the same as finding nothing, and it is worth
+    // saying so: the fix is to wait, not to try a different URL.
+    if (isRateLimitError(e)) {
+      return json({ error: e.message }, { status: 429 })
+    }
     console.error('Discover error:', e)
     const message = e instanceof Error ? e.message : 'Failed to discover feed'
     return json({ error: message }, { status: 400 })

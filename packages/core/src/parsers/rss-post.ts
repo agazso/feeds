@@ -4,6 +4,7 @@ import type { ImageData } from '../models/image-data'
 import type { Post } from '../models/post'
 import type { RSSEnclosure, RSSFeed, RSSFeedWithMetrics, RSSMedia } from '../models/rss'
 import { MINUTE } from '../utils/date'
+import { isRateLimitError } from '../utils/errors'
 import { DEFAULT_FAVICON, findBestIconFromLinks, parseFaviconFromHtml } from '../utils/favicon'
 import { safeFetch } from '../utils/fetch'
 import { HEADERS_WITH_CURL, HEADERS_WITH_FELFELE, HEADERS_WITH_WHATSAPP } from '../utils/headers'
@@ -132,7 +133,11 @@ export async function fetchContentWithMimeType(url: string): Promise<ContentWith
       content: content,
       mimeType: mimeType,
     }
-  } catch {
+  } catch (error) {
+    // Everything else is a miss worth moving past. A rate limit is not: the next
+    // well-known path, and the one after it, will be throttled too, and reporting
+    // "no feed" sends someone looking for a better URL when the fix is to wait.
+    if (isRateLimitError(error)) throw error
     return null
   }
 }
@@ -224,8 +229,11 @@ export async function augmentFeedWithMetadata(
     name: name,
     favicon: rssFeed.feed.icon || '',
   }
-  // Fetch the website to augment the feed data with favicon and title
-  const html = pageHtml || (await fetchContentWithMimeType(baseUrl))?.content
+  // Fetch the website to augment the feed data with favicon and title. Best-effort:
+  // the feed itself already parsed, so no failure here may discard it — including a
+  // rate limit, which callers above are otherwise meant to see.
+  const html =
+    pageHtml ?? (await fetchContentWithMimeType(baseUrl).catch(() => null))?.content ?? undefined
   if (!html) {
     // Website unreachable — keep the successfully parsed feed (favicon best-effort).
     // Resolve the default favicon against the origin, not a deep feed path

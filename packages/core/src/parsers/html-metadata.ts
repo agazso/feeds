@@ -1,4 +1,5 @@
 import type { Feed } from '../models/feed'
+import { RateLimitError, isRateLimitStatus } from '../utils/errors'
 import { DEFAULT_FAVICON, parseFaviconFromHtml } from '../utils/favicon'
 import { getHeadersForUrl } from '../utils/headers'
 import { HtmlUtils, type ParsedNode } from '../utils/html'
@@ -29,6 +30,12 @@ export async function fetchHtmlMetaDataOnly(
 ): Promise<HtmlMetaData> {
   const headers = init?.headers ?? getHeadersForUrl(url)
   const response = await fetch(url, { ...init, headers })
+  // Only this status is turned into an error. Other failures still get parsed for
+  // whatever they carry, which several callers rely on. A rate-limit page carries
+  // nothing but looks like a valid page, so silence here reads as "no feed here".
+  if (isRateLimitStatus(response.status)) {
+    throw new RateLimitError(url, response.status)
+  }
   const html = await response.text()
   return parseHtmlMetaData(url, html)
 }

@@ -158,3 +158,16 @@ describe('fetchYoutubeFeed for a /channel/<id> URL', () => {
     expect(feed?.url).toBe('https://www.youtube.com/@RubyRangerr')
   })
 })
+
+describe('fetchYoutubeFeed when youtube is rate limiting', () => {
+  // The provider swallows failures so other routes can be tried. A rate limit must
+  // not be swallowed: it would surface as "no feed found at this URL", which sends
+  // you looking for a better URL when the answer is to wait.
+  test('propagates the rate limit instead of reporting no feed', async () => {
+    vi.stubGlobal('fetch', async () => new Response('<html>captcha</html>', { status: 429 }))
+
+    await expect(fetchYoutubeFeed('https://www.youtube.com/watch?v=abc123')).rejects.toThrow(
+      /rate limiting/i,
+    )
+  })
+})

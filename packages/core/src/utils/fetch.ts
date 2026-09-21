@@ -1,7 +1,11 @@
+import { RateLimitError, isRateLimitStatus } from './errors'
 import { timeout } from './timeout'
 
 export async function safeFetch(input: string | URL, init?: RequestInit): Promise<Response> {
   const response = await fetch(input, init)
+  if (isRateLimitStatus(response.status)) {
+    throw new RateLimitError(input.toString(), response.status)
+  }
   if (!response.ok) {
     throw new Error(
       `Network error: ${response.status}, text: ${response.statusText}, request: ${input.toString()}`,
