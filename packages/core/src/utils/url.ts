@@ -29,8 +29,14 @@ export function isRedditUrl(url: string): boolean {
   }
 }
 
+/**
+ * youtu.be is YouTube's own share link — the form the app and the share button hand
+ * out — so it has to route like any other YouTube URL, or it falls through to generic
+ * discovery and finds nothing.
+ */
 export function isYoutubeUrl(url: string): boolean {
-  return getHumanHostname(getCanonicalUrl(url)) === 'youtube.com'
+  const hostname = getHumanHostname(getCanonicalUrl(url))
+  return hostname === 'youtube.com' || hostname === 'youtu.be'
 }
 
 export function isImageUrl(url: string): boolean {

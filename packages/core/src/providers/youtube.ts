@@ -1,4 +1,5 @@
 import type { Feed } from '../models/feed'
+import { fetchHtmlMetaDataOnly } from '../parsers/html-metadata'
 import { type ContentResult, fetchContentResult, fetchFeedFromUrl } from '../parsers/rss-post'
 import { timeout } from '../utils/timeout'
 import * as urlUtils from '../utils/url'
@@ -35,6 +36,45 @@ export async function resolveYoutubeChannelUrl(
 
 export function isYoutubeLink(url: string): boolean {
   return urlUtils.isYoutubeUrl(url)
+}
+
+/**
+ * The channel page URL when `url` already is one — /@handle, /c/x or /user/x, with any
+ * sub-path (/videos, /streams) trimmed. Undefined for a video page, whose own URL is
+ * not something to show as the feed's home. Read from the URL as given: canonicalizing
+ * drops the query a /watch URL needs.
+ */
+export function youtubeChannelPageUrl(url: string): string | undefined {
+  try {
+    const { origin, pathname } = new URL(urlUtils.getHttpsUrl(url))
+    const match = pathname.match(/^\/(@[^/]+|c\/[^/]+|user\/[^/]+)/)
+    return match ? `${origin}/${match[1]}` : undefined
+  } catch {
+    return undefined
+  }
+}
+
+/**
+ * Every YouTube page — a video or a channel — carries its channel id in the page HTML,
+ * which `parseHtmlMetaData` turns into the channel's feed URL. This is the only route
+ * that works for /watch: `getCanonicalUrl` strips the `?v=` that identifies the video,
+ * leaving youtube.com/watch, which has no feed. It is what the share path already does.
+ */
+async function fetchYoutubeFeedFromPage(url: string): Promise<Feed | undefined> {
+  let feedUrl: string
+  try {
+    feedUrl = (await fetchHtmlMetaDataOnly(url)).feedUrl
+  } catch {
+    return undefined
+  }
+  if (!feedUrl.includes('/feeds/videos.xml')) return undefined
+
+  const feed = await fetchFeedFromUrl(feedUrl)
+  if (!feed) return undefined
+  // A channel page is already the link to show, and saying so here avoids the extra
+  // fetch resolveYoutubeChannelUrl would make to find out.
+  feed.url = youtubeChannelPageUrl(url) ?? (await resolveYoutubeChannelUrl(feedUrl)) ?? feed.url
+  return feed
 }
 
 export interface YoutubeFetchConfiguration {
@@ -75,13 +115,14 @@ export async function fetchYoutubeFeed(
 
   if (parsedUrl.pathname?.startsWith('/channel/')) {
     const channelId = parsedUrl.pathname?.replace('/channel/', '')
+    // Handed to the branch above rather than fetched here, so feed.url ends up the
+    // channel page too; fetching it directly left the videos.xml self-link showing.
     const feedUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`
-    const feed = await fetchFeedFromUrl(feedUrl)
-    if (feed != null) {
-      return feed
-    }
-    return undefined
+    return fetchYoutubeFeed(feedUrl, fetchConfiguration)
   }
+
+  const fromPage = await fetchYoutubeFeedFromPage(url)
+  if (fromPage) return fromPage
 
   const canonicalUrl = urlUtils.getCanonicalUrl(url)
   const contentResult = await fetchConfiguration.fetchContentResult(canonicalUrl)

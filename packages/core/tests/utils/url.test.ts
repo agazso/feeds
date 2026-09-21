@@ -207,6 +207,12 @@ describe('isYoutubeUrl', () => {
     expect(isYoutubeUrl('https://www.youtube.com/feeds/videos.xml?channel_id=UC1')).toBe(true)
   })
 
+  // The share link YouTube's own app hands out. Without this it falls through to
+  // generic discovery, which finds nothing on a video page.
+  test('matches the youtu.be share link', () => {
+    expect(isYoutubeUrl('https://youtu.be/cT2-7KkPkBc')).toBe(true)
+  })
+
   test('rejects non-youtube hosts (incl. the endsWith trap)', () => {
     expect(isYoutubeUrl('https://notyoutube.com/watch?v=x')).toBe(false)
     expect(isYoutubeUrl('https://example.com')).toBe(false)
