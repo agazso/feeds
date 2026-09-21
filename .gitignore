@@ -5,6 +5,8 @@ node_modules/
 dist/
 build/
 .svelte-kit/
+# Vite writes this beside vite.config.ts while starting, and can leave it behind
+vite.config.ts.timestamp-*
 
 # IDE
 .idea/
