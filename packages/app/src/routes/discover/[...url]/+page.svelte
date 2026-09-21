@@ -42,6 +42,7 @@
   const picked = new SvelteSet<string>()
   let importTags = $state<string[]>([])
   let importing = $state(false)
+  let sourceLabel = $state('')
   let imported = $state<{ added: number; skipped: number } | null>(null)
 
   const alreadyFollowed = (feedUrl: string) => data.existingFeedUrls.includes(feedUrl)
@@ -95,11 +96,11 @@
       }
 
       if (responseData.kind === 'list') {
+        sourceLabel = url.trim()
         listFeeds = responseData.feeds
         // Everything not already followed starts ticked: importing the lot is the
         // common case, and unticking a few is less work than ticking ninety.
-        picked.clear()
-        for (const f of importable) picked.add(f.feedUrl)
+        pickAll(true)
         return
       }
 
@@ -182,6 +183,38 @@
     }
   }
 
+  let fileInput = $state<HTMLInputElement | null>(null)
+
+  /** An OPML file from another reader, which needs no fetching — just parsing. */
+  async function openOpmlFile(event: Event) {
+    const file = (event.currentTarget as HTMLInputElement).files?.[0]
+    if (!file) return
+
+    loading = true
+    error = null
+    try {
+      const response = await fetch(`${prefix()}/api/discover`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ opml: await file.text() }),
+      })
+      const responseData = await response.json()
+      if (!response.ok) {
+        error = responseData.error || 'Could not read that file'
+        return
+      }
+      sourceLabel = file.name
+      listFeeds = responseData.feeds
+      pickAll(true)
+    } catch {
+      error = 'Could not read that file. Is it an OPML subscription list?'
+    } finally {
+      loading = false
+      // Cleared so choosing the same file again still fires a change event.
+      if (fileInput) fileInput.value = ''
+    }
+  }
+
   function togglePicked(feedUrl: string) {
     if (picked.has(feedUrl)) picked.delete(feedUrl)
     else picked.add(feedUrl)
@@ -249,6 +282,7 @@
       picked.clear()
       importTags = []
       imported = null
+      sourceLabel = ''
     }
   })
 </script>
@@ -263,8 +297,8 @@
       <div class="import-header">
         <h2>Subscription list</h2>
         <p class="import-subtitle">
-          {listFeeds.length} feeds found in <span class="import-source">{url}</span>. Pick the ones
-          to follow.
+          {listFeeds.length} feeds found in
+          <span class="import-source">{sourceLabel}</span>. Pick the ones to follow.
         </p>
       </div>
 
@@ -403,6 +437,25 @@
       </button>
     </div>
 
+    <p class="opml-hint">
+      Coming from another reader?
+      <button
+        type="button"
+        class="link-button"
+        disabled={loading}
+        onclick={() => fileInput?.click()}
+      >
+        Import an OPML file
+      </button>
+    </p>
+    <input
+      bind:this={fileInput}
+      type="file"
+      accept=".opml,.xml,application/xml,text/xml,text/x-opml"
+      class="visually-hidden"
+      onchange={openOpmlFile}
+    />
+
     {#if loading}
       <p class="loading-text">Discovering feed and enriching items...</p>
     {/if}
@@ -452,11 +505,16 @@
     margin-left: auto;
   }
 
+  /* app.css makes every button a flex box with a min-width and height; a button that
+     reads as a link has to opt out of all three or it breaks onto its own line. */
   .link-button {
+    display: inline;
+    min-width: 0;
+    height: auto;
     background: none;
     border: none;
     padding: 0;
-    color: var(--accent-color);
+    color: var(--color);
     font-size: 14px;
     cursor: pointer;
     text-decoration: underline;
@@ -464,13 +522,13 @@
 
   .import-done {
     padding: var(--padding);
-    border: 1px solid var(--accent-color);
+    border: 1px solid var(--color-step-20);
     border-radius: 4px;
     margin-bottom: var(--padding);
   }
 
   .import-done a {
-    color: var(--accent-color);
+    color: var(--color);
   }
 
   .import-source {
@@ -540,8 +598,8 @@
     padding: 2px 8px;
     font-size: 12px;
     border-radius: 12px;
-    background: var(--accent-color);
-    color: white;
+    background: var(--color-step-20);
+    color: var(--color);
   }
 
   .followed-badge {
@@ -555,6 +613,25 @@
     flex-direction: column;
     align-items: center;
     min-height: 60vh;
+  }
+
+  .opml-hint {
+    width: 100%;
+    max-width: var(--max-column-width);
+    margin: 0 var(--padding);
+    text-align: center;
+    color: var(--color-step-30);
+    font-size: 14px;
+  }
+
+  /* Reachable by keyboard and screen readers; the link above is what you click. */
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
   }
 
   .discover-form {

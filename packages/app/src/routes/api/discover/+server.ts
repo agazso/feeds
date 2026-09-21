@@ -1,10 +1,21 @@
-import { discoverUrl } from '@feeds/core'
+import { discoverUrl, parseOPML } from '@feeds/core'
 import { json } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
 
 export const POST: RequestHandler = async ({ request }) => {
   const body = await request.json()
   const url = body.url
+  const opml = body.opml
+
+  // An uploaded subscription list: already have the document, so there is nothing to
+  // fetch. Parsed here rather than in the browser to keep core out of the client bundle.
+  if (typeof opml === 'string') {
+    const feeds = await parseOPML(opml)
+    if (!feeds?.length) {
+      return json({ error: 'No feeds found in that file' }, { status: 400 })
+    }
+    return json({ kind: 'list', feeds })
+  }
 
   if (!url) {
     return json({ error: 'URL is required' }, { status: 400 })
