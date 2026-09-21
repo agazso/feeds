@@ -14,10 +14,14 @@ const PLATE = { r: 0x27, g: 0x27, b: 0x27 }
 // the artwork is then valid as a maskable icon too.
 const INSET = 0.56
 
+// The favicon gets a bigger mark than that. Nothing masks a favicon, and it renders
+// at 16px, so the safe-zone padding above would just throw away pixels it needs.
+const FAVICON_INSET = 0.74
+
 // Opaque icons: iOS and Android both flatten alpha to black, so the background
 // has to be baked in.
-async function opaqueIcon(file: string, size: number) {
-  const box = size - Math.round((size * (1 - INSET)) / 2) * 2
+async function opaqueIcon(file: string, size: number, inset: number = INSET) {
+  const box = size - Math.round((size * (1 - inset)) / 2) * 2
 
   // The source mark is near-white. Keep only its alpha and fill through that, so it
   // takes the palette colour with its antialiased edges intact — and so the faint
@@ -48,21 +52,10 @@ async function main() {
   const trimmed = await sharp(SOURCE).trim().toBuffer({ resolveWithObject: true })
   console.log('After trim:', trimmed.info.width, 'x', trimmed.info.height)
 
-  // Trim, then resize to 128x128 (contain mode keeps aspect ratio). Transparent, so
-  // it sits on whatever the browser's tab strip happens to be, but recoloured through
-  // its alpha like the others so no purple survives in the antialiased edge.
-  const faviconAlpha = await sharp(SOURCE)
-    .trim()
-    .resize(128, 128, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
-    .extractChannel('alpha')
-    .toBuffer()
-  await sharp({ create: { width: 128, height: 128, channels: 3, background: MARK } })
-    .joinChannel(faviconAlpha)
-    .png()
-    .toFile('static/favicon.png')
-
-  const meta = await sharp('static/favicon.png').metadata()
-  console.log('Favicon:', meta.width, 'x', meta.height)
+  // On the same plate as the rest. It used to be light-on-transparent, which is
+  // invisible against a light tab strip; carrying its own background means it reads
+  // the same whatever the browser puts behind it.
+  await opaqueIcon('favicon.png', 128, FAVICON_INSET)
 
   // iOS home screen. 180 is the modern size; the rest are for older devices.
   for (const size of [120, 152, 167, 180]) {
