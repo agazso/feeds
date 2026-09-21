@@ -7,7 +7,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "typecheck": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-    "regenerate-cache": "pnpx tsx scripts/regenerate-cache.ts"
+    "regenerate-cache": "pnpx tsx scripts/regenerate-cache.ts",
+    "icons": "pnpx tsx scripts/create-favicon.ts"
   },
   "dependencies": {
     "@feeds/core": "workspace:*",
