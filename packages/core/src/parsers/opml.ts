@@ -6,6 +6,8 @@ export interface OPMLFeed {
   url: string
   feedUrl: string
   feedType: string
+  /** The outline's `category` attribute, split on commas. Often empty. */
+  tags: string[]
 }
 
 export async function tryFetchOPML(url: string): Promise<Feed[] | undefined> {
@@ -39,6 +41,7 @@ function parseOPMLToFeeds(xml: string): OPMLFeed[] {
     const htmlUrl = extractAttribute(outline, 'htmlUrl')
     const title = extractAttribute(outline, 'title') || extractAttribute(outline, 'text')
     const type = extractAttribute(outline, 'type')
+    const category = extractAttribute(outline, 'category')
 
     if (xmlUrl) {
       feeds.push({
@@ -46,11 +49,28 @@ function parseOPMLToFeeds(xml: string): OPMLFeed[] {
         url: htmlUrl || '',
         feedUrl: xmlUrl,
         feedType: type || 'rss',
+        tags: parseCategories(category),
       })
     }
   }
 
   return feeds
+}
+
+/**
+ * OPML has no tag list, so readers put them in `category` — comma separated, and
+ * sometimes as slash-delimited paths (`/tech/linux`). Both reduce to plain tags.
+ */
+function parseCategories(category: string): string[] {
+  return [
+    ...new Set(
+      category
+        .split(',')
+        .flatMap((part) => part.split('/'))
+        .map((tag) => tag.trim().toLowerCase())
+        .filter(Boolean),
+    ),
+  ]
 }
 
 function extractAttribute(tag: string, name: string): string {
@@ -94,6 +114,7 @@ export async function convertOPMLFeed(opmlFeed: OPMLFeed): Promise<Feed | undefi
       feedUrl: feedUrl,
       favicon: '',
       followed: true,
+      tags: opmlFeed.tags,
     }
     return completeFeed
   } catch {

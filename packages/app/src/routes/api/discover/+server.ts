@@ -1,4 +1,4 @@
-import { discoverAndEnrichFeed } from '@feeds/core'
+import { discoverUrl } from '@feeds/core'
 import { json } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
 
@@ -11,7 +11,9 @@ export const POST: RequestHandler = async ({ request }) => {
   }
 
   try {
-    const result = await discoverAndEnrichFeed(url)
+    // Either one feed with its posts, or a subscription list naming many — the page
+    // shows a preview for the first and an import picker for the second.
+    const result = await discoverUrl(url)
     return json(result)
   } catch (e) {
     console.error('Discover error:', e)

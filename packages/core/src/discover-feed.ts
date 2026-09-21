@@ -203,10 +203,18 @@ export async function loadEnrichedFeedPosts(
   return enrichRssItems(items, info, { ...options, tags: feed.tags })
 }
 
-export async function discoverAndEnrichFeed(
+/**
+ * A URL names either one feed or a subscription list (an OPML file) naming many.
+ * Collapsing a list to its first feed, as taking `feeds[0]` does, silently discards
+ * the rest — so say which one it was and let the caller decide.
+ */
+export type DiscoveredUrl =
+  ({ kind: 'feed' } & DiscoveredFeedResult) | { kind: 'list'; feeds: Feed[] }
+
+export async function discoverUrl(
   url: string,
   options?: DiscoverFeedOptions,
-): Promise<DiscoveredFeedResult> {
+): Promise<DiscoveredUrl> {
   const normalizedUrl = normalizeUrl(url)
 
   if (!normalizedUrl) {
@@ -220,32 +228,67 @@ export async function discoverAndEnrichFeed(
     throw new Error('No RSS feed found at this URL')
   }
 
-  // Handle single feed or array of feeds
   const feeds = Array.isArray(feedResult) ? feedResult : [feedResult]
+
+  // More than one feed from a single URL means a subscription list. Its feeds carry
+  // no items to enrich — fetching every one of them is the import's job, not this.
+  if (feeds.length > 1) {
+    return { kind: 'list', feeds }
+  }
+
   const firstFeed = feeds[0]
 
   if (!firstFeed?.feedUrl) {
     throw new Error('Could not discover feed URL')
   }
 
+  return { kind: 'feed', ...(await enrichDiscoveredFeed(firstFeed, normalizedUrl, options)) }
+}
+
+async function enrichDiscoveredFeed(
+  feed: Feed,
+  fallbackUrl: string,
+  options?: DiscoverFeedOptions,
+): Promise<DiscoveredFeedResult> {
   // Fetch the actual feed items
-  const rssFeedResult = await fetchFeed(firstFeed.feedUrl)
+  const rssFeedResult = await fetchFeed(feed.feedUrl)
   const rssFeed: RSSFeed = rssFeedResult.feed
 
   // Prepare feed info
   const discoveredFeed: DiscoveredFeedInfo = {
-    name: firstFeed.name || rssFeed.title || 'Unknown Feed',
-    url: firstFeed.url || rssFeed.url || normalizedUrl,
-    feedUrl: firstFeed.feedUrl,
-    favicon: typeof firstFeed.favicon === 'string' ? firstFeed.favicon : '',
+    name: feed.name || rssFeed.title || 'Unknown Feed',
+    url: feed.url || rssFeed.url || fallbackUrl,
+    feedUrl: feed.feedUrl,
+    favicon: typeof feed.favicon === 'string' ? feed.favicon : '',
     itemCount: rssFeed.items.length,
-    enrich: looksLikeLinkAggregator(rssFeed.items, firstFeed.feedUrl),
+    enrich: looksLikeLinkAggregator(rssFeed.items, feed.feedUrl),
   }
 
   const items = options?.maxItems ? rssFeed.items.slice(0, options.maxItems) : rssFeed.items
   const posts = await enrichRssItems(items, discoveredFeed, options)
 
   return { feed: discoveredFeed, posts }
+}
+
+/**
+ * The single-feed view of `discoverUrl`. A subscription list collapses to its first
+ * feed here, which is all this shape can carry — use `discoverUrl` to see the rest.
+ */
+export async function discoverAndEnrichFeed(
+  url: string,
+  options?: DiscoverFeedOptions,
+): Promise<DiscoveredFeedResult> {
+  const result = await discoverUrl(url, options)
+
+  if (result.kind === 'list') {
+    const firstFeed = result.feeds[0]
+    if (!firstFeed?.feedUrl) {
+      throw new Error('Could not discover feed URL')
+    }
+    return enrichDiscoveredFeed(firstFeed, url, options)
+  }
+
+  return { feed: result.feed, posts: result.posts }
 }
 
 /**

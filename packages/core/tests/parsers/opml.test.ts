@@ -73,3 +73,34 @@ describe('buildOPML', () => {
     )
   })
 })
+
+describe('reading categories back', () => {
+  test('parses the category attribute into tags', async () => {
+    const xml = buildOPML([makeFeed({ tags: ['music', 'guitar'] })], 'Feeds', DATE)
+    const [feed] = await readOPML(xml)
+    expect(feed?.tags).toEqual(['music', 'guitar'])
+  })
+
+  test('a feed keeps its tags through a full round trip', async () => {
+    const xml = buildOPML([makeFeed({ tags: ['Music', 'Guitar'] })], 'Feeds', DATE)
+    const parsed = await parseOPML(xml)
+    // Lowercased: tags are matched by value everywhere else in the app.
+    expect(parsed?.[0]?.tags).toEqual(['music', 'guitar'])
+  })
+
+  test('accepts the slash-delimited folders other readers write', async () => {
+    const xml = `<opml version="2.0"><body>
+      <outline type="rss" text="A" xmlUrl="https://a.test/f" category="/tech/linux,/fun" />
+    </body></opml>`
+    const [feed] = await readOPML(xml)
+    expect(feed?.tags).toEqual(['tech', 'linux', 'fun'])
+  })
+
+  test('a feed with no category has no tags', async () => {
+    const xml = `<opml version="2.0"><body>
+      <outline type="rss" text="A" xmlUrl="https://a.test/f" />
+    </body></opml>`
+    const [feed] = await readOPML(xml)
+    expect(feed?.tags).toEqual([])
+  })
+})

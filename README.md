@@ -141,6 +141,11 @@ imports: `/feeds.opml` is everything you follow, and `/tags/music.opml` is only 
 feeds tagged that way. Both download as a file, and the tags are written as categories
 so they survive the import.
 
+It reads OPML too. Paste the address of a subscription list into **Discover** and you
+get the feeds it names, each with a checkbox and the tags the list gave it, so you can
+pick what to follow and add tags of your own to the lot. Feeds you already follow are
+marked and left alone.
+
 The `/feeds` page carries the same list as microformats2, one `h-card` per feed with its
 name, site, icon, feed URL and tags. Nothing replaced OPML as an exchange format, but a
 marked-up blogroll is what the IndieWeb settled on for publishing one, and it costs a

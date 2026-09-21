@@ -1,5 +1,6 @@
 <script lang="ts">
   import { untrack } from 'svelte'
+  import { SvelteSet } from 'svelte/reactivity'
   import type { Feed, Post } from '@feeds/core'
   import { goto } from '$app/navigation'
   import FeedHeader from '$lib/components/FeedHeader.svelte'
@@ -35,6 +36,17 @@
   let error = $state<string | null>(null)
   let discoveredFeed = $state<DiscoveredFeed | null>(null)
   let posts = $state<Post[]>([])
+
+  // A subscription list (OPML): many feeds, no posts. Picked from, not previewed.
+  let listFeeds = $state<Feed[]>([])
+  const picked = new SvelteSet<string>()
+  let importTags = $state<string[]>([])
+  let importing = $state(false)
+  let imported = $state<{ added: number; skipped: number } | null>(null)
+
+  const alreadyFollowed = (feedUrl: string) => data.existingFeedUrls.includes(feedUrl)
+  const importable = $derived(listFeeds.filter((f) => !alreadyFollowed(f.feedUrl)))
+  const pickedCount = $derived(importable.filter((f) => picked.has(f.feedUrl)).length)
 
   // Add feed mode state
   let addMode = $state(false)
@@ -79,6 +91,15 @@
 
       if (!response.ok) {
         error = responseData.error || 'Failed to discover feed'
+        return
+      }
+
+      if (responseData.kind === 'list') {
+        listFeeds = responseData.feeds
+        // Everything not already followed starts ticked: importing the lot is the
+        // common case, and unticking a few is less work than ticking ninety.
+        picked.clear()
+        for (const f of importable) picked.add(f.feedUrl)
         return
       }
 
@@ -161,9 +182,52 @@
     }
   }
 
-  // Auto-discover if URL parameter is provided
+  function togglePicked(feedUrl: string) {
+    if (picked.has(feedUrl)) picked.delete(feedUrl)
+    else picked.add(feedUrl)
+  }
+
+  function pickAll(on: boolean) {
+    picked.clear()
+    if (on) for (const f of importable) picked.add(f.feedUrl)
+  }
+
+  async function importPicked() {
+    const feeds = importable
+      .filter((f) => picked.has(f.feedUrl))
+      .map((f) => ({
+        ...f,
+        // The list's own tags for this feed, plus whatever was chosen for the import.
+        tags: [...new Set([...(f.tags ?? []), ...importTags])],
+      }))
+    if (!feeds.length) return
+
+    importing = true
+    error = null
+    try {
+      const response = await fetch(`${prefix()}/api/feeds`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ feeds }),
+      })
+      const result = await response.json()
+      if (!response.ok) {
+        error = result.error || 'Failed to import feeds'
+        return
+      }
+      imported = { added: result.added, skipped: result.skipped }
+    } catch {
+      error = 'Failed to import feeds. Please try again.'
+    } finally {
+      importing = false
+    }
+  }
+
+  // Auto-discover if URL parameter is provided. Every outcome of discover() has to
+  // be represented here: a subscription list leaves discoveredFeed null, so without
+  // listFeeds this re-runs on its own result, forever.
   $effect(() => {
-    if (data.url && !discoveredFeed && !loading && !error) {
+    if (data.url && !discoveredFeed && !listFeeds.length && !loading && !error) {
       url = data.url
       discover()
     }
@@ -181,6 +245,10 @@
       enrichFeed = false
       feedAdded = false
       embeddingSuggestions = []
+      listFeeds = []
+      picked.clear()
+      importTags = []
+      imported = null
     }
   })
 </script>
@@ -190,7 +258,87 @@
 </svelte:head>
 
 <div class="discover-page">
-  {#if discoveredFeed}
+  {#if listFeeds.length}
+    <div class="import-container">
+      <div class="import-header">
+        <h2>Subscription list</h2>
+        <p class="import-subtitle">
+          {listFeeds.length} feeds found in <span class="import-source">{url}</span>. Pick the ones
+          to follow.
+        </p>
+      </div>
+
+      {#if imported}
+        <p class="import-done">
+          Added {imported.added}
+          {imported.added === 1 ? 'feed' : 'feeds'}{imported.skipped
+            ? `, skipped ${imported.skipped} already followed`
+            : ''}.
+          <a href="{prefix()}/feeds">Go to feeds</a>
+        </p>
+      {:else if auth.canWrite}
+        <div class="import-tags">
+          <p class="import-tags-label">Tags for every feed you import</p>
+          <TagSelector
+            availableTags={data.availableTags}
+            bind:selectedTags={importTags}
+            suggestedTags={[]}
+          />
+        </div>
+
+        <div class="import-actions">
+          <button type="button" class="link-button" onclick={() => pickAll(true)}>
+            Select all
+          </button>
+          <button type="button" class="link-button" onclick={() => pickAll(false)}>
+            Select none
+          </button>
+          <button
+            type="button"
+            class="save-button"
+            onclick={importPicked}
+            disabled={importing || pickedCount === 0}
+          >
+            {importing ? 'Importing…' : `Import ${pickedCount}`}
+          </button>
+        </div>
+      {/if}
+
+      {#if error}
+        <p class="error">{error}</p>
+      {/if}
+
+      <ul class="import-list">
+        {#each listFeeds as feed (feed.feedUrl)}
+          {@const followed = alreadyFollowed(feed.feedUrl)}
+          <li class="import-row" class:followed>
+            <label>
+              <input
+                type="checkbox"
+                checked={picked.has(feed.feedUrl)}
+                disabled={followed || !!imported || !auth.canWrite}
+                onchange={() => togglePicked(feed.feedUrl)}
+              />
+              <span class="import-feed">
+                <span class="import-name">{feed.name || feed.feedUrl}</span>
+                <span class="import-url">{feed.url || feed.feedUrl}</span>
+                {#if feed.tags?.length}
+                  <span class="import-feed-tags">
+                    {#each feed.tags as tag (tag)}
+                      <span class="tag-chip">#{tag}</span>
+                    {/each}
+                  </span>
+                {/if}
+              </span>
+            </label>
+            {#if followed}
+              <span class="followed-badge">Following</span>
+            {/if}
+          </li>
+        {/each}
+      </ul>
+    </div>
+  {:else if discoveredFeed}
     <div class="feed-container">
       <FeedHeader
         name={discoveredFeed.name}
@@ -266,6 +414,142 @@
 </div>
 
 <style>
+  .import-container {
+    width: 100%;
+    max-width: var(--max-column-width);
+    margin: 0 auto;
+    padding: var(--padding);
+  }
+
+  .import-header h2 {
+    margin: 0;
+  }
+
+  .import-subtitle {
+    color: var(--color-step-30);
+    margin: var(--half-padding) 0 var(--padding);
+  }
+
+  .import-tags {
+    margin-bottom: var(--padding);
+  }
+
+  .import-tags-label {
+    font-size: 13px;
+    color: var(--color-step-30);
+    margin: 0 0 var(--half-padding);
+  }
+
+  .import-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--half-padding);
+    flex-wrap: wrap;
+    margin-bottom: var(--padding);
+  }
+
+  .import-actions .save-button {
+    margin-left: auto;
+  }
+
+  .link-button {
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--accent-color);
+    font-size: 14px;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+
+  .import-done {
+    padding: var(--padding);
+    border: 1px solid var(--accent-color);
+    border-radius: 4px;
+    margin-bottom: var(--padding);
+  }
+
+  .import-done a {
+    color: var(--accent-color);
+  }
+
+  .import-source {
+    word-break: break-all;
+  }
+
+  .import-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .import-row {
+    display: flex;
+    align-items: center;
+    gap: var(--half-padding);
+    padding: var(--half-padding) 0;
+    border-bottom: 1px solid #88888833;
+  }
+
+  .import-row.followed {
+    opacity: 0.55;
+  }
+
+  .import-row label {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--half-padding);
+    flex-grow: 1;
+    min-width: 0;
+    cursor: pointer;
+  }
+
+  .import-row.followed label {
+    cursor: default;
+  }
+
+  .import-feed {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .import-name {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .import-url {
+    font-size: 13px;
+    color: var(--color-step-30);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .import-feed-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+  }
+
+  .tag-chip {
+    padding: 2px 8px;
+    font-size: 12px;
+    border-radius: 12px;
+    background: var(--accent-color);
+    color: white;
+  }
+
+  .followed-badge {
+    flex-shrink: 0;
+    font-size: 12px;
+    color: var(--color-step-30);
+  }
+
   .discover-page {
     display: flex;
     flex-direction: column;
