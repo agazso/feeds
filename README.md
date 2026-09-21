@@ -1,6 +1,28 @@
-# Feeds
+<p align="center">
+  <img width="128" height="128" src="packages/app/static/icon-512.png" alt="Feeds logo">
+</p>
 
-A self-hosted feed reader for sharing what you read.
+<h1 align="center">Feeds</h1>
+
+<p align="center">
+  A self-hosted feed reader for sharing what you read.
+</p>
+
+<p align="center">
+  <a href="#features">Features</a>
+  ·
+  <a href="#installation">Installation</a>
+  ·
+  <a href="#packages">Packages</a>
+  ·
+  <a href="#project-structure">Structure</a>
+  ·
+  <a href="#contributing">Contributing</a>
+  ·
+  <a href="#license">License</a>
+</p>
+
+![The reading view, with posts from several feeds in a masonry grid](docs/images/reading.webp)
 
 It follows RSS, Atom and JSON feeds, plus YouTube channels, subreddits and some other
 sites that do not publish a feed of their own. Items from every feed you follow appear
@@ -14,8 +36,6 @@ subscribe to. To share a slice of your reading, you hand someone a link.
 
 The repository is a TypeScript monorepo with three packages: a SvelteKit web app, the
 core library it is built on, and a command-line tool that uses the same library.
-
-![The reading view, with posts from several feeds in a masonry grid](docs/images/reading.webp)
 
 ## Features
 
