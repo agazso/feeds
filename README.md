@@ -194,7 +194,7 @@ contain `[a-z0-9_]`, so a path cannot reach outside the data directory.
 
 ## Installation
 
-You need **Node.js 20 or newer** and **pnpm 9.15 or newer**.
+You need **Node.js 22 or newer** and **pnpm 9.15 or newer**.
 
 ```bash
 git clone <repository-url>

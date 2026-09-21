@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # Debian (glibc), not Alpine: sharp + onnxruntime ship glibc prebuilts.
-FROM node:20-trixie-slim AS base
+FROM node:22-trixie-slim AS base
 ENV PNPM_HOME=/pnpm PATH="/pnpm:$PATH"
 RUN corepack enable
 WORKDIR /repo
