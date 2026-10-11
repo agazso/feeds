@@ -5,8 +5,9 @@ import { join } from 'node:path'
 import { dataDir } from './paths'
 
 // Hosts whose feeds are cached instead of fetched live, because they rate-limit
-// bulk requests (YouTube started per-IP limiting 2026-07). Add hosts to extend.
-const CACHED_HOSTS = ['youtube.com']
+// bulk requests (YouTube started per-IP limiting 2026-07; Reddit 429s a tag's worth of
+// feeds on the second load). Add hosts to extend.
+const CACHED_HOSTS = ['youtube.com', 'reddit.com']
 
 const DEFAULT_TTL = 30 * 60_000 // used when a feed sends no Cache-Control max-age
 const MIN_TTL = 5 * 60_000 // floor, so max-age=0/no-cache can't force a refetch every load
