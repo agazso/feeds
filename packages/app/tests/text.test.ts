@@ -26,6 +26,15 @@ describe('postTitle', () => {
     const post = makePost('**Just Title**')
     expect(postTitle(post)).toBe('Just Title')
   })
+
+  // `.` stops at any line terminator, not just \n — a stray \r used to defeat the match
+  // and return the whole raw markdown text as the title.
+  test('handles carriage returns in the description', () => {
+    const post = makePost(
+      '**My Title**\n\nWritten by: GEmmo\r\n\r\n<br>On...\n\n[Comments](https://example.com)',
+    )
+    expect(postTitle(post)).toBe('My Title')
+  })
 })
 
 describe('postText', () => {

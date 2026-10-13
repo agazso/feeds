@@ -134,7 +134,13 @@ export function createPost(params: CreatePostParams): { post: Post; title: strin
   // into posts whose page yielded no description of its own — a PDF link, say.
   let description = useRssItemData
     ? htmlToMarkdown(rssItem.description || '')
-    : metadata.description?.trim() || ''
+    : // A page description is plain text, but some sites put CRLFs and an entity-encoded
+      // <br> in it, which arrives here as literal markup. Only <br> is stripped: a broader
+      // tag filter would eat legitimate text such as `Vec<T>`.
+      metadata.description
+        ?.replace(/\r\n?/g, '\n')
+        .replace(/\s*<br\s*\/?>\s*/gi, '\n')
+        .trim() || ''
   // For Reddit: prefer RSS item image (from media.thumbnail), fall back to metadata
   let image = useRssItemData ? extractRssItemImage(rssItem) || metadata.image : metadata.image
 

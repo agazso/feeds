@@ -24,7 +24,8 @@ export function postTitle(post: Post): string | undefined {
   if (!post.text.startsWith('**')) {
     return undefined
   }
-  return post.text.replaceAll('\n', '').replace(/^\*\*(.*?)\*\*(.*)$/, '$1')
+  // dotAll: the body may hold line terminators other than \n (a \r from a CRLF page)
+  return post.text.replaceAll('\n', '').replace(/^\*\*(.*?)\*\*(.*)$/s, '$1')
 }
 
 export function postText(post: Post): string | undefined {

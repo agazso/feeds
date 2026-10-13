@@ -232,3 +232,31 @@ describe('createPost text from an RSS item', () => {
     expect(post.text).not.toMatch(/<[a-z][^>]*>/i)
   })
 })
+
+describe('createPost text from page metadata', () => {
+  // playstationcouch.com: og:description is "Written by: GEmmo\r\n\r\n&lt;br&gt;On..." —
+  // an entity-encoded <br> behind CRLFs, which the HTML parser hands over as literal text.
+  test('strips line-break markup and carriage returns from the description', () => {
+    const { post } = createPost({
+      url: 'https://playstationcouch.com/post.php?id=818',
+      metadata: {
+        title: 'Virtual Boy Headaches: What Nintendo Saw Coming in 1995',
+        description: 'Written by: GEmmo\r\n\r\n<br>On...',
+      },
+      originUrl: 'https://twostopbits.com/',
+      feedName: 'Two Stop Bits',
+    })
+    expect(post.text).toBe(
+      '**Virtual Boy Headaches: What Nintendo Saw Coming in 1995**\n\nWritten by: GEmmo\nOn...',
+    )
+  })
+
+  test('leaves paragraphs and angle brackets in a plain description alone', () => {
+    const { post } = createPost({
+      url: 'https://example.org/post',
+      metadata: { title: 'Generics', description: 'Why Vec<T> wins.\n\nAnd a < b too.' },
+      originUrl: 'https://example.org/',
+    })
+    expect(post.text).toBe('**Generics**\n\nWhy Vec<T> wins.\n\nAnd a < b too.')
+  })
+})
