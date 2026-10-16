@@ -203,11 +203,6 @@
     </div>
 
     {#if auth.canWrite}
-      <div class="tags-section">
-        <p class="section-label">Tags (optional)</p>
-        <TagSelector availableTags={data.availableTags} bind:selectedTags {suggestedTags} />
-      </div>
-
       {#if error}
         <p class="error">{error}</p>
       {/if}
@@ -215,6 +210,11 @@
       <button class="save-button" onclick={save} disabled={saving}>
         {saving ? 'Saving...' : 'Save to My Feed'}
       </button>
+
+      <div class="tags-section">
+        <p class="section-label">Tags (optional)</p>
+        <TagSelector availableTags={data.availableTags} bind:selectedTags {suggestedTags} />
+      </div>
     {:else}
       <p class="error"><a href="{prefix()}/auth">Authenticate</a> to save to your feed.</p>
     {/if}
@@ -230,6 +230,7 @@
     min-height: 60vh;
     padding: var(--padding);
     padding-top: calc(var(--padding) * 4);
+    padding-bottom: calc(var(--padding) * 4);
     gap: calc(var(--padding) * 2);
   }
 
