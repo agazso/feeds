@@ -1,7 +1,7 @@
 import type { Feed } from '../models/feed'
 import { RateLimitError, isRateLimitStatus } from '../utils/errors'
 import { DEFAULT_FAVICON, parseFaviconFromHtml } from '../utils/favicon'
-import { getHeadersForUrl } from '../utils/headers'
+import { HEADERS_WITH_SAFARI, getHeadersForUrl } from '../utils/headers'
 import { HtmlUtils, type ParsedNode } from '../utils/html'
 import { type OpenGraphData, getHtmlOpenGraphData } from '../utils/opengraph'
 import { createUrlFromUrn, isYoutubeUrl } from '../utils/url'
@@ -29,7 +29,11 @@ export async function fetchHtmlMetaDataOnly(
   init?: RequestInit,
 ): Promise<HtmlMetaData> {
   const headers = init?.headers ?? getHeadersForUrl(url)
-  const response = await fetch(url, { ...init, headers })
+  let response = await fetch(url, { ...init, headers })
+  // Some sites (e.g. pikuma.com) 403 the default bot UA but serve browsers fine.
+  if (response.status === 403 && !init?.headers) {
+    response = await fetch(url, { ...init, headers: HEADERS_WITH_SAFARI })
+  }
   // Only this status is turned into an error. Other failures still get parsed for
   // whatever they carry, which several callers rely on. A rate-limit page carries
   // nothing but looks like a valid page, so silence here reads as "no feed here".

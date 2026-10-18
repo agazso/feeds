@@ -1,5 +1,34 @@
-import { describe, expect, it } from 'vitest'
-import { parseAllFeedLinksFromHtml, parseHtmlMetaData } from '../../src/parsers/html-metadata'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import {
+  fetchHtmlMetaDataOnly,
+  parseAllFeedLinksFromHtml,
+  parseHtmlMetaData,
+} from '../../src/parsers/html-metadata'
+
+afterEach(() => {
+  vi.unstubAllGlobals()
+})
+
+describe('fetchHtmlMetaDataOnly', () => {
+  // Regression: pikuma.com returns 403 to the Discordbot UA, so a shared link
+  // ended up titled "403 Forbidden". Retry once with a browser UA.
+  it('retries with a browser user agent when the bot user agent gets a 403', async () => {
+    const agents: string[] = []
+    vi.stubGlobal('fetch', async (_url: string, init?: RequestInit) => {
+      const ua = (init?.headers as Record<string, string>)['User-Agent']
+      agents.push(ua)
+      return ua.startsWith('Discordbot')
+        ? new Response('<title>403 Forbidden</title>', { status: 403 })
+        : new Response('<title>History of x86</title>', { status: 200 })
+    })
+
+    const meta = await fetchHtmlMetaDataOnly('https://pikuma.com/blog/history-of-x86')
+
+    expect(meta.title).toBe('History of x86')
+    expect(agents).toHaveLength(2)
+    expect(agents[1]).toContain('Safari')
+  })
+})
 
 describe('parseHtmlMetaData', () => {
   describe('pages without <head> tag', () => {
