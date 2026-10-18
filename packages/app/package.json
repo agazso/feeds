@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev --host --port 1337",
+    "start": "PORT=1337 NODE_ENV=production node build/index.js",
     "build": "vite build",
     "preview": "vite preview",
     "typecheck": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
