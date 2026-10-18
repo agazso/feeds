@@ -14,6 +14,7 @@ This project uses **pnpm** (not npm or yarn). Always use `pnpm` commands:
 - `pnpm add <package>` - Add a dependency
 - `pnpm dev` - Run development server
 - `pnpm build` - Build for production
+- `pnpm start` - Run the production build on port 1337 (run `pnpm build` first)
 
 ## Design Principles
 
