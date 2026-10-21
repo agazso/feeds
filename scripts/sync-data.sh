@@ -35,7 +35,9 @@ rsync -az --no-g --partial --info=progress2 \
 # Image cache — optional (server would re-fetch on demand), but shipping it avoids
 # a burst of refetches. Skip with SKIP_CACHE=1.
 if [ -z "${SKIP_CACHE:-}" ] && [ -d "$LOCAL_CACHE" ]; then
-  rsync -az --no-g --partial --info=progress2 "$LOCAL_CACHE"/ "$REMOTE:$DATA_ROOT/cache/"
+  # -rl, not -a: the cache dirs belong to the service user, and setting their perms/times
+  # as another account fails. Content-addressed files need neither anyway.
+  rsync -rlz --partial --info=progress2 "$LOCAL_CACHE"/ "$REMOTE:$DATA_ROOT/cache/"
 fi
 
 # Write keys live beside the data dir, never inside it (DATA_DIR is served publicly).

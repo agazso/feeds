@@ -133,9 +133,10 @@ copy_images() { # from-host from-dir to-host to-dir
   local fh="$1" fc="$2" th="$3" tc="$4"
   on "$fh" "[ -d '$fc' ]" || return 0
   # --ignore-existing: a file's name is its content hash, so an existing one is already
-  # right. --exclude: user caches are nested inside the root's cache dir. --no-g: see
-  # sync-data.sh.
-  local flags=(-az --no-g --partial --ignore-existing --exclude='@*/')
+  # right. --exclude: user caches are nested inside the root's cache dir. -rl, not -a:
+  # the remote dirs belong to the service user, and setting their perms/times as another
+  # account fails; new files take the server's umask so the service can still write.
+  local flags=(-rlz --partial --ignore-existing --exclude='@*/')
   if [ -n "$fh" ] && [ -n "$th" ]; then
     if [ -n "$DRY" ]; then
       echo "  images: not checked (dry run between two servers)"
