@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { goto } from '$app/navigation'
   import type { Feed, Post } from '@feeds/core'
   import PostCard from '$lib/components/PostCard.svelte'
   import TagSelector from '$lib/components/TagSelector.svelte'
@@ -23,7 +24,6 @@
   let saving = $state(false)
   let previewPost = $state<Post | null>(null)
   let error = $state<string | null>(null)
-  let success = $state<{ title: string; icon?: string } | null>(null)
   let selectedTags = $state<string[]>([])
   let embeddingTags = $state<string[]>([])
 
@@ -144,10 +144,7 @@
         return
       }
 
-      success = {
-        title: result.post?.title || 'Shared link',
-        icon: result.post?.icon,
-      }
+      await goto(`${prefix()}/myfeed`)
     } catch {
       error = 'Failed to save'
     } finally {
@@ -165,27 +162,7 @@
 </svelte:head>
 
 <div class="submit-page">
-  {#if success}
-    <div class="success-container">
-      <div class="success-icon">
-        {#if success.icon}
-          <img src={success.icon} alt="" class="site-icon" />
-        {:else}
-          <span class="checkmark">&#10003;</span>
-        {/if}
-      </div>
-      <h2>Saved!</h2>
-      <p class="post-title">{success.title}</p>
-      {#if selectedTags.length > 0}
-        <div class="saved-tags">
-          {#each selectedTags as tag (tag)}
-            <span class="tag">#{tag}</span>
-          {/each}
-        </div>
-      {/if}
-      <a href="{prefix()}/myfeed" class="goto-button">Go to My Feed</a>
-    </div>
-  {:else if loading}
+  {#if loading}
     <div class="loading-container">
       <p>Loading preview...</p>
     </div>
@@ -240,77 +217,6 @@
     flex-direction: column;
     align-items: center;
     gap: var(--padding);
-  }
-
-  .success-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: var(--padding);
-  }
-
-  .success-icon {
-    width: 64px;
-    height: 64px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .site-icon {
-    width: 64px;
-    height: 64px;
-    border-radius: 8px;
-    object-fit: contain;
-  }
-
-  .checkmark {
-    font-size: 48px;
-    color: #27ae60;
-  }
-
-  .success-container h2 {
-    margin: 0;
-    font-size: 24px;
-  }
-
-  .post-title {
-    color: #888;
-    margin: 0;
-    max-width: var(--max-column-width);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .saved-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--half-padding);
-    justify-content: center;
-  }
-
-  .tag {
-    padding: var(--half-padding) var(--padding);
-    font-size: 14px;
-    background: var(--accent-color);
-    border-radius: 16px;
-    color: white;
-  }
-
-  .goto-button {
-    padding: var(--padding);
-    background: var(--background-color);
-    color: var(--color);
-    text-decoration: none;
-    border-radius: 4px;
-    border: 1px solid #88888888;
-    margin-top: var(--padding);
-  }
-
-  .goto-button:hover {
-    opacity: 0.9;
   }
 
   .preview-section,
