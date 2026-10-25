@@ -122,8 +122,8 @@
     try {
       // Build API URL with feedUrl query parameter if available
       const apiUrl = data.feedUrl
-        ? `/api/myfeed?feedUrl=${encodeURIComponent(data.feedUrl)}`
-        : '/api/myfeed'
+        ? `${prefix()}/api/myfeed?feedUrl=${encodeURIComponent(data.feedUrl)}`
+        : `${prefix()}/api/myfeed`
 
       // Reuse the already-enriched preview post so the server doesn't re-enrich
       // (re-running metadata + feed discovery is what made Save slow). Fall back to
